@@ -1,6 +1,0 @@
-[submodule "media-server"]
-	path = media-server
-	url = https://github.com/ireader/media-server.git
-[submodule "third/media-server"]
-	path = third/media-server
-	url = https://github.com/ireader/media-server.git

@@ -11,7 +11,11 @@ SpacesBeforeTrailingComments: 4
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 BinPackParameters: false
 BinPackArguments: false
+AlignConsecutiveAssignments: Consecutive
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortFunctionsOnASingleLine: false
 BraceWrapping:
   AfterCaseLabel:  true
 
-ColumnLimit: 120
+ColumnLimit: 320

@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.10)
 
 project(simple_rtmp)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -20,16 +20,6 @@ set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 
 find_package(Threads)
 set(LINK_LIBS Threads::Threads)
-
-include_directories(third/media-server/librtmp/include)
-aux_source_directory(third/media-server/librtmp/source RTMP_SRC)
-add_library(LIB_RTMP STATIC ${RTMP_SRC})
-list(APPEND LINK_LIBS LIB_RTMP)
-
-include_directories(third/media-server/libflv/include)
-aux_source_directory(third/media-server/libflv/source FLV_SRC)
-add_library(LIB_FLV STATIC ${FLV_SRC})
-list(APPEND LINK_LIBS LIB_FLV)
 
 
 find_package(Boost 1.80 COMPONENTS system thread REQUIRED)
