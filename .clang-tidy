@@ -17,4 +17,5 @@ Checks: '-*,
   -bugprone-easily-swappable-parameters,
   -readability-magic-numbers,
   -bugprone-exception-escape,
+  -misc-use-anonymous-namespace,
   '
