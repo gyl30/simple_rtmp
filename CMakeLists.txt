@@ -9,7 +9,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer -g -O0 -ggdb")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -g -O0 -ggdb")
@@ -21,8 +21,9 @@ set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads)
 set(LINK_LIBS Threads::Threads)
 
+include_directories(third/spdlog/include)
 
-find_package(Boost 1.80 COMPONENTS system thread REQUIRED)
+find_package(Boost 1.81 COMPONENTS system filesystem thread REQUIRED)
 
 list(APPEND LINK_LIBS ${Boost_LIBRARIES})
 
