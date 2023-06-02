@@ -1,11 +1,19 @@
 #include <iostream>
 #include <map>
+#include <memory>
 #include <string>
 #include "timestamp.h"
 #include "scoped_exit.h"
 #include "execution.h"
 #include "tcp_server.h"
 #include "log.h"
+#include "rtmp_publish_session.h"
+
+using simple_rtmp::rtmp_publish_session;
+using simple_rtmp::tcp_server;
+
+static const std::string kRtmpServerName = "rtmp";
+static const uint16_t kRtmpPublishPort   = 1935;
 
 int main(int argc, char* argv[])
 {
@@ -49,6 +57,8 @@ int main(int argc, char* argv[])
             stop          = true;
             signal_number = s;
         });
+
+    std::make_shared<tcp_server<rtmp_publish_session>>(kRtmpPublishPort, kRtmpServerName, exs.get_executor(), exs)->run();
 
     exs.run();
 
