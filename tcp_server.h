@@ -24,6 +24,10 @@ class tcp_server : public std::enable_shared_from_this<tcp_server<Session>>
     {
         LOG_INFO("tcp server :{} destroy", port_);
     }
+    tcp_server(const tcp_server &)            = delete;
+    tcp_server(tcp_server &&)                 = delete;
+    tcp_server &operator=(const tcp_server &) = delete;
+    tcp_server &operator=(tcp_server &&)      = delete;
 
    public:
     void run()
@@ -88,6 +92,7 @@ class tcp_server : public std::enable_shared_from_this<tcp_server<Session>>
     {
         if (!acceptor_.is_open())
         {
+            LOG_ERROR("tcp server :{} accept error", port_);
             return;
         }
         LOG_INFO("tcp server :{} accept count ", port_, count_++);
@@ -99,6 +104,7 @@ class tcp_server : public std::enable_shared_from_this<tcp_server<Session>>
     {
         if (ec == boost::system::errc::operation_canceled)
         {
+            LOG_WARN("tcp server :{} accept cancel", port_);
             return;
         }
         if (ec)
