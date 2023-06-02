@@ -15,7 +15,7 @@ template <typename Session>
 class tcp_server : public std::enable_shared_from_this<tcp_server<Session>>
 {
    public:
-    tcp_server(uint16_t port, execution::executors::executor &io, execution::executors &pool) : port_(port), acceptor_(io), pool_(pool)
+    tcp_server(uint16_t port, executors::executor &io, executors &pool) : port_(port), acceptor_(io), pool_(pool)
     {
         LOG_INFO("tcp server :{} create", port_);
     }
