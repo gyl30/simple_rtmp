@@ -1,4 +1,5 @@
 #include "log.h"
+#include "rtmp_codec.h"
 #include "rtmp_publish_session.h"
 
 using simple_rtmp::rtmp_publish_session;
@@ -100,4 +101,61 @@ void rtmp_publish_session::safe_shutdown()
     LOG_WARN("{} shutdown", static_cast<void*>(this));
     boost::system::error_code ec;
     socket_.close(ec);
+}
+
+//
+int rtmp_publish_session::rtmp_do_send(void* param, const void* header, size_t len, const void* data, size_t bytes)
+{
+    auto* self = static_cast<rtmp_publish_session*>(param);
+    auto frame = std::make_shared<simple_rtmp::frame_buffer>(len + bytes);
+    frame->append(header, len);
+    frame->append(data, bytes);
+    self->do_write(frame);
+    return static_cast<int>(len) + static_cast<int>(bytes);
+}
+
+int rtmp_publish_session::rtmp_on_publish(void* param, const char* app, const char* stream, const char* type)
+{
+    auto* self    = static_cast<rtmp_publish_session*>(param);
+    self->app_    = app;
+    self->stream_ = stream;
+    self->source_ = std::make_shared<rtmp_source>();
+    LOG_DEBUG("{} on publish app {} srteam {} type {}", param, app, stream, type);
+    return 0;
+}
+
+int rtmp_publish_session::rtmp_on_script(void* param, const void* script, size_t bytes, uint32_t timestamp)
+{
+    auto* self = static_cast<rtmp_publish_session*>(param);
+    auto frame = std::make_shared<frame_buffer>(bytes);
+    frame->append(script, bytes);
+    frame->pts   = timestamp;
+    frame->dts   = timestamp;
+    frame->codec = simple_rtmp::rtmp_codec::script;
+    self->source_->write(frame, {});
+    return 0;
+}
+
+int rtmp_publish_session::rtmp_on_video(void* param, const void* data, size_t bytes, uint32_t timestamp)
+{
+    auto* self = static_cast<rtmp_publish_session*>(param);
+    auto frame = std::make_shared<frame_buffer>(bytes);
+    frame->append(data, bytes);
+    frame->pts   = timestamp;
+    frame->dts   = timestamp;
+    frame->codec = simple_rtmp::rtmp_codec::video;
+    self->source_->write(frame, {});
+    return 0;
+}
+
+int rtmp_publish_session::rtmp_on_audio(void* param, const void* data, size_t bytes, uint32_t timestamp)
+{
+    auto* self = static_cast<rtmp_publish_session*>(param);
+    auto frame = std::make_shared<frame_buffer>(bytes);
+    frame->append(data, bytes);
+    frame->pts   = timestamp;
+    frame->dts   = timestamp;
+    frame->codec = simple_rtmp::rtmp_codec::audio;
+    self->source_->write(frame, {});
+    return 0;
 }
