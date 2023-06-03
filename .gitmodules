@@ -1,3 +1,6 @@
 [submodule "third/spdlog"]
 	path = third/spdlog
 	url = https://github.com/gabime/spdlog.git
+[submodule "third/media-server"]
+	path = third/media-server
+	url = https://github.com/ireader/media-server.git
