@@ -18,4 +18,5 @@ Checks: '-*,
   -readability-magic-numbers,
   -bugprone-exception-escape,
   -misc-use-anonymous-namespace,
+  -misc-non-private-member-variables-in-classes,
   '
