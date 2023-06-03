@@ -45,6 +45,8 @@ class rtmp_publish_session : public std::enable_shared_from_this<rtmp_publish_se
    private:
     std::string app_;
     std::string stream_;
+    std::string local_addr_;
+    std::string remote_addr_;
     executors::executor& io_;
     boost::asio::ip::tcp::socket socket_{io_};
     uint8_t buffer_[1024 * 64] = {0};

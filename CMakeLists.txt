@@ -21,6 +21,16 @@ set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads)
 set(LINK_LIBS Threads::Threads)
 
+include_directories(third/media-server/librtmp/include)
+aux_source_directory(third/media-server/librtmp/source RTMP_SRC)
+add_library(rtmp STATIC ${RTMP_SRC})
+list(APPEND LINK_LIBS rtmp)
+
+include_directories(third/media-server/libflv/include)
+aux_source_directory(third/media-server/libflv/source FLV_SRC)
+add_library(flv STATIC ${FLV_SRC})
+list(APPEND LINK_LIBS flv)
+
 include_directories(third/spdlog/include)
 
 find_package(Boost 1.81 COMPONENTS system filesystem thread REQUIRED)

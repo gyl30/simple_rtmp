@@ -1,8 +1,15 @@
 #include "log.h"
+#include "socket.h"
 #include "rtmp_codec.h"
 #include "rtmp_publish_session.h"
+#include "rtmp-server.h"
 
 using simple_rtmp::rtmp_publish_session;
+
+struct simple_rtmp::publish_args
+{
+    rtmp_server_t* rtmp = nullptr;
+};
 
 rtmp_publish_session::rtmp_publish_session(executors::executor& io) : io_(io)
 {
@@ -21,12 +28,22 @@ boost::asio::ip::tcp::socket& rtmp_publish_session::socket()
 void rtmp_publish_session::start()
 {
     LOG_DEBUG("{} start", static_cast<void*>(this));
-
+    local_addr_  = simple_rtmp::get_socket_local_address(socket_);
+    remote_addr_ = simple_rtmp::get_socket_remote_address(socket_);
     startup();
     do_read();
 }
 void rtmp_publish_session::startup()
 {
+    struct rtmp_server_handler_t handler;
+    memset(&handler, 0, sizeof(handler));
+    handler.send      = rtmp_do_send;
+    handler.onpublish = rtmp_on_publish;
+    handler.onscript  = rtmp_on_script;
+    handler.onvideo   = rtmp_on_video;
+    handler.onaudio   = rtmp_on_audio;
+    args_             = std::make_shared<publish_args>();
+    args_->rtmp       = rtmp_server_create(this, &handler);
 }
 
 void rtmp_publish_session::do_write(const frame_buffer::ptr& buff)
