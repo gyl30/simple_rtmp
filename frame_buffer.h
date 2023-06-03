@@ -18,6 +18,21 @@ struct frame_buffer
     int64_t dts   = 0;
     std::vector<uint8_t> payload;
     std::any context;
+    //
+    explicit frame_buffer(std::size_t size)
+    {
+        payload.reserve(size);
+    }
+
+    void append(const uint8_t* data, size_t len)
+    {
+        payload.insert(payload.end(), data, data + len);
+    }
+
+    void append(const void* data, size_t len)
+    {
+        append(static_cast<const uint8_t*>(data), len);
+    }
 };
 }    // namespace simple_rtmp
 
