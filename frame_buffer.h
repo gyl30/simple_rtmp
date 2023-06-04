@@ -33,6 +33,10 @@ struct frame_buffer
     {
         append(static_cast<const uint8_t*>(data), len);
     }
+    void resize(size_t size)
+    {
+        payload.resize(size);
+    }
 };
 }    // namespace simple_rtmp
 
