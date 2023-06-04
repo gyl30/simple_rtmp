@@ -17,8 +17,7 @@ class rtmp_source : public std::enable_shared_from_this<rtmp_source>
    public:
     using prt = std::shared_ptr<rtmp_source>;
 
-   public:
-    rtmp_source();
+    explicit rtmp_source(std::string id);
 
    public:
     void write(const frame_buffer::ptr& frame, const boost::system::error_code& ec);
@@ -28,6 +27,7 @@ class rtmp_source : public std::enable_shared_from_this<rtmp_source>
     void on_frame(const frame_buffer::ptr& frame, const boost::system::error_code& ec);
 
    private:
+    std::string id_;
     channel::ptr ch_;
     rtmp_demuxer::prt demuxer_;
 };
