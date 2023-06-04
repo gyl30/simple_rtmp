@@ -152,7 +152,7 @@ int rtmp_publish_session::rtmp_on_script(void* param, const void* script, size_t
     frame->append(script, bytes);
     frame->pts   = timestamp;
     frame->dts   = timestamp;
-    frame->codec = simple_rtmp::rtmp_codec::script;
+    frame->codec = simple_rtmp::rtmp_tag::script;
     self->source_->write(frame, {});
     return 0;
 }
@@ -164,7 +164,7 @@ int rtmp_publish_session::rtmp_on_video(void* param, const void* data, size_t by
     frame->append(data, bytes);
     frame->pts   = timestamp;
     frame->dts   = timestamp;
-    frame->codec = simple_rtmp::rtmp_codec::video;
+    frame->codec = simple_rtmp::rtmp_tag::video;
     self->source_->write(frame, {});
     return 0;
 }
@@ -176,7 +176,7 @@ int rtmp_publish_session::rtmp_on_audio(void* param, const void* data, size_t by
     frame->append(data, bytes);
     frame->pts   = timestamp;
     frame->dts   = timestamp;
-    frame->codec = simple_rtmp::rtmp_codec::audio;
+    frame->codec = simple_rtmp::rtmp_tag::audio;
     self->source_->write(frame, {});
     return 0;
 }
