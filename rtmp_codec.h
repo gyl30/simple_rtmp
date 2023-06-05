@@ -32,13 +32,6 @@ enum rtmp_codec
     av1c = 0x202,
 
 };
-enum
-{
-    sequence_header = 0,
-    avpacket        = 1,
-    end_of_sequence = 2,
-};
-
 }    // namespace simple_rtmp
 
 #endif
