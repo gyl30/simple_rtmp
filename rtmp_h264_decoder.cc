@@ -6,6 +6,7 @@
 #include "mpeg4-avc.h"
 #include "rtmp_codec.h"
 #include "log.h"
+#include "execution.h"
 
 enum
 {
@@ -60,6 +61,7 @@ void rtmp_h264_decoder::write(const frame_buffer::ptr& frame)
 
     if (video.avpacket == end_of_sequence)
     {
+        on_frame({}, boost::asio::error::eof);
         return;
     }
     if (video.avpacket != avpacket)
@@ -122,7 +124,7 @@ void rtmp_h264_decoder::demuxer_avpacket(const uint8_t* data, size_t bytes, int6
             {
                 return;
             }
-            on_frame(frame);
+            on_frame(frame, {});
         }
 
         const static uint8_t header[] = {0x00, 0x00, 0x00, 0x01};
@@ -133,16 +135,16 @@ void rtmp_h264_decoder::demuxer_avpacket(const uint8_t* data, size_t bytes, int6
         frame->dts                    = timestamp;
         frame->append(header, sizeof header);
         frame->append(data_offset + args_->avc.nalu, nalu_size);
-        on_frame(frame);
+        on_frame(frame, {});
         offset = offset + args_->avc.nalu + nalu_size;
     }
     assert(data + offset == data_end);
 }
 
-void rtmp_h264_decoder::on_frame(const frame_buffer::ptr& frame)
+void rtmp_h264_decoder::on_frame(const frame_buffer::ptr& frame, boost::system::error_code ec)
 {
     if (ch_)
     {
-        ch_->write(frame, {});
+        ch_->write(frame, ec);
     }
 }

@@ -21,7 +21,7 @@ class rtmp_h264_decoder : public rtmp_decoder
 
    private:
     void demuxer_avpacket(const uint8_t* data, size_t bytes, int64_t timestamp);
-    void on_frame(const frame_buffer::ptr& frame);
+    void on_frame(const frame_buffer::ptr& frame, boost::system::error_code ec);
 
    private:
     std::string id_;
