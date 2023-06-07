@@ -11,12 +11,12 @@ namespace simple_rtmp
 class rtmp_decoder
 {
    public:
-    virtual ~rtmp_decoder();
+    rtmp_decoder()          = default;
+    virtual ~rtmp_decoder() = default;
 
    public:
-    virtual void write(const frame_buffer::ptr &frame);
-    virtual void on_codec(const std::function<void(int)> &codec_cb);
-    virtual void set_output(const channel::ptr &ch);
+    virtual void write(const frame_buffer::ptr &frame)              = 0;
+    virtual void set_output(const channel::ptr &ch)                 = 0;
 };
 
 }    // namespace simple_rtmp
