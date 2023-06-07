@@ -21,6 +21,7 @@ class rtmp_source : public std::enable_shared_from_this<rtmp_source>
 
    public:
     void write(const frame_buffer::ptr& frame, const boost::system::error_code& ec);
+    void on_codec(int codec);
     void set_channel(const channel::ptr& ch);
 
    private:
