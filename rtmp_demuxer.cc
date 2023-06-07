@@ -1,6 +1,9 @@
 #include <cstring>
+#include "flv-demuxer.h"
 #include "rtmp_demuxer.h"
 #include "rtmp_codec.h"
+#include "rtmp_h264_decoder.h"
+#include "amf0.h"
 #include "log.h"
 
 using simple_rtmp::rtmp_demuxer;
@@ -14,21 +17,26 @@ void rtmp_demuxer::set_channel(const channel::ptr& ch)
     ch_ = ch;
 }
 
+void rtmp_demuxer::on_codec(const std::function<void(int)>& codec_cb)
+{
+    codec_cb_ = codec_cb;
+}
+
 void rtmp_demuxer::write(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
 {
     if (ec)
     {
         return;
     }
-    if (frame->codec == simple_rtmp::rtmp_codec::script)
+    if (frame->codec == simple_rtmp::rtmp_tag::script)
     {
         demuxer_script(frame);
     }
-    else if (frame->codec == simple_rtmp::rtmp_codec::video)
+    else if (frame->codec == simple_rtmp::rtmp_tag::video)
     {
         demuxer_video(frame);
     }
-    else if (frame->codec == simple_rtmp::rtmp_codec::audio)
+    else if (frame->codec == simple_rtmp::rtmp_tag::audio)
     {
         demuxer_audio(frame);
     }
@@ -41,9 +49,6 @@ void rtmp_demuxer::on_frame(const frame_buffer::ptr& frame)
         ch_->write(frame, {});
     }
 }
-
-#include "flv-demuxer.h"
-#include "amf0.h"
 
 void rtmp_demuxer::demuxer_script(const frame_buffer::ptr& frame)
 {
@@ -153,10 +158,39 @@ void rtmp_demuxer::demuxer_script(const frame_buffer::ptr& frame)
               height,
               duration,
               filesize);
+    if (codec_cb_)
+    {
+        codec_cb_(videocodecid);
+        codec_cb_(audiocodecid);
+    }
+    create_decoder(videocodecid);
+    create_decoder(videocodecid);
 }
+
+void rtmp_demuxer::create_decoder(int32_t codec)
+{
+    if (codec == simple_rtmp::rtmp_codec::h264)
+    {
+        video_decoder_ = std::make_shared<rtmp_h264_decoder>(id_);
+    }
+    if (video_decoder_)
+    {
+        video_decoder_->set_output(ch_);
+    }
+}
+
 void rtmp_demuxer::demuxer_video(const frame_buffer::ptr& frame)
 {
+    if (video_decoder_)
+    {
+        video_decoder_->write(frame);
+    }
 }
+
 void rtmp_demuxer::demuxer_audio(const frame_buffer::ptr& frame)
 {
+    if (audio_decoder_)
+    {
+        audio_decoder_->write(frame);
+    }
 }
