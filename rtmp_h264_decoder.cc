@@ -29,9 +29,18 @@ rtmp_h264_decoder::rtmp_h264_decoder(std::string id) : id_(std::move(id))
 rtmp_h264_decoder::~rtmp_h264_decoder()
 {
 }
+
 void rtmp_h264_decoder::set_output(const channel::ptr& ch)
 {
     ch_ = ch;
+}
+
+void rtmp_h264_decoder::on_frame(const frame_buffer::ptr& frame, boost::system::error_code ec)
+{
+    if (ch_)
+    {
+        ch_->write(frame, ec);
+    }
 }
 
 void rtmp_h264_decoder::write(const frame_buffer::ptr& frame)
@@ -139,12 +148,4 @@ void rtmp_h264_decoder::demuxer_avpacket(const uint8_t* data, size_t bytes, int6
         offset = offset + args_->avc.nalu + nalu_size;
     }
     assert(data + offset == data_end);
-}
-
-void rtmp_h264_decoder::on_frame(const frame_buffer::ptr& frame, boost::system::error_code ec)
-{
-    if (ch_)
-    {
-        ch_->write(frame, ec);
-    }
 }
