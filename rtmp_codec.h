@@ -3,6 +3,8 @@
 
 namespace simple_rtmp
 {
+std::string rtmp_tag_to_str(int tag);
+std::string rtmp_codec_to_str(int codec);
 enum rtmp_tag
 {
     script,
