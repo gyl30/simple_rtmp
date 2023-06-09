@@ -20,6 +20,7 @@ struct frame_buffer
     std::vector<uint8_t> payload;
     std::any context;
     //
+    frame_buffer() = default;
     explicit frame_buffer(std::size_t size)
     {
         payload.reserve(size);
