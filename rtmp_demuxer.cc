@@ -3,6 +3,7 @@
 #include "rtmp_demuxer.h"
 #include "rtmp_codec.h"
 #include "rtmp_h264_decoder.h"
+#include "rtmp_aac_decoder.h"
 #include "amf0.h"
 #include "log.h"
 
@@ -163,19 +164,23 @@ void rtmp_demuxer::demuxer_script(const frame_buffer::ptr& frame)
         codec_cb_(videocodecid);
         codec_cb_(audiocodecid);
     }
-    create_decoder(videocodecid);
-    create_decoder(videocodecid);
-}
-
-void rtmp_demuxer::create_decoder(int32_t codec)
-{
-    if (codec == simple_rtmp::rtmp_codec::h264)
+    int64_t audio_codec_id = audiocodecid;
+    audio_codec_id         = audio_codec_id << 4;
+    if (videocodecid == simple_rtmp::rtmp_codec::h264)
     {
         video_decoder_ = std::make_shared<rtmp_h264_decoder>(id_);
+    }
+    if (audio_codec_id == simple_rtmp::rtmp_codec::aac)
+    {
+        audio_decoder_ = std::make_shared<rtmp_aac_decoder>(id_);
     }
     if (video_decoder_)
     {
         video_decoder_->set_output(ch_);
+    }
+    if (audio_decoder_)
+    {
+        audio_decoder_->set_output(ch_);
     }
 }
 

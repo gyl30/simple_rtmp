@@ -24,7 +24,6 @@ class rtmp_demuxer : public std::enable_shared_from_this<rtmp_demuxer>
     void set_channel(const channel::ptr& ch);
 
    private:
-    void create_decoder(int32_t codec);
     void on_frame(const frame_buffer::ptr& frame);
     void demuxer_script(const frame_buffer::ptr& frame);
     void demuxer_video(const frame_buffer::ptr& frame);
