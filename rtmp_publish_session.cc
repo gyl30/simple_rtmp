@@ -140,7 +140,7 @@ int rtmp_publish_session::rtmp_on_publish(void* param, const char* app, const ch
     self->stream_ = stream;
     char id[256]  = {0};
     snprintf(id, sizeof(id), "%s_%s", app, stream);
-    self->source_ = std::make_shared<rtmp_source>(id);
+    self->source_ = std::make_shared<rtmp_source>(id, self->io_);
     LOG_DEBUG("{} local {} remote {} on publish app {} srteam {} type {}", param, self->local_addr_, self->remote_addr_, app, stream, type);
     return 0;
 }
