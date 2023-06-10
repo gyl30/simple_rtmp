@@ -13,7 +13,8 @@ namespace simple_rtmp
 class sink : public std::enable_shared_from_this<sink>
 {
    public:
-    using ptr = std::shared_ptr<sink>;
+    using ptr  = std::shared_ptr<sink>;
+    using weak = std::weak_ptr<sink>;
 
    public:
     static ptr get(const std::string& id);
