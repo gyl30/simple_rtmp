@@ -125,6 +125,7 @@ void rtmp_h264_decoder::demuxer_avpacket(const uint8_t* data, size_t bytes, int6
             auto frame     = std::make_shared<frame_buffer>(avc_length);
             frame->media   = simple_rtmp::rtmp_tag::video;
             frame->codec   = simple_rtmp::rtmp_codec::h264;
+            frame->flag    = 1;
             frame->pts     = timestamp;
             frame->dts     = timestamp;
             frame->resize(avc_length);
@@ -142,6 +143,7 @@ void rtmp_h264_decoder::demuxer_avpacket(const uint8_t* data, size_t bytes, int6
         frame->codec                  = simple_rtmp::rtmp_codec::h264;
         frame->pts                    = timestamp;
         frame->dts                    = timestamp;
+        frame->flag                   = 0;
         frame->append(header, sizeof header);
         frame->append(data_offset + args_->avc.nalu, nalu_size);
         on_frame(frame, {});
