@@ -1,5 +1,5 @@
-#ifndef SIMPLE_RTMP_H264_H
-#define SIMPLE_RTMP_H264_H
+#ifndef SIMPLE_RTMP_RTMP_H264_DECODER_H
+#define SIMPLE_RTMP_RTMP_H264_DECODER_H
 
 #include <memory>
 #include <string>
