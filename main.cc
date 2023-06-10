@@ -8,12 +8,16 @@
 #include "tcp_server.h"
 #include "log.h"
 #include "rtmp_publish_session.h"
+#include "rtmp_forward_session.h"
 
 using simple_rtmp::rtmp_publish_session;
+using simple_rtmp::rtmp_forward_session;
 using simple_rtmp::tcp_server;
 
-static const std::string kRtmpServerName = "rtmp";
-static const uint16_t kRtmpPublishPort   = 1935;
+static const std::string kRtmpServerName        = "rtmp publish";
+static const std::string kRtmpForwardServerName = "rtmp forward";
+static const uint16_t kRtmpPublishPort          = 1935;
+static const uint16_t kRtmpForwardPort          = 1936;
 
 int main(int argc, char* argv[])
 {
@@ -59,6 +63,7 @@ int main(int argc, char* argv[])
         });
 
     std::make_shared<tcp_server<rtmp_publish_session>>(kRtmpPublishPort, kRtmpServerName, exs.get_executor(), exs)->run();
+    std::make_shared<tcp_server<rtmp_forward_session>>(kRtmpForwardPort, kRtmpForwardServerName, exs.get_executor(), exs)->run();
 
     exs.run();
 
