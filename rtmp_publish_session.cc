@@ -29,7 +29,7 @@ void rtmp_publish_session::start()
 {
     local_addr_  = simple_rtmp::get_socket_local_address(socket_);
     remote_addr_ = simple_rtmp::get_socket_remote_address(socket_);
-    LOG_DEBUG("{} start local {} remote {}", static_cast<void*>(this), local_addr_, remote_addr_);
+    LOG_DEBUG("rtmp publish session {} {} <--> {} start", static_cast<void*>(this), local_addr_, remote_addr_);
     startup();
     do_read();
 }
@@ -77,14 +77,19 @@ void rtmp_publish_session::safe_do_write()
 }
 void rtmp_publish_session::on_write(const boost::system::error_code& ec, std::size_t bytes)
 {
+    if (ec && ec == boost::asio::error::bad_descriptor)
+    {
+        return;
+    }
+
     if (ec)
     {
-        LOG_DEBUG("{} write failed local {} remote {} {}", static_cast<void*>(this), local_addr_, remote_addr_, ec.message());
+        LOG_ERROR("rtmp publish session write failed {} {} <--> {} {}", static_cast<void*>(this), local_addr_, remote_addr_, ec.message());
         shutdown();
         return;
     }
 
-    LOG_TRACE("{} local {} remote {} write {} bytes", static_cast<void*>(this), local_addr_, remote_addr_, bytes);
+    LOG_DEBUG("rtmp publish session {} {} <--> {} write {} bytes", static_cast<void*>(this), local_addr_, remote_addr_, bytes);
 
     writing_queue_.clear();
 
@@ -97,27 +102,32 @@ void rtmp_publish_session::do_read()
 }
 void rtmp_publish_session::on_read(const boost::system::error_code& ec, std::size_t bytes)
 {
+    if (ec && ec == boost::asio::error::bad_descriptor)
+    {
+        return;
+    }
+
     if (ec)
     {
-        LOG_DEBUG("{} read failed local {} remote {} {}", static_cast<void*>(this), local_addr_, remote_addr_, ec.message());
+        LOG_DEBUG("rtmp publish session read failed {} {} <--> {} {}", static_cast<void*>(this), local_addr_, remote_addr_, ec.message());
         shutdown();
         return;
     }
-    LOG_TRACE("{} local {} remote {} read {} bytes", static_cast<void*>(this), local_addr_, remote_addr_, bytes);
+    LOG_TRACE("rtmp publish session {} {} <--> {} read {} bytes", static_cast<void*>(this), local_addr_, remote_addr_, bytes);
     rtmp_server_input(args_->rtmp, buffer_, bytes);
     //
     do_read();
 }
 void rtmp_publish_session::shutdown()
 {
-    LOG_DEBUG("{} shutdown local {} remote {}", static_cast<void*>(this), local_addr_, remote_addr_);
+    LOG_DEBUG("rtmp publish session {} {} <--> {} shutdown", static_cast<void*>(this), local_addr_, remote_addr_);
     auto self = shared_from_this();
     boost::asio::post(socket_.get_executor(), [this, self]() { safe_shutdown(); });
 }
 
 void rtmp_publish_session::safe_shutdown()
 {
-    LOG_DEBUG("{} safe shutdown local {} remote {}", static_cast<void*>(this), local_addr_, remote_addr_);
+    LOG_DEBUG("rtmp publish session {} {} <--> {} safe shutdown", static_cast<void*>(this), local_addr_, remote_addr_);
     boost::system::error_code ec;
     socket_.close(ec);
 }
@@ -141,7 +151,7 @@ int rtmp_publish_session::rtmp_on_publish(void* param, const char* app, const ch
     char id[256]  = {0};
     snprintf(id, sizeof(id), "%s_%s", app, stream);
     self->source_ = std::make_shared<rtmp_source>(id, self->io_);
-    LOG_DEBUG("{} local {} remote {} on publish app {} srteam {} type {}", param, self->local_addr_, self->remote_addr_, app, stream, type);
+    LOG_DEBUG("rtmp publish session {} {} <--> {} app {} stream {} type {}", param, self->local_addr_, self->remote_addr_, app, stream, type);
     return 0;
 }
 

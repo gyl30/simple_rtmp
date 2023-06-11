@@ -120,6 +120,11 @@ void rtmp_forward_session::safe_do_write()
 
 void rtmp_forward_session::safe_on_write(const boost::system::error_code& ec, std::size_t bytes)
 {
+    if (ec && ec == boost::asio::error::bad_descriptor)
+    {
+        return;
+    }
+
     if (ec)
     {
         LOG_ERROR("rtmp forward session write failed {} {} <--> {} {}", static_cast<void*>(this), local_addr_, remote_addr_, ec.message());
@@ -141,20 +146,14 @@ void rtmp_forward_session::do_read()
 
 void rtmp_forward_session::on_read(const boost::system::error_code& ec, std::size_t bytes)
 {
+    if (ec && ec == boost::asio::error::bad_descriptor)
+    {
+        return;
+    }
+
     if (ec)
     {
         LOG_ERROR("rtmp forward session read failed {} {} <--> {} {}", static_cast<void*>(this), local_addr_, remote_addr_, ec.message());
-        shutdown();
-        return;
-    }
-    auto self = shared_from_this();
-    boost::asio::post(socket_.get_executor(), [self, this, ec, bytes]() { safe_on_read(ec, bytes); });
-}
-
-void rtmp_forward_session::safe_on_read(const boost::system::error_code& ec, std::size_t bytes)
-{
-    if (ec)
-    {
         shutdown();
         return;
     }

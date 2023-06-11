@@ -33,7 +33,6 @@ class rtmp_forward_session : public std::enable_shared_from_this<rtmp_forward_se
     //
     void do_read();
     void on_read(const boost::system::error_code& ec, std::size_t bytes);
-    void safe_on_read(const boost::system::error_code& ec, std::size_t bytes);
     void safe_shutdown();
 
    private:
