@@ -76,8 +76,18 @@ void rtmp_forward_session::channel_out(const frame_buffer::ptr& buf, const boost
         LOG_ERROR("rtmp forward session channel_out {} failed {}", static_cast<void*>(this), ec.message());
         return;
     }
-    auto self = shared_from_this();
-    ex_.post(std::bind(&rtmp_forward_session::do_write, self, buf));
+    if (buf->media == simple_rtmp::rtmp_tag::video)
+    {
+        rtmp_server_send_video(args_->rtmp, buf->payload.data(), buf->payload.size(), buf->pts);
+    }
+    else if (buf->media == simple_rtmp::rtmp_tag::audio)
+    {
+        rtmp_server_send_audio(args_->rtmp, buf->payload.data(), buf->payload.size(), buf->pts);
+    }
+    else if (buf->media == simple_rtmp::rtmp_tag::script)
+    {
+        rtmp_server_send_script(args_->rtmp, buf->payload.data(), buf->payload.size(), buf->pts);
+    }
 }
 
 void rtmp_forward_session::do_write(const frame_buffer::ptr& buff)
