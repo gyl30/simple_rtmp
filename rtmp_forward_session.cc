@@ -64,7 +64,7 @@ void rtmp_forward_session::start()
     do_read();
 }
 
-void rtmp_forward_session::channel_out(const frame_buffer::ptr& buf, const boost::system::error_code& ec)
+void rtmp_forward_session::channel_out(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
 {
     if (ec)
     {
@@ -72,23 +72,23 @@ void rtmp_forward_session::channel_out(const frame_buffer::ptr& buf, const boost
         shutdown();
         return;
     }
-    if (buf->media == simple_rtmp::rtmp_tag::video)
+    if (frame->media == simple_rtmp::rtmp_tag::video)
     {
-        rtmp_server_send_video(args_->rtmp, buf->payload.data(), buf->payload.size(), buf->pts);
+        rtmp_server_send_video(args_->rtmp, frame->payload.data(), frame->payload.size(), frame->pts);
     }
-    else if (buf->media == simple_rtmp::rtmp_tag::audio)
+    else if (frame->media == simple_rtmp::rtmp_tag::audio)
     {
-        rtmp_server_send_audio(args_->rtmp, buf->payload.data(), buf->payload.size(), buf->pts);
+        rtmp_server_send_audio(args_->rtmp, frame->payload.data(), frame->payload.size(), frame->pts);
     }
-    else if (buf->media == simple_rtmp::rtmp_tag::script)
+    else if (frame->media == simple_rtmp::rtmp_tag::script)
     {
-        rtmp_server_send_script(args_->rtmp, buf->payload.data(), buf->payload.size(), buf->pts);
+        rtmp_server_send_script(args_->rtmp, frame->payload.data(), frame->payload.size(), frame->pts);
     }
 }
 
-void rtmp_forward_session::do_write(const frame_buffer::ptr& buff)
+void rtmp_forward_session::do_write(const frame_buffer::ptr& frame)
 {
-    write_queue_.push_back(buff);
+    write_queue_.push_back(frame);
     safe_do_write();
 }
 
@@ -187,7 +187,7 @@ int rtmp_forward_session::rtmp_server_send(void* param, const void* header, size
     frame->append(header, len);
     frame->append(data, bytes);
     self->do_write(frame);
-    return len + bytes;
+    return static_cast<int>(len + bytes);
 }
 
 int rtmp_forward_session::rtmp_server_onplay(void* param, const char* app, const char* stream, double start, double duration, uint8_t reset)

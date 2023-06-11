@@ -26,10 +26,10 @@ class rtmp_forward_session : public std::enable_shared_from_this<rtmp_forward_se
 
    private:
     void startup();
-    void do_write(const frame_buffer::ptr& buff);
+    void do_write(const frame_buffer::ptr& frame);
     void safe_do_write();
     void safe_on_write(const boost::system::error_code& ec, std::size_t bytes);
-    void channel_out(const frame_buffer::ptr& buf, const boost::system::error_code& ec);
+    void channel_out(const frame_buffer::ptr& frame, const boost::system::error_code& ec);
     //
     void do_read();
     void on_read(const boost::system::error_code& ec, std::size_t bytes);

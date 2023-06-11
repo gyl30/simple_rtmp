@@ -46,9 +46,9 @@ void rtmp_publish_session::startup()
     args_->rtmp       = rtmp_server_create(this, &handler);
 }
 
-void rtmp_publish_session::do_write(const frame_buffer::ptr& buff)
+void rtmp_publish_session::do_write(const frame_buffer::ptr& frame)
 {
-    write_queue_.push_back(buff);
+    write_queue_.push_back(frame);
     safe_do_write();
 }
 void rtmp_publish_session::safe_do_write()
