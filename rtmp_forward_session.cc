@@ -33,11 +33,6 @@ rtmp_forward_session::~rtmp_forward_session()
     {
         args_.reset();
     }
-    auto s = sink_.lock();
-    if (s)
-    {
-        s->del_channel(channel_);
-    }
     LOG_DEBUG("rtmp forward session destroy {}", static_cast<void*>(this));
 }
 
@@ -74,6 +69,7 @@ void rtmp_forward_session::channel_out(const frame_buffer::ptr& buf, const boost
     if (ec)
     {
         LOG_ERROR("rtmp forward session channel_out {} failed {}", static_cast<void*>(this), ec.message());
+        shutdown();
         return;
     }
     if (buf->media == simple_rtmp::rtmp_tag::video)
@@ -170,6 +166,15 @@ void rtmp_forward_session::shutdown()
 void rtmp_forward_session::safe_shutdown()
 {
     LOG_DEBUG("rtmp forward session shutdown {} {} <--> {}", static_cast<void*>(this), local_addr_, remote_addr_);
+    auto s = sink_.lock();
+    if (s)
+    {
+        s->del_channel(channel_);
+    }
+    if (channel_)
+    {
+        channel_.reset();
+    }
 
     boost::system::error_code ec;
     socket_.close(ec);

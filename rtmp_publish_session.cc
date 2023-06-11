@@ -128,6 +128,10 @@ void rtmp_publish_session::shutdown()
 void rtmp_publish_session::safe_shutdown()
 {
     LOG_DEBUG("rtmp publish session {} {} <--> {} safe shutdown", static_cast<void*>(this), local_addr_, remote_addr_);
+    if (source_)
+    {
+        source_.reset();
+    }
     boost::system::error_code ec;
     socket_.close(ec);
 }
