@@ -25,15 +25,28 @@ struct frame_buffer
     {
         payload.reserve(size);
     }
-
+    void append(const ptr& f)
+    {
+        media   = f->media;
+        codec   = f->codec;
+        flag    = f->flag;
+        pts     = f->pts;
+        dts     = f->dts;
+        context = f->context;
+        append(f->payload);
+    }
     void append(const uint8_t* data, size_t len)
     {
         payload.insert(payload.end(), data, data + len);
     }
-
     void append(const void* data, size_t len)
     {
-        append(static_cast<const uint8_t*>(data), len);
+        append(static_cast<const uint8_t*>(data),len);
+    }
+
+    void append(const std::vector<uint8_t>& data)
+    {
+        payload.insert(payload.end(), data.begin(), data.end());
     }
     void resize(size_t size)
     {
