@@ -58,35 +58,36 @@ void rtmp_h264_encoder::write(const frame_buffer::ptr &frame)
     {
         return;
     }
-    avc_frame->pts   = frame->pts;
-    avc_frame->dts   = frame->dts;
-    avc_frame->codec = kCodecId;
-    avc_frame->media = kFrameTag;
-
+    avc_frame->resize(ret);
+    avc_frame->pts                 = frame->pts;
+    avc_frame->dts                 = frame->dts;
+    avc_frame->codec               = kCodecId;
+    avc_frame->media               = kFrameTag;
     const static int kBufferSize   = 4096;
     const static int kVideoTagSize = 5;
 
     if ((args_->update != 0) && args_->avc.nb_sps > 0 && args_->avc.nb_pps > 0)
     {
-        avc_frame->flag          = 1;
         uint8_t buf[kBufferSize] = {0};
         buf[0]                   = (1 << 4) | (kCodecId & 0x0F);
         buf[1]                   = sequence_header;
         buf[2]                   = (0 >> 16) & 0xFF;
         buf[3]                   = (0 >> 8) & 0xFF;
         buf[4]                   = 0 & 0xFF;
-        ret                      = mpeg4_avc_decoder_configuration_record_save(&args_->avc, buf + kVideoTagSize, kBufferSize - kVideoTagSize);
+
+        ret = mpeg4_avc_decoder_configuration_record_save(&args_->avc, buf + kVideoTagSize, kBufferSize - kVideoTagSize);
         if (ret <= 0)
         {
             LOG_DEBUG("rtmp encoder configuration record save failed {}", ret);
             return;
         }
-        auto config_frame = std::make_shared<frame_buffer>(ret + kVideoTagSize);
+        auto config_frame = std::make_shared<frame_buffer>();
         config_frame->append(buf, ret + kVideoTagSize);
         config_frame->pts            = frame->pts;
         config_frame->dts            = frame->dts;
         config_frame->codec          = kCodecId;
         config_frame->media          = kFrameTag;
+        config_frame->flag           = 1;
         args_->video_sequence_header = 1;
         on_frame(config_frame, {});
     }
@@ -99,14 +100,16 @@ void rtmp_h264_encoder::write(const frame_buffer::ptr &frame)
         buf[2]                     = (0 >> 16) & 0xFF;
         buf[3]                     = (0 >> 8) & 0xFF;
         buf[4]                     = 0 & 0xFF;
-        auto header_frame          = std::make_shared<frame_buffer>(kVideoTagSize);
+        auto header_frame          = std::make_shared<frame_buffer>();
         header_frame->append(buf, kVideoTagSize);
         header_frame->pts   = frame->pts;
         header_frame->dts   = frame->dts;
         header_frame->codec = kCodecId;
         header_frame->media = kFrameTag;
-        on_frame(header_frame, {});
-        avc_frame->flag = keyframe == 1 ? 1 : 0;
-        on_frame(avc_frame, {});
+        auto encode_frame   = std::make_shared<frame_buffer>();
+        encode_frame->append(header_frame);
+        encode_frame->append(avc_frame);
+        encode_frame->flag = keyframe == 1 ? 1 : 0;
+        on_frame(encode_frame, {});
     }
 }
