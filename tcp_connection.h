@@ -2,6 +2,7 @@
 #define SIMPLE_RTMP_TCP_CONNECTION_H
 
 #include <memory>
+#include <functional>
 #include "execution.h"
 #include "channel.h"
 #include "frame_buffer.h"
@@ -20,7 +21,7 @@ class tcp_connection : public std::enable_shared_from_this<tcp_connection>
     boost::asio::ip::tcp::socket& socket();
 
    public:
-    using read_cb  = std::function<void(boost::system::error_code, const simple_rtmp::frame_buffer::ptr&)>;
+    using read_cb  = std::function<void(const simple_rtmp::frame_buffer::ptr&, boost::system::error_code)>;
     using write_cb = std::function<void(boost::system::error_code, std::size_t)>;
     void set_read_cb(const read_cb& cb);
     void set_write_cb(const write_cb& cb);

@@ -45,6 +45,8 @@ void tcp_connection::safe_shutdown()
     {
         LOG_DEBUG("safe shutdown {}", static_cast<void*>(this));
     }
+    read_cb_  = nullptr;
+    write_cb_ = nullptr;
 }
 
 void tcp_connection::set_read_cb(const read_cb& cb)
@@ -72,7 +74,7 @@ void tcp_connection::on_read(const boost::system::error_code& ec, std::size_t by
 
     if (read_cb_)
     {
-        read_cb_(ec, frame);
+        read_cb_(frame, ec);
     }
     else if (ec)
     {
