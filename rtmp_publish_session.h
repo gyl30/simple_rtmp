@@ -7,13 +7,14 @@
 #include "execution.h"
 #include "rtmp_source.h"
 #include "frame_buffer.h"
+#include "tcp_connection.h"
 
 namespace simple_rtmp
 {
 class rtmp_publish_session : public std::enable_shared_from_this<rtmp_publish_session>
 {
    public:
-    explicit rtmp_publish_session(executors::executor& io);
+    explicit rtmp_publish_session(executors::executor& ex);
     ~rtmp_publish_session();
     rtmp_publish_session(const rtmp_publish_session&)            = delete;
     rtmp_publish_session(rtmp_publish_session&&)                 = delete;
@@ -27,12 +28,8 @@ class rtmp_publish_session : public std::enable_shared_from_this<rtmp_publish_se
 
    private:
     void startup();
-    //
-    void do_read();
-    void on_read(const boost::system::error_code& ec, std::size_t bytes);
+    void on_read(const simple_rtmp::frame_buffer::ptr& frame, boost::system::error_code ec);
     void on_write(const boost::system::error_code& ec, std::size_t bytes);
-    void do_write(const frame_buffer::ptr& frame);
-    void safe_do_write();
     void safe_shutdown();
 
    private:
@@ -45,14 +42,9 @@ class rtmp_publish_session : public std::enable_shared_from_this<rtmp_publish_se
    private:
     std::string app_;
     std::string stream_;
-    std::string local_addr_;
-    std::string remote_addr_;
-    executors::executor& io_;
-    boost::asio::ip::tcp::socket socket_{io_};
-    uint8_t buffer_[1024 * 64] = {0};
     rtmp_source::prt source_;
-    std::vector<frame_buffer::ptr> write_queue_;
-    std::vector<frame_buffer::ptr> writing_queue_;
+    executors::executor& ex_;
+    std::shared_ptr<tcp_connection> conn_;
     std::shared_ptr<struct publish_args> args_;
 };
 }    // namespace simple_rtmp
