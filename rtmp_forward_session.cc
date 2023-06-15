@@ -8,19 +8,16 @@
 
 using simple_rtmp::rtmp_forward_session;
 
-const static auto kRecvMaxSize = 64 * 1024;
-
-struct simple_rtmp::rtmp_forward_session::args
+struct simple_rtmp::forward_args
 {
     std::string app;
     std::string stream;
-    rtmp_server_t* rtmp          = nullptr;
-    uint8_t buffer[kRecvMaxSize] = {0};
+    rtmp_server_t* rtmp = nullptr;
 };
 
-rtmp_forward_session::rtmp_forward_session(simple_rtmp::executors::executor& ex) : ex_(ex), args_(std::make_shared<simple_rtmp::rtmp_forward_session::args>())
+rtmp_forward_session::rtmp_forward_session(simple_rtmp::executors::executor& ex) : ex_(ex), conn_(std::make_shared<tcp_connection>(ex_)), args_(std::make_shared<simple_rtmp::forward_args>())
 {
-    LOG_DEBUG("rtmp forward session create {}", static_cast<void*>(this));
+    LOG_DEBUG("create {}", static_cast<void*>(this));
 };
 
 rtmp_forward_session::~rtmp_forward_session()
@@ -33,21 +30,16 @@ rtmp_forward_session::~rtmp_forward_session()
     {
         args_.reset();
     }
-    LOG_DEBUG("rtmp forward session destroy {}", static_cast<void*>(this));
+    LOG_DEBUG("destroy {}", static_cast<void*>(this));
 }
 
 boost::asio::ip::tcp::socket& rtmp_forward_session::socket()
 {
-    return socket_;
+    return conn_->socket();
 }
 
 void rtmp_forward_session::start()
 {
-    local_addr_  = get_socket_local_address(socket_);
-    remote_addr_ = get_socket_remote_address(socket_);
-
-    LOG_DEBUG("rtmp forward session start {} {} <--> {}", static_cast<void*>(this), local_addr_, remote_addr_);
-
     struct rtmp_server_handler_t handler;
     memset(&handler, 0, sizeof(handler));
     handler.send          = rtmp_server_send;
@@ -56,19 +48,19 @@ void rtmp_forward_session::start()
     handler.onseek        = rtmp_server_onseek;
     handler.ongetduration = rtmp_server_ongetduration;
 
-    auto self = shared_from_this();
-
     args_->rtmp = rtmp_server_create(this, &handler);
     channel_    = std::make_shared<simple_rtmp::channel>();
-    channel_->set_output(std::bind(&rtmp_forward_session::channel_out, self, std::placeholders::_1, std::placeholders::_2));
-    do_read();
+    channel_->set_output(std::bind(&rtmp_forward_session::channel_out, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
+    conn_->set_read_cb(std::bind(&rtmp_forward_session::on_read, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
+    conn_->set_write_cb(std::bind(&rtmp_forward_session::on_write, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
+    conn_->start();
 }
 
 void rtmp_forward_session::channel_out(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
 {
     if (ec)
     {
-        LOG_ERROR("rtmp forward session channel_out {} failed {}", static_cast<void*>(this), ec.message());
+        LOG_ERROR("channel out {} failed {}", static_cast<void*>(this), ec.message());
         shutdown();
         return;
     }
@@ -86,35 +78,7 @@ void rtmp_forward_session::channel_out(const frame_buffer::ptr& frame, const boo
     }
 }
 
-void rtmp_forward_session::do_write(const frame_buffer::ptr& frame)
-{
-    write_queue_.push_back(frame);
-    safe_do_write();
-}
-
-void rtmp_forward_session::safe_do_write()
-{
-    if (!writing_queue_.empty())
-    {
-        return;
-    }
-    if (write_queue_.empty())
-    {
-        return;
-    }
-    auto self = shared_from_this();
-    writing_queue_.swap(write_queue_);
-    std::vector<boost::asio::const_buffer> bufs;
-    bufs.reserve(writing_queue_.size());
-    for (const auto& frame : writing_queue_)
-    {
-        bufs.emplace_back(boost::asio::buffer(frame->payload));
-    }
-    auto fn = [bufs, this, self](boost::system::error_code ec, std::size_t bytes) { safe_on_write(ec, bytes); };
-    boost::asio::async_write(socket_, bufs, fn);
-}
-
-void rtmp_forward_session::safe_on_write(const boost::system::error_code& ec, std::size_t bytes)
+void rtmp_forward_session::on_read(const simple_rtmp::frame_buffer::ptr& frame, boost::system::error_code ec)
 {
     if (ec && ec == boost::asio::error::bad_descriptor)
     {
@@ -123,24 +87,14 @@ void rtmp_forward_session::safe_on_write(const boost::system::error_code& ec, st
 
     if (ec)
     {
-        LOG_ERROR("rtmp forward session write failed {} {} <--> {} {}", static_cast<void*>(this), local_addr_, remote_addr_, ec.message());
+        LOG_ERROR("read failed {} {}", static_cast<void*>(this), ec.message());
         shutdown();
         return;
     }
-    LOG_DEBUG("rtmp forward session {} {} <--> {} write {} bytes", static_cast<void*>(this), local_addr_, remote_addr_, bytes);
-
-    writing_queue_.clear();
-    write_size_ += bytes;
-    safe_do_write();
+    rtmp_server_input(args_->rtmp, frame->payload.data(), frame->payload.size());
 }
 
-void rtmp_forward_session::do_read()
-{
-    auto fn = [this, self = shared_from_this()](boost::system::error_code ec, std::size_t bytes) { on_read(ec, bytes); };
-    socket_.async_read_some(boost::asio::buffer(args_->buffer, kRecvMaxSize), fn);
-}
-
-void rtmp_forward_session::on_read(const boost::system::error_code& ec, std::size_t bytes)
+void rtmp_forward_session::on_write(const boost::system::error_code& ec, std::size_t /*bytes*/)
 {
     if (ec && ec == boost::asio::error::bad_descriptor)
     {
@@ -149,23 +103,20 @@ void rtmp_forward_session::on_read(const boost::system::error_code& ec, std::siz
 
     if (ec)
     {
-        LOG_ERROR("rtmp forward session read failed {} {} <--> {} {}", static_cast<void*>(this), local_addr_, remote_addr_, ec.message());
+        LOG_ERROR("read failed {} {}", static_cast<void*>(this), ec.message());
         shutdown();
         return;
     }
-    rtmp_server_input(args_->rtmp, args_->buffer, bytes);
-    do_read();
 }
 
 void rtmp_forward_session::shutdown()
 {
-    auto self = shared_from_this();
-    boost::asio::post(socket_.get_executor(), [this, self]() { safe_shutdown(); });
+    ex_.post(std::bind(&rtmp_forward_session::safe_shutdown, shared_from_this()));
 }
 
 void rtmp_forward_session::safe_shutdown()
 {
-    LOG_DEBUG("rtmp forward session shutdown {} {} <--> {}", static_cast<void*>(this), local_addr_, remote_addr_);
+    LOG_DEBUG("shutdown {}", static_cast<void*>(this));
     auto s = sink_.lock();
     if (s)
     {
@@ -176,8 +127,11 @@ void rtmp_forward_session::safe_shutdown()
         channel_.reset();
     }
 
-    boost::system::error_code ec;
-    socket_.close(ec);
+    if (conn_)
+    {
+        conn_->shutdown();
+        conn_.reset();
+    }
 }
 
 int rtmp_forward_session::rtmp_server_send(void* param, const void* header, size_t len, const void* data, size_t bytes)
@@ -186,7 +140,7 @@ int rtmp_forward_session::rtmp_server_send(void* param, const void* header, size
     auto frame = std::make_shared<simple_rtmp::frame_buffer>(len + bytes);
     frame->append(header, len);
     frame->append(data, bytes);
-    self->do_write(frame);
+    self->conn_->write_frame(frame);
     return static_cast<int>(len + bytes);
 }
 
@@ -196,7 +150,8 @@ int rtmp_forward_session::rtmp_server_onplay(void* param, const char* app, const
 
     char id[1024] = {0};
     snprintf(id, sizeof id, "rtmp_%s_%s", app, stream);
-    LOG_DEBUG("rtmp forward session on play {} {} <--> {} app {} stream {} id {} start {} duration {} reset {} ", param, self->local_addr_, self->remote_addr_, app, stream, id, start, duration, reset);
+
+    LOG_DEBUG("play {} app {} stream {} id {} start {} duration {} reset {} ", param, app, stream, id, start, duration, reset);
 
     auto s = sink::get(id);
     if (!s)
@@ -216,14 +171,14 @@ int rtmp_forward_session::rtmp_server_onplay(void* param, const char* app, const
 int rtmp_forward_session::rtmp_server_onpause(void* param, int pause, uint32_t ms)
 {
     auto* self = static_cast<rtmp_forward_session*>(param);
-    LOG_DEBUG("rtmp forward session on pause {} {} <--> {} pause {} ms {} ", param, self->local_addr_, self->remote_addr_, pause, ms);
+    LOG_DEBUG("pause {} {} {}ms ", param, pause, ms);
     return 0;
 }
 
 int rtmp_forward_session::rtmp_server_onseek(void* param, uint32_t ms)
 {
     auto* self = static_cast<rtmp_forward_session*>(param);
-    LOG_DEBUG("rtmp forward session on seek {} {} <--> {} ms {} ", param, self->local_addr_, self->remote_addr_, ms);
+    LOG_DEBUG("seek {} {}ms", param, ms);
     return 0;
 }
 
@@ -231,7 +186,7 @@ int rtmp_forward_session::rtmp_server_ongetduration(void* param, const char* app
 {
     auto* self = static_cast<rtmp_forward_session*>(param);
 
-    LOG_DEBUG("rtmp forward session on get duration {} {} <--> {} app {} stream {}", param, self->local_addr_, self->remote_addr_, app, stream);
+    LOG_DEBUG("get duration {} app {} stream {}", param, app, stream);
     *duration = 30 * 60;
     return 0;
 }

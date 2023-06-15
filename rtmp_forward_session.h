@@ -10,6 +10,7 @@
 #include "channel.h"
 #include "frame_buffer.h"
 #include "sink.h"
+#include "tcp_connection.h"
 
 namespace simple_rtmp
 {
@@ -26,13 +27,9 @@ class rtmp_forward_session : public std::enable_shared_from_this<rtmp_forward_se
 
    private:
     void startup();
-    void do_write(const frame_buffer::ptr& frame);
-    void safe_do_write();
-    void safe_on_write(const boost::system::error_code& ec, std::size_t bytes);
+    void on_read(const simple_rtmp::frame_buffer::ptr& frame, boost::system::error_code ec);
+    void on_write(const boost::system::error_code& ec, std::size_t bytes);
     void channel_out(const frame_buffer::ptr& frame, const boost::system::error_code& ec);
-    //
-    void do_read();
-    void on_read(const boost::system::error_code& ec, std::size_t bytes);
     void safe_shutdown();
 
    private:
@@ -43,18 +40,14 @@ class rtmp_forward_session : public std::enable_shared_from_this<rtmp_forward_se
     static int rtmp_server_ongetduration(void*, const char*, const char*, double*);
 
    private:
-    uint64_t write_size_ = 0;
-    std::string local_addr_;
-    std::string remote_addr_;
     std::string stream_id_;
     sink::weak sink_;
     channel::ptr channel_ = nullptr;
     simple_rtmp::executors::executor& ex_;
-    boost::asio::ip::tcp::socket socket_{ex_};
+    std::shared_ptr<tcp_connection> conn_;
     std::vector<frame_buffer::ptr> write_queue_;
     std::vector<frame_buffer::ptr> writing_queue_;
-    struct args;
-    std::shared_ptr<args> args_;
+    std::shared_ptr<struct forward_args> args_;
 };
 }    // namespace simple_rtmp
 #endif    //
