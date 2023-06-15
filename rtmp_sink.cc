@@ -39,6 +39,10 @@ void rtmp_sink::on_frame(const frame_buffer::ptr& frame, const boost::system::er
 {
     if (ec)
     {
+        for (const auto& ch : chs_)
+        {
+            ch->write(frame, ec);
+        }
         return;
     }
     if (frame->media == simple_rtmp::rtmp_tag::video)
@@ -120,10 +124,19 @@ void rtmp_sink::write(const frame_buffer::ptr& frame, const boost::system::error
 {
     if (ec)
     {
+        if (video_encoder_)
+        {
+            video_encoder_->write(frame, ec);
+        }
+        if (audio_encoder_)
+        {
+            audio_encoder_->write(frame, ec);
+        }
         return;
     }
+
     if (frame->media == simple_rtmp::rtmp_tag::video && video_encoder_)
     {
-        video_encoder_->write(frame);
+        video_encoder_->write(frame, ec);
     }
 }

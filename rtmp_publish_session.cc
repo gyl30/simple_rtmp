@@ -17,7 +17,7 @@ rtmp_publish_session::rtmp_publish_session(executors::executor& ex) : ex_(ex), c
 }
 rtmp_publish_session::~rtmp_publish_session()
 {
-    LOG_DEBUG("destory {}", static_cast<void*>(this));
+    LOG_DEBUG("destroy {}", static_cast<void*>(this));
 }
 
 boost::asio::ip::tcp::socket& rtmp_publish_session::socket()
@@ -83,6 +83,7 @@ void rtmp_publish_session::safe_shutdown()
 {
     if (source_)
     {
+        source_->write(nullptr, boost::asio::error::eof);
         source_.reset();
     }
     if (conn_)

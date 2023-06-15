@@ -14,11 +14,11 @@ class rtmp_h264_encoder : public rtmp_encoder
 
    public:
     std::string id() override;
-    void write(const frame_buffer::ptr &frame) override;
-    void set_output(const channel::ptr &ch) override;
+    void write(const frame_buffer::ptr& frame, const boost::system::error_code& ec) override;
+    void set_output(const channel::ptr& ch) override;
 
    private:
-    void on_frame(const frame_buffer::ptr &frame, boost::system::error_code ec);
+    void on_frame(const frame_buffer::ptr& frame, boost::system::error_code ec);
 
    private:
     std::string id_;

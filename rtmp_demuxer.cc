@@ -27,32 +27,46 @@ void rtmp_demuxer::write(const frame_buffer::ptr& frame, const boost::system::er
 {
     if (ec)
     {
+        demuxer_script(frame, ec);
+        demuxer_video(frame, ec);
+        demuxer_audio(frame, ec);
         return;
     }
     if (frame->codec == simple_rtmp::rtmp_tag::script)
     {
-        demuxer_script(frame);
+        demuxer_script(frame, ec);
     }
     else if (frame->codec == simple_rtmp::rtmp_tag::video)
     {
-        demuxer_video(frame);
+        demuxer_video(frame, ec);
     }
     else if (frame->codec == simple_rtmp::rtmp_tag::audio)
     {
-        demuxer_audio(frame);
+        demuxer_audio(frame, ec);
     }
 }
 
-void rtmp_demuxer::on_frame(const frame_buffer::ptr& frame)
+void rtmp_demuxer::demuxer_video(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
 {
-    if (ch_)
+    if (video_decoder_)
     {
-        ch_->write(frame, {});
+        video_decoder_->write(frame, ec);
     }
 }
 
-void rtmp_demuxer::demuxer_script(const frame_buffer::ptr& frame)
+void rtmp_demuxer::demuxer_audio(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
 {
+    if (audio_decoder_)
+    {
+        audio_decoder_->write(frame, ec);
+    }
+}
+void rtmp_demuxer::demuxer_script(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
+{
+    if (ec)
+    {
+        return;
+    }
     const uint8_t* data = frame->payload.data();
     size_t bytes        = frame->payload.size();
     const uint8_t* end;
@@ -181,21 +195,5 @@ void rtmp_demuxer::demuxer_script(const frame_buffer::ptr& frame)
     if (audio_decoder_)
     {
         audio_decoder_->set_output(ch_);
-    }
-}
-
-void rtmp_demuxer::demuxer_video(const frame_buffer::ptr& frame)
-{
-    if (video_decoder_)
-    {
-        video_decoder_->write(frame);
-    }
-}
-
-void rtmp_demuxer::demuxer_audio(const frame_buffer::ptr& frame)
-{
-    if (audio_decoder_)
-    {
-        audio_decoder_->write(frame);
     }
 }

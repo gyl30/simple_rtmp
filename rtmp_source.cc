@@ -27,10 +27,6 @@ void rtmp_source::on_codec(int codec)
 
 void rtmp_source::on_frame(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
 {
-    if (ec)
-    {
-        return;
-    }
     // LOG_DEBUG("rtmp demuxer media {} codec {} pts {} dts {} paylaod {} bytes", simple_rtmp::rtmp_tag_to_str(frame->media), simple_rtmp::rtmp_codec_to_str(frame->codec), frame->pts, frame->dts, frame->payload.size());
     rtmp_sink_->write(frame, ec);
 }

@@ -44,8 +44,14 @@ void rtmp_h264_encoder::on_frame(const frame_buffer::ptr &frame, boost::system::
     }
 }
 
-void rtmp_h264_encoder::write(const frame_buffer::ptr &frame)
+void rtmp_h264_encoder::write(const frame_buffer::ptr &frame, const boost::system::error_code &ec)
 {
+    if (ec)
+    {
+        on_frame(frame, ec);
+        return;
+    }
+
     const static uint8_t kCodecId  = simple_rtmp::rtmp_codec::h264;
     const static uint8_t kFrameTag = simple_rtmp::rtmp_tag::video;
     const uint8_t *data            = frame->payload.data();

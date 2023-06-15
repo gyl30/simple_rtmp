@@ -44,8 +44,14 @@ void rtmp_aac_decoder::on_frame(const frame_buffer::ptr& frame, boost::system::e
     }
 }
 
-void rtmp_aac_decoder::write(const frame_buffer::ptr& frame)
+void rtmp_aac_decoder::write(const frame_buffer::ptr& frame, boost::system::error_code ec)
 {
+    if (ec)
+    {
+        on_frame(frame, ec);
+        return;
+    }
+
     const uint8_t* data = frame->payload.data();
     size_t bytes        = frame->payload.size();
 

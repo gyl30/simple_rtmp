@@ -45,8 +45,14 @@ void rtmp_h264_decoder::on_frame(const frame_buffer::ptr& frame, boost::system::
     }
 }
 
-void rtmp_h264_decoder::write(const frame_buffer::ptr& frame)
+void rtmp_h264_decoder::write(const frame_buffer::ptr& frame, boost::system::error_code ec)
 {
+    if (ec)
+    {
+        on_frame(frame, ec);
+        return;
+    }
+
     const uint8_t* data = frame->payload.data();
     size_t bytes        = frame->payload.size();
 
@@ -79,7 +85,7 @@ void rtmp_h264_decoder::write(const frame_buffer::ptr& frame)
     {
         return;
     }
-    demuxer_avpacket(data, bytes, frame->pts, video.cts,video.keyframe == 1 ? 1 : 0);
+    demuxer_avpacket(data, bytes, frame->pts, video.cts, video.keyframe == 1 ? 1 : 0);
 }
 
 static int h264_sps_pps_size(const struct mpeg4_avc_t* avc)

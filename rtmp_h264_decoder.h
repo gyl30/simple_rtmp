@@ -16,7 +16,7 @@ class rtmp_h264_decoder : public rtmp_decoder
     ~rtmp_h264_decoder() override;
 
    public:
-    void write(const frame_buffer::ptr& frame) override;
+    void write(const frame_buffer::ptr& frame, boost::system::error_code ec) override;
     void set_output(const channel::ptr& ch) override;
 
    private:
