@@ -28,9 +28,7 @@ rtmp_h264_decoder::rtmp_h264_decoder(std::string id) : id_(std::move(id))
 {
 }
 
-rtmp_h264_decoder::~rtmp_h264_decoder()
-{
-}
+rtmp_h264_decoder::~rtmp_h264_decoder() = default;
 
 void rtmp_h264_decoder::set_output(const channel::ptr& ch)
 {

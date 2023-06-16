@@ -27,9 +27,7 @@ rtmp_aac_decoder::rtmp_aac_decoder(std::string id) : id_(std::move(id))
     args_ = std::make_shared<args>();
 }
 
-rtmp_aac_decoder::~rtmp_aac_decoder()
-{
-}
+rtmp_aac_decoder::~rtmp_aac_decoder() = default;
 
 void rtmp_aac_decoder::set_output(const simple_rtmp::channel::ptr& ch)
 {
