@@ -97,7 +97,7 @@ void rtmp_demuxer::demuxer_script(const frame_buffer::ptr& frame, const boost::s
         v.size  = amf_size;                                               \
     }
     AMF_OBJECT_ITEM_VALUE(keyframes[0], AMF_STRICT_ARRAY, "filepositions", NULL, 0);    // ignore keyframes
-    AMF_OBJECT_ITEM_VALUE(keyframes[1], AMF_STRICT_ARRAY, "times", NULL, 0);
+    AMF_OBJECT_ITEM_VALUE(keyframes[1], AMF_STRICT_ARRAY, "times", nullptr, 0);
 
     AMF_OBJECT_ITEM_VALUE(prop[0], AMF_NUMBER, "audiocodecid", &audiocodecid, sizeof(audiocodecid));
     AMF_OBJECT_ITEM_VALUE(prop[1], AMF_NUMBER, "audiodatarate", &audiodatarate, sizeof(audiodatarate));
