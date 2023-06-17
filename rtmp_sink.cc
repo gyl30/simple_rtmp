@@ -1,6 +1,7 @@
 #include "rtmp_sink.h"
 #include "rtmp_codec.h"
 #include "rtmp_h264_encoder.h"
+#include "rtmp_aac_encoder.h"
 #include "log.h"
 
 using simple_rtmp::rtmp_sink;
@@ -16,12 +17,22 @@ std::string rtmp_sink::id() const
 
 void rtmp_sink::add_codec(int codec)
 {
+    LOG_DEBUG("{} add codec {}", id_, codec);
     if (codec == simple_rtmp::rtmp_codec::h264)
     {
         video_encoder_ = std::make_shared<rtmp_h264_encoder>(id_);
         auto ch        = std::make_shared<simple_rtmp::channel>();
         ch->set_output(std::bind(&rtmp_sink::on_frame, this, std::placeholders::_1, std::placeholders::_2));
         video_encoder_->set_output(ch);
+        LOG_DEBUG("{} add h264 encoder", id_);
+    }
+    else if (codec == simple_rtmp::rtmp_codec::aac)
+    {
+        audio_encoder_ = std::make_shared<rtmp_aac_encoder>(id_);
+        auto ch        = std::make_shared<simple_rtmp::channel>();
+        ch->set_output(std::bind(&rtmp_sink::on_frame, this, std::placeholders::_1, std::placeholders::_2));
+        audio_encoder_->set_output(ch);
+        LOG_DEBUG("{} add aac encoder", id_);
     }
 }
 
@@ -138,5 +149,9 @@ void rtmp_sink::write(const frame_buffer::ptr& frame, const boost::system::error
     if (frame->media == simple_rtmp::rtmp_tag::video && video_encoder_)
     {
         video_encoder_->write(frame, ec);
+    }
+    if (frame->media == simple_rtmp::rtmp_tag::audio && audio_encoder_)
+    {
+        audio_encoder_->write(frame, ec);
     }
 }
