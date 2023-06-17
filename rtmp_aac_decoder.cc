@@ -66,18 +66,18 @@ void rtmp_aac_decoder::write(const frame_buffer::ptr& frame, boost::system::erro
         mpeg4_aac_audio_specific_config_load(data + n, bytes - n, &args_->aac);
         return;
     }
-    auto aac_frame   = std::make_shared<frame_buffer>();
+    auto aac_frame   = std::make_shared<frame_buffer>(args_->aac.npce + 7 + 1);
     aac_frame->media = simple_rtmp::rtmp_tag::audio;
     aac_frame->codec = simple_rtmp::rtmp_codec::aac;
     aac_frame->pts   = frame->pts;
     aac_frame->dts   = frame->dts;
-    aac_frame->resize(7 + 1 + args_->aac.npce);
-    int ret = mpeg4_aac_adts_save(&args_->aac, static_cast<uint16_t>(bytes - n), aac_frame->payload.data(), aac_frame->payload.size());
+    int ret          = mpeg4_aac_adts_save(&args_->aac, static_cast<uint16_t>(bytes - n), aac_frame->payload.data(), aac_frame->payload.size());
     if (ret < 7)
     {
         return;
     }
     args_->aac.npce = 0;
+    aac_frame->resize(ret);
     aac_frame->append(data + n, bytes - n);
     on_frame(aac_frame, {});
 }
