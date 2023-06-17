@@ -183,7 +183,7 @@ void rtmp_demuxer::demuxer_script(const frame_buffer::ptr& frame, const boost::s
     }
     if (videocodecid == simple_rtmp::rtmp_codec::h264)
     {
-//        video_decoder_ = std::make_shared<rtmp_h264_decoder>(id_);
+        video_decoder_ = std::make_shared<rtmp_h264_decoder>(id_);
     }
     if (audio_codec_id == simple_rtmp::rtmp_codec::aac)
     {
