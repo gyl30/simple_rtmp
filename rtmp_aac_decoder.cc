@@ -66,7 +66,8 @@ void rtmp_aac_decoder::write(const frame_buffer::ptr& frame, boost::system::erro
         mpeg4_aac_audio_specific_config_load(data + n, bytes - n, &args_->aac);
         return;
     }
-    auto aac_frame   = std::make_shared<frame_buffer>(args_->aac.npce + 7 + 1);
+    auto aac_frame   = std::make_shared<frame_buffer>();
+    aac_frame->resize(args_->aac.npce + 7 + 1);
     aac_frame->media = simple_rtmp::rtmp_tag::audio;
     aac_frame->codec = simple_rtmp::rtmp_codec::aac;
     aac_frame->pts   = frame->pts;
