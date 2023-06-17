@@ -173,16 +173,17 @@ void rtmp_demuxer::demuxer_script(const frame_buffer::ptr& frame, const boost::s
               height,
               duration,
               filesize);
+    int64_t audio_codec_id = audiocodecid;
+    audio_codec_id         = audio_codec_id << 4;
+
     if (codec_cb_)
     {
         codec_cb_(videocodecid);
-        codec_cb_(audiocodecid);
+        codec_cb_(audio_codec_id);
     }
-    int64_t audio_codec_id = audiocodecid;
-    audio_codec_id         = audio_codec_id << 4;
     if (videocodecid == simple_rtmp::rtmp_codec::h264)
     {
-        video_decoder_ = std::make_shared<rtmp_h264_decoder>(id_);
+//        video_decoder_ = std::make_shared<rtmp_h264_decoder>(id_);
     }
     if (audio_codec_id == simple_rtmp::rtmp_codec::aac)
     {
