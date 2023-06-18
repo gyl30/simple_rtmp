@@ -461,14 +461,49 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_send(void* param, const u
     return (r == (int)(payloadBytes + headerBytes)) ? 0 : -1;
 }
 
-rtmp_server_context::rtmp_server_context(rtmp_server_context_handler handler) : args_(std::make_shared<simple_rtmp::rtmp_server_context_args>())
+rtmp_server_context::rtmp_server_context(rtmp_server_context_handler handler) : args_(new simple_rtmp::rtmp_server_context_args())
 {
     args_->init(this, handler);
 }
 
 int rtmp_server_context::rtmp_server_start(int r, const std::string& msg)
 {
-    return 0;
+    if (RTMP_SERVER_ONPLAY == args_->start.play)
+    {
+        if (0 == r)
+        {
+            // User Control (StreamBegin)
+            r = 0 == r ? args_->rtmp_server_send_stream_begin(args_) : r;
+
+            // NetStream.Play.Reset
+            if (args_->start.reset)
+                r = 0 == r ? args_->rtmp_server_send_onstatus(args_, args_->start.transaction, 0, "NetStream.Play.Reset", "NetStream.Play.Failed", "") : r;
+
+            if (0 != r)
+                return r;
+        }
+
+        r = args_->rtmp_server_send_onstatus(args_, args_->start.transaction, r, "NetStream.Play.Start", !msg.empty() ? msg.data() : "NetStream.Play.Failed", "Start video on demand");
+
+        // User Control (StreamIsRecorded)
+        r = 0 == r ? args_->rtmp_server_send_stream_is_record(args_) : r;
+        r = 0 == r ? args_->rtmp_server_rtmp_sample_access(args_) : r;
+    }
+    else if (RTMP_SERVER_ONPUBLISH == args_->start.play)
+    {
+        if (0 == r)
+        {
+            // User Control (StreamBegin)
+            r = args_->rtmp_server_send_stream_begin(args_);
+            if (0 != r)
+                return r;
+        }
+
+        r = args_->rtmp_server_send_onstatus(args_, args_->start.transaction, r, "NetStream.Publish.Start", !msg.empty() ? msg.data() : "NetStream.Publish.BadName", "");
+    }
+
+    args_->start.play = 0;
+    return r;
 }
 
 int rtmp_server_context::rtmp_server_input(const uint8_t* data, size_t bytes)

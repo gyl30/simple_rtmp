@@ -31,7 +31,7 @@ class rtmp_server_context
     int rtmp_server_stop();
 
    private:
-    std::shared_ptr<struct rtmp_server_context_args> args_;
+    struct rtmp_server_context_args* args_;
 };
 
 }    // namespace simple_rtmp
