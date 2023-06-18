@@ -25,13 +25,13 @@ class tcp_connection : public std::enable_shared_from_this<tcp_connection>
     using write_cb = std::function<void(boost::system::error_code, std::size_t)>;
     void set_read_cb(const read_cb& cb);
     void set_write_cb(const write_cb& cb);
-    void write_frame(simple_rtmp::frame_buffer::ptr& frame);
+    void write_frame(const simple_rtmp::frame_buffer::ptr& frame);
 
    private:
     void do_read();
     void on_read(const boost::system::error_code& ec, std::size_t bytes);
     void do_write(const frame_buffer::ptr& frame);
-    void safe_write_frame(simple_rtmp::frame_buffer::ptr& frame);
+    void safe_write_frame(const simple_rtmp::frame_buffer::ptr& frame);
     void safe_do_write();
     void safe_on_write(const boost::system::error_code& ec, std::size_t bytes);
     void safe_shutdown();

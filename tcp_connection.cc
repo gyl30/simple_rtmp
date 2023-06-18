@@ -87,12 +87,12 @@ void tcp_connection::on_read(const boost::system::error_code& ec, std::size_t by
     do_read();
 }
 
-void tcp_connection::write_frame(simple_rtmp::frame_buffer::ptr& frame)
+void tcp_connection::write_frame(const simple_rtmp::frame_buffer::ptr& frame)
 {
     ex_.post(std::bind(&tcp_connection::safe_write_frame, shared_from_this(), frame));
 }
 
-void tcp_connection::safe_write_frame(simple_rtmp::frame_buffer::ptr& frame)
+void tcp_connection::safe_write_frame(const simple_rtmp::frame_buffer::ptr& frame)
 {
     write_queue_.push_back(frame);
     safe_do_write();

@@ -691,15 +691,48 @@ int rtmp_server_context::rtmp_server_stop()
 
 int rtmp_server_context::rtmp_server_send_audio(const simple_rtmp::frame_buffer::ptr& frame)
 {
-    return 0;
+    struct rtmp_chunk_header_t header;
+    if (0 == args_->receiveAudio)
+    {
+        return 0;    // client don't want receive audio
+    }
+
+    header.fmt       = RTMP_CHUNK_TYPE_1;    // enable compact header
+    header.cid       = RTMP_CHANNEL_AUDIO;
+    header.timestamp = frame->pts;
+    header.length    = frame->payload.size();
+    header.type      = RTMP_TYPE_AUDIO;
+    header.stream_id = args_->stream_id;
+
+    return rtmp_chunk_write(&args_->rtmp, &header, (const uint8_t*)frame->payload.data());
 }
 
 int rtmp_server_context::rtmp_server_send_video(const simple_rtmp::frame_buffer::ptr& frame)
 {
-    return 0;
+    struct rtmp_chunk_header_t header;
+    if (0 == args_->receiveVideo)
+    {
+        return 0;    // client don't want receive video
+    }
+
+    header.fmt       = RTMP_CHUNK_TYPE_1;    // enable compact header
+    header.cid       = RTMP_CHANNEL_VIDEO;
+    header.timestamp = frame->pts;
+    header.length    = frame->payload.size();
+    header.type      = RTMP_TYPE_VIDEO;
+    header.stream_id = args_->stream_id;
+
+    return rtmp_chunk_write(&args_->rtmp, &header, (const uint8_t*)frame->payload.data());
 }
 
 int rtmp_server_context::rtmp_server_send_script(const simple_rtmp::frame_buffer::ptr& frame)
 {
-    return 0;
+    struct rtmp_chunk_header_t header;
+    header.fmt       = RTMP_CHUNK_TYPE_1;    // enable compact header
+    header.cid       = RTMP_CHANNEL_INVOKE;
+    header.timestamp = frame->pts;
+    header.length    = frame->payload.size();
+    header.type      = RTMP_TYPE_DATA;
+    header.stream_id = args_->stream_id;
+    return rtmp_chunk_write(&args_->rtmp, &header, (const uint8_t*)frame->payload.data());
 }

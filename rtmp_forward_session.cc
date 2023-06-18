@@ -4,27 +4,34 @@
 #include "log.h"
 #include "sink.h"
 #include "frame_buffer.h"
-#include "rtmp-server.h"
+#include "rtmp_server_context.h"
 
 using simple_rtmp::rtmp_forward_session;
+using simple_rtmp::rtmp_server_context;
+using simple_rtmp::rtmp_server_context_handler;
+using std::placeholders::_1;
+using std::placeholders::_2;
+using std::placeholders::_3;
+using std::placeholders::_4;
+using std::placeholders::_5;
 
 struct simple_rtmp::forward_args
 {
     std::string app;
     std::string stream;
-    rtmp_server_t* rtmp = nullptr;
+    rtmp_server_context* rtmp_ctx = nullptr;
 };
 
-rtmp_forward_session::rtmp_forward_session(simple_rtmp::executors::executor& ex) : ex_(ex), conn_(std::make_shared<tcp_connection>(ex_)), args_(std::make_shared<simple_rtmp::forward_args>())
+rtmp_forward_session::rtmp_forward_session(simple_rtmp::executors::executor& ex) : ex_(ex), conn_(std::make_shared<tcp_connection>(ex_))
 {
     LOG_DEBUG("create {}", static_cast<void*>(this));
 };
 
 rtmp_forward_session::~rtmp_forward_session()
 {
-    if (args_->rtmp != nullptr)
+    if (args_ && args_->rtmp_ctx != nullptr)
     {
-        rtmp_server_destroy(args_->rtmp);
+        args_->rtmp_ctx->rtmp_server_stop();
     }
     if (args_)
     {
@@ -40,16 +47,16 @@ boost::asio::ip::tcp::socket& rtmp_forward_session::socket()
 
 void rtmp_forward_session::start()
 {
-    struct rtmp_server_handler_t handler;
-    memset(&handler, 0, sizeof(handler));
-    handler.send          = rtmp_server_send;
-    handler.onplay        = rtmp_server_onplay;
-    handler.onpause       = rtmp_server_onpause;
-    handler.onseek        = rtmp_server_onseek;
-    handler.ongetduration = rtmp_server_ongetduration;
+    rtmp_server_context_handler ctx_handler;
+    ctx_handler.send          = std::bind(&rtmp_forward_session::rtmp_server_send, shared_from_this(), _1);
+    ctx_handler.onplay        = std::bind(&rtmp_forward_session::rtmp_server_onplay, shared_from_this(), _1, _2, _3, _4, _5);
+    ctx_handler.onpause       = std::bind(&rtmp_forward_session::rtmp_server_onpause, shared_from_this(), _1, _2);
+    ctx_handler.onseek        = std::bind(&rtmp_forward_session::rtmp_server_onseek, shared_from_this(), _1);
+    ctx_handler.ongetduration = std::bind(&rtmp_forward_session::rtmp_server_ongetduration, shared_from_this(), _1, _2, _3);
 
-    args_->rtmp = rtmp_server_create(this, &handler);
-    channel_    = std::make_shared<simple_rtmp::channel>();
+    args_           = std::make_shared<simple_rtmp::forward_args>();
+    args_->rtmp_ctx = new rtmp_server_context(std::move(ctx_handler));
+    channel_        = std::make_shared<simple_rtmp::channel>();
     channel_->set_output(std::bind(&rtmp_forward_session::channel_out, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
     conn_->set_read_cb(std::bind(&rtmp_forward_session::on_read, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
     conn_->set_write_cb(std::bind(&rtmp_forward_session::on_write, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
@@ -66,15 +73,15 @@ void rtmp_forward_session::channel_out(const frame_buffer::ptr& frame, const boo
     }
     if (frame->media == simple_rtmp::rtmp_tag::video)
     {
-        rtmp_server_send_video(args_->rtmp, frame->payload.data(), frame->payload.size(), frame->pts);
+        args_->rtmp_ctx->rtmp_server_send_video(frame);
     }
     else if (frame->media == simple_rtmp::rtmp_tag::audio)
     {
-        rtmp_server_send_audio(args_->rtmp, frame->payload.data(), frame->payload.size(), frame->pts);
+        args_->rtmp_ctx->rtmp_server_send_audio(frame);
     }
     else if (frame->media == simple_rtmp::rtmp_tag::script)
     {
-        rtmp_server_send_script(args_->rtmp, frame->payload.data(), frame->payload.size(), frame->pts);
+        args_->rtmp_ctx->rtmp_server_send_script(frame);
     }
 }
 
@@ -91,7 +98,7 @@ void rtmp_forward_session::on_read(const simple_rtmp::frame_buffer::ptr& frame, 
         shutdown();
         return;
     }
-    rtmp_server_input(args_->rtmp, frame->payload.data(), frame->payload.size());
+    args_->rtmp_ctx->rtmp_server_input(frame->payload.data(), frame->payload.size());
 }
 
 void rtmp_forward_session::on_write(const boost::system::error_code& ec, std::size_t /*bytes*/)
@@ -134,59 +141,48 @@ void rtmp_forward_session::safe_shutdown()
     }
 }
 
-int rtmp_forward_session::rtmp_server_send(void* param, const void* header, size_t len, const void* data, size_t bytes)
+int rtmp_forward_session::rtmp_server_send(const simple_rtmp::frame_buffer::ptr& frame)
 {
-    auto* self = static_cast<rtmp_forward_session*>(param);
-    auto frame = std::make_shared<simple_rtmp::frame_buffer>(len + bytes);
-    frame->append(header, len);
-    frame->append(data, bytes);
-    self->conn_->write_frame(frame);
-    return static_cast<int>(len + bytes);
+    conn_->write_frame(frame);
+    return static_cast<int>(frame->payload.size());
 }
 
-int rtmp_forward_session::rtmp_server_onplay(void* param, const char* app, const char* stream, double start, double duration, uint8_t reset)
+int rtmp_forward_session::rtmp_server_onplay(const std::string& app, const std::string& stream, double start, double duration, uint8_t reset)
 {
-    auto* self = static_cast<rtmp_forward_session*>(param);
+    std::string id = "rtmp_" + app + "_" + stream;
 
-    char id[1024] = {0};
-    snprintf(id, sizeof id, "rtmp_%s_%s", app, stream);
-
-    LOG_DEBUG("play {} app {} stream {} id {} start {} duration {} reset {} ", param, app, stream, id, start, duration, reset);
+    LOG_DEBUG("play app {} stream {} id {} start {} duration {} reset {} ", app, stream, id, start, duration, reset);
 
     auto s = sink::get(id);
     if (!s)
     {
         LOG_ERROR("not found sink {}", id);
-        self->shutdown();
+        shutdown();
         return 0;
     }
-    self->sink_         = s;
-    self->stream_id_    = id;
-    self->args_->app    = app;
-    self->args_->stream = stream;
-    s->add_channel(self->channel_);
+    sink_         = s;
+    stream_id_    = id;
+    args_->app    = app;
+    args_->stream = stream;
+    s->add_channel(channel_);
     return 0;
 }
 
-int rtmp_forward_session::rtmp_server_onpause(void* param, int pause, uint32_t ms)
+int rtmp_forward_session::rtmp_server_onpause(int pause, uint32_t ms)
 {
-    auto* self = static_cast<rtmp_forward_session*>(param);
-    LOG_DEBUG("pause {} {} {}ms ", param, pause, ms);
+    LOG_DEBUG("pause {} {} {}ms ", stream_id_, pause, ms);
     return 0;
 }
 
-int rtmp_forward_session::rtmp_server_onseek(void* param, uint32_t ms)
+int rtmp_forward_session::rtmp_server_onseek(uint32_t ms)
 {
-    auto* self = static_cast<rtmp_forward_session*>(param);
-    LOG_DEBUG("seek {} {}ms", param, ms);
+    LOG_DEBUG("seek {} {}ms", stream_id_, ms);
     return 0;
 }
 
-int rtmp_forward_session::rtmp_server_ongetduration(void* param, const char* app, const char* stream, double* duration)
+int rtmp_forward_session::rtmp_server_ongetduration(const std::string& app, const std::string& stream, double* duration)
 {
-    auto* self = static_cast<rtmp_forward_session*>(param);
-
-    LOG_DEBUG("get duration {} app {} stream {}", param, app, stream);
+    LOG_DEBUG("get duration {} app {} stream {}", stream_id_, app, stream);
     *duration = 30 * 60;
     return 0;
 }

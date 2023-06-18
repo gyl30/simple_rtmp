@@ -33,11 +33,11 @@ class rtmp_forward_session : public std::enable_shared_from_this<rtmp_forward_se
     void safe_shutdown();
 
    private:
-    static int rtmp_server_send(void*, const void*, size_t, const void*, size_t);
-    static int rtmp_server_onplay(void*, const char*, const char*, double, double, uint8_t);
-    static int rtmp_server_onpause(void*, int, uint32_t);
-    static int rtmp_server_onseek(void*, uint32_t);
-    static int rtmp_server_ongetduration(void*, const char*, const char*, double*);
+    int rtmp_server_send(const simple_rtmp::frame_buffer::ptr& frame);
+    int rtmp_server_onplay(const std::string& app, const std::string& stream, double start, double duration, uint8_t reset);
+    int rtmp_server_onpause(int, uint32_t);
+    int rtmp_server_onseek(uint32_t);
+    int rtmp_server_ongetduration(const std::string& app, const std::string& stream, double* duration);
 
    private:
     std::string stream_id_;
