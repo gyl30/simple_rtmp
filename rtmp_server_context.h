@@ -3,6 +3,7 @@
 
 #include <string>
 #include <functional>
+#include "frame_buffer.h"
 
 namespace simple_rtmp
 {
@@ -29,6 +30,9 @@ class rtmp_server_context
     int rtmp_server_start(int r, const std::string& msg);
     int rtmp_server_input(const uint8_t* data, size_t bytes);
     int rtmp_server_stop();
+    int rtmp_server_send_audio(const simple_rtmp::frame_buffer::ptr& frame);
+    int rtmp_server_send_video(const simple_rtmp::frame_buffer::ptr& frame);
+    int rtmp_server_send_script(const simple_rtmp::frame_buffer::ptr& frame);
 
    private:
     struct rtmp_server_context_args* args_;
