@@ -3,10 +3,6 @@
 
 #include <string>
 #include <functional>
-#include "rtmp-chunk-header.h"
-#include "rtmp-netconnection.h"
-#include "rtmp-netstream.h"
-#include "frame_buffer.h"
 
 namespace simple_rtmp
 {
