@@ -508,6 +508,65 @@ int rtmp_server_context::rtmp_server_start(int r, const std::string& msg)
 
 int rtmp_server_context::rtmp_server_input(const uint8_t* data, size_t bytes)
 {
+    int r;
+    size_t n;
+    const uint8_t* p;
+
+    p = data;
+    while (bytes > 0)
+    {
+        switch (args_->handshake_state)
+        {
+            case RTMP_HANDSHAKE_UNINIT:    // C0: version
+                args_->handshake_state = RTMP_HANDSHAKE_0;
+                args_->handshake_bytes = 0;    // clear buffer
+                assert(*p <= RTMP_VERSION);
+                bytes -= 1;
+                p += 1;
+                break;
+
+            case RTMP_HANDSHAKE_0:    // C1: 4-time + 4-zero + 1528-random
+                assert(RTMP_HANDSHAKE_SIZE > args_->handshake_bytes);
+                n = RTMP_HANDSHAKE_SIZE - args_->handshake_bytes;
+                n = n <= bytes ? n : bytes;
+                memcpy(args_->payload + args_->handshake_bytes, p, n);
+                args_->handshake_bytes += n;
+                bytes -= n;
+                p += n;
+
+                if (args_->handshake_bytes == RTMP_HANDSHAKE_SIZE)
+                {
+                    args_->handshake_state = RTMP_HANDSHAKE_1;
+                    args_->handshake_bytes = 0;    // clear buffer
+                    r                      = args_->rtmp_server_send_handshake(args_);
+                    if (0 != r)
+                        return r;
+                }
+                break;
+
+            case RTMP_HANDSHAKE_1:    // C2: 4-time + 4-time2 + 1528-echo
+                assert(RTMP_HANDSHAKE_SIZE > args_->handshake_bytes);
+                n = RTMP_HANDSHAKE_SIZE - args_->handshake_bytes;
+                n = n <= bytes ? n : bytes;
+                memcpy(args_->payload + args_->handshake_bytes, p, n);
+                args_->handshake_bytes += n;
+                bytes -= n;
+                p += n;
+
+                if (args_->handshake_bytes == RTMP_HANDSHAKE_SIZE)
+                {
+                    args_->handshake_state = RTMP_HANDSHAKE_2;
+                    args_->handshake_bytes = 0;    // clear buffer
+                }
+                break;
+
+            case RTMP_HANDSHAKE_2:
+            default:
+                args_->rtmp_server_send_acknowledgement(args_, bytes);
+                return rtmp_chunk_read(&args_->rtmp, (const uint8_t*)p, bytes);
+        }
+    }
+
     return 0;
 }
 
