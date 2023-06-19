@@ -409,9 +409,13 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_oncreate_stream(void* par
         ctx->stream_id = 1;
         // r = ctx->handler.oncreate_stream(ctx->param, &ctx->stream_id);
         if (0 == r)
+        {
             r = (int)(rtmp_netconnection_create_stream_reply(ctx->payload, sizeof(ctx->payload), transaction, ctx->stream_id) - ctx->payload);
+        }
         else
+        {
             r = (int)(rtmp_netconnection_error(ctx->payload, sizeof(ctx->payload), transaction, "NetConnection.CreateStream.Failed", RTMP_LEVEL_ERROR, "createStream failed.") - ctx->payload);
+        }
         r = rtmp_server_send_control(&ctx->rtmp, ctx->payload, r, 0 /*ctx->stream_id*/);    // must be 0
     }
 
@@ -467,7 +471,9 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_onpublish(void* param, in
 
         r = ctx->handler_.onpublish(ctx->info.app, stream_name, stream_type);
         if (RTMP_SERVER_ASYNC_START == r || 0 == ctx->start.play)
+        {
             return RTMP_SERVER_ASYNC_START == r ? 0 : r;
+        }
 
         r = ctx->ctx_->rtmp_server_start(r, "");
     }
@@ -591,10 +597,14 @@ int rtmp_server_context::rtmp_server_start(int r, const std::string& msg)
 
             // NetStream.Play.Reset
             if (args_->start.reset)
+            {
                 r = 0 == r ? args_->rtmp_server_send_onstatus(args_, args_->start.transaction, 0, "NetStream.Play.Reset", "NetStream.Play.Failed", "") : r;
+            }
 
             if (0 != r)
+            {
                 return r;
+            }
         }
 
         r = args_->rtmp_server_send_onstatus(args_, args_->start.transaction, r, "NetStream.Play.Start", !msg.empty() ? msg.data() : "NetStream.Play.Failed", "Start video on demand");
@@ -610,7 +620,9 @@ int rtmp_server_context::rtmp_server_start(int r, const std::string& msg)
             // User Control (StreamBegin)
             r = args_->rtmp_server_send_stream_begin(args_);
             if (0 != r)
+            {
                 return r;
+            }
         }
 
         r = args_->rtmp_server_send_onstatus(args_, args_->start.transaction, r, "NetStream.Publish.Start", !msg.empty() ? msg.data() : "NetStream.Publish.BadName", "");
@@ -654,7 +666,9 @@ int rtmp_server_context::rtmp_server_input(const uint8_t* data, size_t bytes)
                     args_->handshake_bytes = 0;    // clear buffer
                     r                      = args_->rtmp_server_send_handshake(args_);
                     if (0 != r)
+                    {
                         return r;
+                    }
                 }
                 break;
 
