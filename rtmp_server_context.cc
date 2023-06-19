@@ -161,7 +161,7 @@ int rtmp_chunk_write_help(simple_rtmp::rtmp_server_context_args* args, const str
 
     while (payloadSize > 0 && 0 == r)
     {
-        uint32_t chunkSize = payloadSize < args->rtmp.out_chunk_size ? payloadSize : args->rtmp.out_chunk_size;
+        uint32_t chunkSize = std::min(payloadSize, args->rtmp.out_chunk_size);
         auto frame         = std::make_shared<simple_rtmp::frame_buffer>();
         frame->append(p, headerSize);
         frame->append(payload, chunkSize);
@@ -174,8 +174,6 @@ int rtmp_chunk_write_help(simple_rtmp::rtmp_server_context_args* args, const str
         {
             r = 0;
         }
-        // r = rtmp->send(rtmp->param, p, headerSize, payload, chunkSize);    // callback
-
         payload += chunkSize;
         payloadSize -= chunkSize;
 
