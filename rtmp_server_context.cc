@@ -137,11 +137,10 @@ static const struct rtmp_chunk_header_t* rtmp_chunk_header_zip_help(struct rtmp_
     return &pkt->header;
 }
 
-int rtmp_chunk_write_help(struct rtmp_t* rtmp, const struct rtmp_chunk_header_t* h, const uint8_t* payload)
+int rtmp_chunk_write_help(struct rtmp_t* rtmp, const struct rtmp_chunk_header_t* h, const simple_rtmp::frame_buffer::ptr& frame)
 {
     int r = 0;
     uint8_t p[MAX_CHUNK_HEADER];
-    uint32_t chunkSize, headerSize, payloadSize;
     const struct rtmp_chunk_header_t* header;
 
     // compression rtmp chunk header
@@ -150,19 +149,20 @@ int rtmp_chunk_write_help(struct rtmp_t* rtmp, const struct rtmp_chunk_header_t*
     {
         return -EINVAL;    // invalid length
     }
-
-    payloadSize = header->length;
-    headerSize  = rtmp_chunk_basic_header_write(p, header->fmt, header->cid);
+    uint32_t headerSize = rtmp_chunk_basic_header_write(p, header->fmt, header->cid);
     headerSize += rtmp_chunk_message_header_write(p + headerSize, header);
     if (header->timestamp >= 0xFFFFFF)
     {
         headerSize += rtmp_chunk_extended_timestamp_write(p + headerSize, header->timestamp);
     }
 
+    const uint8_t* payload = frame->payload.data();
+    uint32_t payloadSize   = header->length;
+
     while (payloadSize > 0 && 0 == r)
     {
-        chunkSize = payloadSize < rtmp->out_chunk_size ? payloadSize : rtmp->out_chunk_size;
-        r         = rtmp->send(rtmp->param, p, headerSize, payload, chunkSize);    // callback
+        uint32_t chunkSize = payloadSize < rtmp->out_chunk_size ? payloadSize : rtmp->out_chunk_size;
+        r                  = rtmp->send(rtmp->param, p, headerSize, payload, chunkSize);    // callback
 
         payload += chunkSize;
         payloadSize -= chunkSize;
