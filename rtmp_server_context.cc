@@ -411,7 +411,6 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_oncreate_stream(void* par
     if (0 == r)
     {
         ctx->stream_id = 1;
-        // r = ctx->handler.oncreate_stream(ctx->param, &ctx->stream_id);
         if (0 == r)
         {
             r = (int)(rtmp_netconnection_create_stream_reply(ctx->payload, sizeof(ctx->payload), transaction, ctx->stream_id) - ctx->payload);
@@ -435,8 +434,7 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_ondelete_stream(void* par
     if (0 == r)
     {
         stream_id = ctx->stream_id = 0;    // clear stream id
-        // r = ctx->handler.ondelete_stream(ctx->param, (uint32_t)stream_id);
-        r = rtmp_server_send_onstatus(ctx, transaction, r, "NetStream.DeleteStream.Suceess", "NetStream.DeleteStream.Failed", "");
+        r                          = rtmp_server_send_onstatus(ctx, transaction, r, "NetStream.DeleteStream.Suceess", "NetStream.DeleteStream.Failed", "");
     }
 
     return r;
@@ -470,8 +468,8 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_onpublish(void* param, in
     {
         ctx->start.play        = RTMP_SERVER_ONPUBLISH;
         ctx->start.transaction = transaction;
-        snprintf(ctx->stream_name, sizeof(ctx->stream_name) - 1, "%s", stream_name ? stream_name : "");
-        snprintf(ctx->stream_type, sizeof(ctx->stream_type) - 1, "%s", stream_type ? stream_type : "");
+        snprintf(ctx->stream_name, sizeof(ctx->stream_name) - 1, "%s", stream_name != nullptr ? stream_name : "");
+        snprintf(ctx->stream_type, sizeof(ctx->stream_type) - 1, "%s", stream_type != nullptr ? stream_type : "");
 
         r = ctx->handler_.onpublish(ctx->info.app, stream_name, stream_type);
         if (RTMP_SERVER_ASYNC_START == r || 0 == ctx->start.play)
@@ -704,7 +702,7 @@ int rtmp_server_context::rtmp_server_input(const uint8_t* data, size_t bytes)
 
 int rtmp_server_context::rtmp_server_stop()
 {
-    assert(sizeof(args_->rtmp.in_packets) == sizeof(args_->rtmp.out_packets));
+    static_assert(sizeof(args_->rtmp.in_packets) == sizeof(args_->rtmp.out_packets));
     for (int i = 0; i < N_CHUNK_STREAM; i++)
     {
         assert(NULL == args_->rtmp.out_packets[i].payload);
