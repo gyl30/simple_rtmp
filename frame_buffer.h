@@ -28,7 +28,6 @@ struct frame_buffer
     frame_buffer(const uint8_t* data, std::size_t size) : payload(data, data + size)
     {
     }
-
     void append(const ptr& f)
     {
         media   = f->media;
@@ -41,15 +40,29 @@ struct frame_buffer
     }
     void append(const uint8_t* data, size_t len)
     {
+        if (data == nullptr)
+        {
+            return;
+        }
         payload.insert(payload.end(), data, data + len);
     }
     void append(const void* data, size_t len)
     {
+        if (data == nullptr)
+        {
+            return;
+        }
+
         append(static_cast<const uint8_t*>(data), len);
     }
 
     void append(const std::vector<uint8_t>& data)
     {
+        if (data.empty())
+        {
+            return;
+        }
+
         payload.insert(payload.end(), data.begin(), data.end());
     }
     void resize(size_t size)
