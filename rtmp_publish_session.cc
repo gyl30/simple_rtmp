@@ -2,13 +2,18 @@
 #include "socket.h"
 #include "rtmp_codec.h"
 #include "rtmp_publish_session.h"
+#include "rtmp_server_context.h"
 #include "rtmp-server.h"
 
 using simple_rtmp::rtmp_publish_session;
+using std::placeholders::_1;
+using std::placeholders::_2;
+using std::placeholders::_3;
+using std::placeholders::_4;
 
 struct simple_rtmp::publish_args
 {
-    rtmp_server_t* rtmp = nullptr;
+    rtmp_server_context* rtmp_ctx;
 };
 
 rtmp_publish_session::rtmp_publish_session(executors::executor& ex) : ex_(ex), conn_(std::make_shared<tcp_connection>(ex))
@@ -34,15 +39,14 @@ void rtmp_publish_session::start()
 }
 void rtmp_publish_session::startup()
 {
-    struct rtmp_server_handler_t handler;
-    memset(&handler, 0, sizeof(handler));
-    handler.send      = rtmp_do_send;
-    handler.onpublish = rtmp_on_publish;
-    handler.onscript  = rtmp_on_script;
-    handler.onvideo   = rtmp_on_video;
-    handler.onaudio   = rtmp_on_audio;
-    args_             = std::make_shared<publish_args>();
-    args_->rtmp       = rtmp_server_create(this, &handler);
+    simple_rtmp::rtmp_server_context_handler ctx_handler;
+    ctx_handler.send      = std::bind(&rtmp_publish_session::rtmp_do_send, shared_from_this(), _1);
+    ctx_handler.onpublish = std::bind(&rtmp_publish_session::rtmp_on_publish, shared_from_this(), _1, _2, _3);
+    ctx_handler.onscript  = std::bind(&rtmp_publish_session::rtmp_on_script, shared_from_this(), _1);
+    ctx_handler.onvideo   = std::bind(&rtmp_publish_session::rtmp_on_video, shared_from_this(), _1);
+    ctx_handler.onaudio   = std::bind(&rtmp_publish_session::rtmp_on_audio, shared_from_this(), _1);
+    args_                 = std::make_shared<publish_args>();
+    args_->rtmp_ctx       = new rtmp_server_context(std::move(ctx_handler));
 }
 
 void rtmp_publish_session::on_write(const boost::system::error_code& ec, std::size_t /*bytes*/)
@@ -71,7 +75,7 @@ void rtmp_publish_session::on_read(const simple_rtmp::frame_buffer::ptr& frame, 
         shutdown();
         return;
     }
-    rtmp_server_input(args_->rtmp, frame->payload.data(), frame->payload.size());
+    args_->rtmp_ctx->rtmp_server_input(frame->payload.data(), frame->payload.size());
 }
 
 void rtmp_publish_session::shutdown()
@@ -94,60 +98,36 @@ void rtmp_publish_session::safe_shutdown()
 }
 
 //
-int rtmp_publish_session::rtmp_do_send(void* param, const void* header, size_t len, const void* data, size_t bytes)
+int rtmp_publish_session::rtmp_do_send(const simple_rtmp::frame_buffer::ptr& frame)
 {
-    auto* self = static_cast<rtmp_publish_session*>(param);
-    auto frame = std::make_shared<simple_rtmp::frame_buffer>(len + bytes);
-    frame->append(header, len);
-    frame->append(data, bytes);
-    self->conn_->write_frame(frame);
-    return static_cast<int>(len) + static_cast<int>(bytes);
+    conn_->write_frame(frame);
+    return static_cast<int>(frame->payload.size());
 }
 
-int rtmp_publish_session::rtmp_on_publish(void* param, const char* app, const char* stream, const char* type)
+int rtmp_publish_session::rtmp_on_publish(const std::string& app, const std::string& stream, const std::string& type)
 {
-    auto* self    = static_cast<rtmp_publish_session*>(param);
-    self->app_    = app;
-    self->stream_ = stream;
-    char id[256]  = {0};
-    snprintf(id, sizeof(id), "%s_%s", app, stream);
-    self->source_ = std::make_shared<rtmp_source>(id, self->ex_);
+    app_           = app;
+    stream_        = stream;
+    std::string id = app + "_" + stream;
+    source_        = std::make_shared<rtmp_source>(id, ex_);
     LOG_DEBUG("publish app {} stream {} type {}", app, stream, type);
     return 0;
 }
 
-int rtmp_publish_session::rtmp_on_script(void* param, const void* script, size_t bytes, uint32_t timestamp)
+int rtmp_publish_session::rtmp_on_script(const simple_rtmp::frame_buffer::ptr& frame)
 {
-    auto* self = static_cast<rtmp_publish_session*>(param);
-    auto frame = std::make_shared<frame_buffer>(bytes);
-    frame->append(script, bytes);
-    frame->pts   = timestamp;
-    frame->dts   = timestamp;
-    frame->codec = simple_rtmp::rtmp_tag::script;
-    self->source_->write(frame, {});
+    source_->write(frame, {});
     return 0;
 }
 
-int rtmp_publish_session::rtmp_on_video(void* param, const void* data, size_t bytes, uint32_t timestamp)
+int rtmp_publish_session::rtmp_on_video(const simple_rtmp::frame_buffer::ptr& frame)
 {
-    auto* self = static_cast<rtmp_publish_session*>(param);
-    auto frame = std::make_shared<frame_buffer>(bytes);
-    frame->append(data, bytes);
-    frame->pts   = timestamp;
-    frame->dts   = timestamp;
-    frame->codec = simple_rtmp::rtmp_tag::video;
-    self->source_->write(frame, {});
+    source_->write(frame, {});
     return 0;
 }
 
-int rtmp_publish_session::rtmp_on_audio(void* param, const void* data, size_t bytes, uint32_t timestamp)
+int rtmp_publish_session::rtmp_on_audio(const simple_rtmp::frame_buffer::ptr& frame)
 {
-    auto* self = static_cast<rtmp_publish_session*>(param);
-    auto frame = std::make_shared<frame_buffer>(bytes);
-    frame->append(data, bytes);
-    frame->pts   = timestamp;
-    frame->dts   = timestamp;
-    frame->codec = simple_rtmp::rtmp_tag::audio;
-    self->source_->write(frame, {});
+    source_->write(frame, {});
     return 0;
 }

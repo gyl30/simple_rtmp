@@ -10,6 +10,7 @@ extern "C"
 #include "rtmp-chunk-header.h"
 }
 #include "frame_buffer.h"
+#include "rtmp_codec.h"
 #include "rtmp_server_context.h"
 #include <cerrno>
 #include <cstdio>
@@ -349,8 +350,9 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_onaudio(void* param, cons
     simple_rtmp::rtmp_server_context_args* ctx = (simple_rtmp::rtmp_server_context_args*)param;
     auto frame                                 = std::make_shared<simple_rtmp::frame_buffer>();
     frame->append(data, bytes);
-    frame->pts = timestamp;
-    frame->dts = timestamp;
+    frame->pts   = timestamp;
+    frame->dts   = timestamp;
+    frame->codec = simple_rtmp::rtmp_tag::audio;
     return ctx->handler_.onaudio(frame);
 }
 
@@ -359,8 +361,9 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_onvideo(void* param, cons
     simple_rtmp::rtmp_server_context_args* ctx = (simple_rtmp::rtmp_server_context_args*)param;
     auto frame                                 = std::make_shared<simple_rtmp::frame_buffer>();
     frame->append(data, bytes);
-    frame->pts = timestamp;
-    frame->dts = timestamp;
+    frame->pts   = timestamp;
+    frame->dts   = timestamp;
+    frame->codec = simple_rtmp::rtmp_tag::video;
     return ctx->handler_.onvideo(frame);
 }
 
@@ -369,8 +372,9 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_onscript(void* param, con
     simple_rtmp::rtmp_server_context_args* ctx = (simple_rtmp::rtmp_server_context_args*)param;
     auto frame                                 = std::make_shared<simple_rtmp::frame_buffer>();
     frame->append(data, bytes);
-    frame->pts = timestamp;
-    frame->dts = timestamp;
+    frame->pts   = timestamp;
+    frame->dts   = timestamp;
+    frame->codec = simple_rtmp::rtmp_tag::script;
     return ctx->handler_.onscript(frame);
 }
 

@@ -33,11 +33,11 @@ class rtmp_publish_session : public std::enable_shared_from_this<rtmp_publish_se
     void safe_shutdown();
 
    private:
-    static int rtmp_do_send(void* param, const void* header, size_t len, const void* data, size_t bytes);
-    static int rtmp_on_publish(void* param, const char* app, const char* stream, const char* type);
-    static int rtmp_on_script(void* param, const void* script, size_t bytes, uint32_t timestamp);
-    static int rtmp_on_video(void* param, const void* data, size_t bytes, uint32_t timestamp);
-    static int rtmp_on_audio(void* param, const void* data, size_t bytes, uint32_t timestamp);
+    int rtmp_do_send(const simple_rtmp::frame_buffer::ptr& frame);
+    int rtmp_on_publish(const std::string& app, const std::string& stream, const std::string& type);
+    int rtmp_on_script(const simple_rtmp::frame_buffer::ptr& frame);
+    int rtmp_on_video(const simple_rtmp::frame_buffer::ptr& frame);
+    int rtmp_on_audio(const simple_rtmp::frame_buffer::ptr& frame);
 
    private:
     std::string app_;
