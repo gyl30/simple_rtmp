@@ -9,42 +9,202 @@
 namespace simple_rtmp
 {
 
-struct frame_buffer
+class frame_buffer
 {
-    using ptr     = std::shared_ptr<frame_buffer>;
-    int32_t media = 0;
-    int32_t codec = 0;
-    int32_t flag  = 0;
-    int64_t pts   = 0;
-    int64_t dts   = 0;
-    std::vector<uint8_t> payload;
-    std::any context;
+   public:
+    virtual ~frame_buffer() = default;
+
+   public:
+    virtual const uint8_t* data() = 0;
+    virtual std::size_t size()    = 0;
+
+   public:
+    virtual int32_t media()               = 0;
+    virtual int32_t codec()               = 0;
+    virtual int32_t flag()                = 0;
+    virtual int64_t pts()                 = 0;
+    virtual int64_t dts()                 = 0;
+    virtual void set_media(int32_t media) = 0;
+    virtual void set_codec(int32_t codec) = 0;
+    virtual void set_flag(int32_t flag)   = 0;
+    virtual void set_pts(int64_t pts)     = 0;
+    virtual void set_dts(int64_t dts)     = 0;
+};
+class ref_frame_buffer : public frame_buffer
+{
+   public:
+    using ptr = std::shared_ptr<ref_frame_buffer>;
+
+   public:
+    ref_frame_buffer(const uint8_t* data, std::size_t size, const std::shared_ptr<frame_buffer>& ref) : ref_data_(data), ref_data_size_(size), ref_(ref)
+    {
+    }
+    ~ref_frame_buffer() override = default;
+
+   public:
+    const uint8_t* data() override
+    {
+        return ref_data_;
+    }
+    size_t size() override
+    {
+        return ref_data_size_;
+    }
+    int32_t media() override
+    {
+        return ref_->media();
+    }
+    int32_t codec() override
+    {
+        return ref_->codec();
+    }
+    int32_t flag() override
+    {
+        return ref_->flag();
+    }
+    int64_t pts() override
+    {
+        return ref_->pts();
+    }
+    int64_t dts() override
+    {
+        return ref_->dts();
+    }
+    void set_media(int32_t media) override
+    {
+        ref_->set_media(media);
+    }
+    void set_codec(int32_t codec) override
+    {
+        ref_->set_codec(codec);
+    }
+    void set_flag(int32_t flag) override
+    {
+        ref_->set_flag(flag);
+    }
+    void set_pts(int64_t pts) override
+    {
+        ref_->set_pts(pts);
+    }
+    void set_dts(int64_t dts) override
+    {
+        ref_->set_dts(dts);
+    }
+
+   private:
+    const uint8_t* ref_data_           = nullptr;
+    std::size_t ref_data_size_         = 0;
+    std::shared_ptr<frame_buffer> ref_ = nullptr;
+};
+
+class fixed_frame_buffer : public frame_buffer
+{
+   public:
+    using ptr = std::shared_ptr<fixed_frame_buffer>;
+
+   private:
+    int32_t media_ = 0;
+    int32_t codec_ = 0;
+    int32_t flag_  = 0;
+    int64_t pts_   = 0;
+    int64_t dts_   = 0;
+    std::vector<uint8_t> payload_;
+
+   private:
     //
-    frame_buffer() = default;
-    explicit frame_buffer(std::size_t size)
+    fixed_frame_buffer() = default;
+    explicit fixed_frame_buffer(std::size_t size)
     {
-        payload.reserve(size);
+        payload_.reserve(size);
     }
-    frame_buffer(const uint8_t* data, std::size_t size) : payload(data, data + size)
+    fixed_frame_buffer(const uint8_t* data, std::size_t size) : payload_(data, data + size)
     {
     }
-    void append(const ptr& f)
+    fixed_frame_buffer(const void* data, std::size_t size) : fixed_frame_buffer(static_cast<const uint8_t*>(data), size)
     {
-        media   = f->media;
-        codec   = f->codec;
-        flag    = f->flag;
-        pts     = f->pts;
-        dts     = f->dts;
-        context = f->context;
-        append(f->payload);
     }
+
+   public:
+    ~fixed_frame_buffer() override = default;
+
+   public:
+    static ptr create()
+    {
+        ptr f;
+        return f;
+    }
+    static ptr create(std::size_t size)
+    {
+        ptr f(new fixed_frame_buffer(size));
+        return f;
+    }
+    static ptr create(const uint8_t* data, std::size_t size)
+    {
+        ptr f(new fixed_frame_buffer(data, size));
+        return f;
+    }
+    static ptr create(const void* data, std::size_t size)
+    {
+        ptr f(new fixed_frame_buffer(data, size));
+        return f;
+    }
+
+    const uint8_t* data() override
+    {
+        return payload_.data();
+    }
+    size_t size() override
+    {
+        return payload_.size();
+    }
+    int32_t media() override
+    {
+        return media_;
+    }
+    int32_t codec() override
+    {
+        return codec_;
+    }
+    int32_t flag() override
+    {
+        return flag_;
+    }
+    int64_t pts() override
+    {
+        return pts_;
+    }
+    int64_t dts() override
+    {
+        return dts_;
+    }
+    void set_media(int32_t media) override
+    {
+        media_ = media;
+    }
+    void set_codec(int32_t codec) override
+    {
+        codec_ = codec;
+    }
+    void set_flag(int32_t flag) override
+    {
+        flag_ = flag;
+    }
+    void set_pts(int64_t pts) override
+    {
+        pts_ = pts;
+    }
+    void set_dts(int64_t dts) override
+    {
+        dts_ = dts;
+    }
+
     void append(const uint8_t* data, size_t len)
     {
         if (data == nullptr)
         {
             return;
         }
-        payload.insert(payload.end(), data, data + len);
+        payload_.insert(payload_.end(), data, data + len);
     }
     void append(const void* data, size_t len)
     {
@@ -62,12 +222,11 @@ struct frame_buffer
         {
             return;
         }
-
-        payload.insert(payload.end(), data.begin(), data.end());
+        payload_.insert(payload_.end(), data.begin(), data.end());
     }
     void resize(size_t size)
     {
-        payload.resize(size);
+        payload_.resize(size);
     }
 };
 }    // namespace simple_rtmp
