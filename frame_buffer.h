@@ -18,8 +18,9 @@ class frame_buffer
     virtual ~frame_buffer() = default;
 
    public:
-    virtual const uint8_t* data() = 0;
-    virtual std::size_t size()    = 0;
+    virtual uint8_t* data()             = 0;
+    virtual const uint8_t* data() const = 0;
+    virtual std::size_t size()          = 0;
 
    public:
     virtual int32_t media()               = 0;
@@ -39,13 +40,21 @@ class ref_frame_buffer : public frame_buffer
     using ptr = std::shared_ptr<ref_frame_buffer>;
 
    public:
-    ref_frame_buffer(const uint8_t* data, std::size_t size, const std::shared_ptr<frame_buffer>& ref) : ref_data_(data), ref_data_size_(size), ref_(ref)
+    ref_frame_buffer(const uint8_t* data, std::size_t size, const std::shared_ptr<frame_buffer>& ref) : ref_data_(const_cast<uint8_t*>(data)), ref_data_size_(size), ref_(ref)
     {
     }
+    ref_frame_buffer(uint8_t* data, std::size_t size, const std::shared_ptr<frame_buffer>& ref) : ref_data_(data), ref_data_size_(size), ref_(ref)
+    {
+    }
+
     ~ref_frame_buffer() override = default;
 
    public:
-    const uint8_t* data() override
+    uint8_t* data() override
+    {
+        return ref_data_;
+    }
+    const uint8_t* data() const override
     {
         return ref_data_;
     }
@@ -95,7 +104,7 @@ class ref_frame_buffer : public frame_buffer
     }
 
    private:
-    const uint8_t* ref_data_           = nullptr;
+    uint8_t* ref_data_                 = nullptr;
     std::size_t ref_data_size_         = 0;
     std::shared_ptr<frame_buffer> ref_ = nullptr;
 };
@@ -133,7 +142,7 @@ class fixed_frame_buffer : public frame_buffer
    public:
     static ptr create()
     {
-        ptr f;
+        ptr f(new fixed_frame_buffer());
         return f;
     }
     static ptr create(std::size_t size)
@@ -152,7 +161,11 @@ class fixed_frame_buffer : public frame_buffer
         return f;
     }
 
-    const uint8_t* data() override
+    uint8_t* data() override
+    {
+        return payload_.data();
+    }
+    const uint8_t* data() const override
     {
         return payload_.data();
     }
@@ -219,6 +232,24 @@ class fixed_frame_buffer : public frame_buffer
         append(static_cast<const uint8_t*>(data), len);
     }
 
+    void append(const frame_buffer::ptr& frame)
+    {
+        if (!frame)
+        {
+            return;
+        }
+
+        append(frame->data(), frame->size());
+    }
+    void append(const ptr& frame)
+    {
+        if (!frame)
+        {
+            return;
+        }
+
+        append(frame->payload_);
+    }
     void append(const std::vector<uint8_t>& data)
     {
         if (data.empty())

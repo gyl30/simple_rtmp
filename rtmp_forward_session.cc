@@ -7,8 +7,6 @@
 #include "rtmp_server_context.h"
 
 using simple_rtmp::rtmp_forward_session;
-using simple_rtmp::rtmp_server_context;
-using simple_rtmp::rtmp_server_context_handler;
 using std::placeholders::_1;
 using std::placeholders::_2;
 using std::placeholders::_3;
@@ -71,15 +69,15 @@ void rtmp_forward_session::channel_out(const frame_buffer::ptr& frame, const boo
         shutdown();
         return;
     }
-    if (frame->media == simple_rtmp::rtmp_tag::video)
+    if (frame->media() == simple_rtmp::rtmp_tag::video)
     {
         args_->rtmp_ctx->rtmp_server_send_video(frame);
     }
-    else if (frame->media == simple_rtmp::rtmp_tag::audio)
+    else if (frame->media() == simple_rtmp::rtmp_tag::audio)
     {
         args_->rtmp_ctx->rtmp_server_send_audio(frame);
     }
-    else if (frame->media == simple_rtmp::rtmp_tag::script)
+    else if (frame->media() == simple_rtmp::rtmp_tag::script)
     {
         args_->rtmp_ctx->rtmp_server_send_script(frame);
     }
@@ -98,7 +96,7 @@ void rtmp_forward_session::on_read(const simple_rtmp::frame_buffer::ptr& frame, 
         shutdown();
         return;
     }
-    args_->rtmp_ctx->rtmp_server_input(frame->payload.data(), frame->payload.size());
+    args_->rtmp_ctx->rtmp_server_input(frame->data(), frame->size());
 }
 
 void rtmp_forward_session::on_write(const boost::system::error_code& ec, std::size_t /*bytes*/)
@@ -144,7 +142,7 @@ void rtmp_forward_session::safe_shutdown()
 int rtmp_forward_session::rtmp_server_send(const simple_rtmp::frame_buffer::ptr& frame)
 {
     conn_->write_frame(frame);
-    return static_cast<int>(frame->payload.size());
+    return static_cast<int>(frame->size());
 }
 
 int rtmp_forward_session::rtmp_server_onplay(const std::string& app, const std::string& stream, double start, double duration, uint8_t reset)

@@ -1,15 +1,13 @@
-#include "log.h"
-#include "socket.h"
-#include "rtmp_codec.h"
 #include "rtmp_publish_session.h"
 #include "rtmp_server_context.h"
-#include "rtmp-server.h"
+#include "rtmp_codec.h"
+#include "socket.h"
+#include "log.h"
 
 using simple_rtmp::rtmp_publish_session;
 using std::placeholders::_1;
 using std::placeholders::_2;
 using std::placeholders::_3;
-using std::placeholders::_4;
 
 struct simple_rtmp::publish_args
 {
@@ -75,7 +73,7 @@ void rtmp_publish_session::on_read(const simple_rtmp::frame_buffer::ptr& frame, 
         shutdown();
         return;
     }
-    args_->rtmp_ctx->rtmp_server_input(frame->payload.data(), frame->payload.size());
+    args_->rtmp_ctx->rtmp_server_input(frame->data(), frame->size());
 }
 
 void rtmp_publish_session::shutdown()
@@ -101,7 +99,7 @@ void rtmp_publish_session::safe_shutdown()
 int rtmp_publish_session::rtmp_do_send(const simple_rtmp::frame_buffer::ptr& frame)
 {
     conn_->write_frame(frame);
-    return static_cast<int>(frame->payload.size());
+    return static_cast<int>(frame->size());
 }
 
 int rtmp_publish_session::rtmp_on_publish(const std::string& app, const std::string& stream, const std::string& type)

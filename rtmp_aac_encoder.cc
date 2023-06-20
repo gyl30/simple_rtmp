@@ -47,7 +47,7 @@ void rtmp_aac_encoder::write(const frame_buffer::ptr &frame, const boost::system
         on_frame(frame, ec);
         return;
     }
-    int n = mpeg4_aac_adts_load(frame->payload.data(), frame->payload.size(), &args_->aac);
+    int n = mpeg4_aac_adts_load(frame->data(), frame->size(), &args_->aac);
     if (n <= 0)
     {
         return;
@@ -63,33 +63,33 @@ void rtmp_aac_encoder::write(const frame_buffer::ptr &frame, const boost::system
     audio.channels = 1;    // Stereo sound
     if (args_->audio_sequence_header == 0)
     {
-        auto aac_frame   = std::make_shared<frame_buffer>();
-        aac_frame->pts   = frame->pts;
-        aac_frame->dts   = frame->dts;
-        aac_frame->codec = kCodecId;
-        aac_frame->media = kFrameTag;
-        aac_frame->resize(frame->payload.size() + 4);
+        auto aac_frame = fixed_frame_buffer::create();
+        aac_frame->set_pts(frame->pts());
+        aac_frame->set_dts(frame->dts());
+        aac_frame->set_codec(kCodecId);
+        aac_frame->set_media(kFrameTag);
+        aac_frame->resize(frame->size() + 4);
 
         audio.avpacket               = sequence_header;
         args_->audio_sequence_header = 1;    // once only
-        flv_audio_tag_header_write(&audio, aac_frame->payload.data(), aac_frame->payload.size());
-        n = mpeg4_aac_audio_specific_config_save(&args_->aac, aac_frame->payload.data() + 2, aac_frame->payload.size() - 2);
+        flv_audio_tag_header_write(&audio, aac_frame->data(), aac_frame->size());
+        n = mpeg4_aac_audio_specific_config_save(&args_->aac, aac_frame->data() + 2, aac_frame->size() - 2);
         aac_frame->resize(n + 2);
         on_frame(aac_frame, {});
     }
-    audio.avpacket   = avpacket;
-    auto aac_frame   = std::make_shared<frame_buffer>();
-    aac_frame->pts   = frame->pts;
-    aac_frame->dts   = frame->dts;
-    aac_frame->codec = kCodecId;
-    aac_frame->media = kFrameTag;
-    aac_frame->resize(frame->payload.size() + 4);
-    int m = flv_audio_tag_header_write(&audio, aac_frame->payload.data(), aac_frame->payload.size());
+    audio.avpacket = avpacket;
+    auto aac_frame = fixed_frame_buffer::create();
+    aac_frame->set_pts(frame->pts());
+    aac_frame->set_dts(frame->dts());
+    aac_frame->set_codec(kCodecId);
+    aac_frame->set_media(kFrameTag);
+    aac_frame->resize(frame->size() + 4);
+    int m = flv_audio_tag_header_write(&audio, aac_frame->data(), aac_frame->size());
     if (m == -1)
     {
         return;
     }
     aac_frame->resize(m);
-    aac_frame->append(frame->payload.data() + n, frame->payload.size() - n);
+    aac_frame->append(frame->data() + n, frame->size() - n);
     on_frame(aac_frame, {});
 }

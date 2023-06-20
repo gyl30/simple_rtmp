@@ -54,21 +54,21 @@ void rtmp_h264_encoder::write(const frame_buffer::ptr &frame, const boost::syste
 
     const static uint8_t kCodecId  = simple_rtmp::rtmp_codec::h264;
     const static uint8_t kFrameTag = simple_rtmp::rtmp_tag::video;
-    const uint8_t *data            = frame->payload.data();
-    size_t size                    = frame->payload.size();
-    auto avc_frame                 = std::make_shared<frame_buffer>();
-    avc_frame->resize(frame->payload.size() + sizeof(args_->avc));
+    const uint8_t *data            = frame->data();
+    size_t size                    = frame->size();
+    auto avc_frame                 = fixed_frame_buffer::create();
+    avc_frame->resize(frame->size() + sizeof(args_->avc));
 
-    int ret = h264_annexbtomp4(&args_->avc, data, size, avc_frame->payload.data(), avc_frame->payload.size(), &args_->vcl, &args_->update);
+    int ret = h264_annexbtomp4(&args_->avc, data, size, avc_frame->data(), avc_frame->size(), &args_->vcl, &args_->update);
     if (ret <= 0)
     {
         return;
     }
     avc_frame->resize(ret);
-    avc_frame->pts                 = frame->pts;
-    avc_frame->dts                 = frame->dts;
-    avc_frame->codec               = kCodecId;
-    avc_frame->media               = kFrameTag;
+    avc_frame->set_pts(frame->pts());
+    avc_frame->set_dts(frame->dts());
+    avc_frame->set_codec(kCodecId);
+    avc_frame->set_media(kFrameTag);
     const static int kBufferSize   = 4096;
     const static int kVideoTagSize = 5;
 
@@ -87,13 +87,13 @@ void rtmp_h264_encoder::write(const frame_buffer::ptr &frame, const boost::syste
             LOG_DEBUG("rtmp encoder configuration record save failed {}", ret);
             return;
         }
-        auto config_frame = std::make_shared<frame_buffer>();
+        auto config_frame = fixed_frame_buffer::create();
         config_frame->append(buf, ret + kVideoTagSize);
-        config_frame->pts            = frame->pts;
-        config_frame->dts            = frame->dts;
-        config_frame->codec          = kCodecId;
-        config_frame->media          = kFrameTag;
-        config_frame->flag           = 1;
+        config_frame->set_pts(frame->pts());
+        config_frame->set_dts(frame->dts());
+        config_frame->set_codec(kCodecId);
+        config_frame->set_media(kFrameTag);
+        config_frame->set_flag(1);
         args_->video_sequence_header = 1;
         on_frame(config_frame, {});
     }
@@ -106,16 +106,16 @@ void rtmp_h264_encoder::write(const frame_buffer::ptr &frame, const boost::syste
         buf[2]                     = (0 >> 16) & 0xFF;
         buf[3]                     = (0 >> 8) & 0xFF;
         buf[4]                     = 0 & 0xFF;
-        auto header_frame          = std::make_shared<frame_buffer>();
+        auto header_frame          = fixed_frame_buffer::create();
         header_frame->append(buf, kVideoTagSize);
-        header_frame->pts   = frame->pts;
-        header_frame->dts   = frame->dts;
-        header_frame->codec = kCodecId;
-        header_frame->media = kFrameTag;
-        auto encode_frame   = std::make_shared<frame_buffer>();
+        header_frame->set_pts(frame->pts());
+        header_frame->set_dts(frame->dts());
+        header_frame->set_codec(kCodecId);
+        header_frame->set_media(kFrameTag);
+        auto encode_frame = fixed_frame_buffer::create();
         encode_frame->append(header_frame);
         encode_frame->append(avc_frame);
-        encode_frame->flag = keyframe == 1 ? 1 : 0;
+        encode_frame->set_flag(keyframe == 1 ? 1 : 0);
         on_frame(encode_frame, {});
     }
 }

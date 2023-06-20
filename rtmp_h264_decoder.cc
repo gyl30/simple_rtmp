@@ -51,8 +51,8 @@ void rtmp_h264_decoder::write(const frame_buffer::ptr& frame, boost::system::err
         return;
     }
 
-    const uint8_t* data = frame->payload.data();
-    size_t bytes        = frame->payload.size();
+    const uint8_t* data = frame->data();
+    size_t bytes        = frame->size();
 
     struct flv_video_tag_header_t video;
     int n = flv_video_tag_header_read(&video, data, bytes);
@@ -83,7 +83,7 @@ void rtmp_h264_decoder::write(const frame_buffer::ptr& frame, boost::system::err
     {
         return;
     }
-    demuxer_avpacket(data, bytes, frame->pts, video.cts, video.keyframe == 1 ? 1 : 0);
+    demuxer_avpacket(data, bytes, frame->pts(), video.cts, video.keyframe == 1 ? 1 : 0);
 }
 
 static int h264_sps_pps_size(const struct mpeg4_avc_t* avc)
@@ -129,14 +129,14 @@ void rtmp_h264_decoder::demuxer_avpacket(const uint8_t* data, size_t bytes, int6
         if (nalu_type == 5 && args_->sps_pps_flag == 0)    // idr
         {
             int avc_length = h264_sps_pps_size(&args_->avc);
-            auto frame     = std::make_shared<frame_buffer>(avc_length);
-            frame->media   = simple_rtmp::rtmp_tag::video;
-            frame->codec   = simple_rtmp::rtmp_codec::h264;
-            frame->flag    = keyframe;
-            frame->pts     = timestamp + cts;
-            frame->dts     = timestamp;
+            auto frame     = fixed_frame_buffer::create(avc_length);
+            frame->set_media(simple_rtmp::rtmp_tag::video);
+            frame->set_codec(simple_rtmp::rtmp_codec::h264);
+            frame->set_flag(keyframe);
+            frame->set_pts(timestamp + cts);
+            frame->set_dts(timestamp);
             frame->resize(avc_length);
-            int n = mpeg4_avc_to_nalu(&args_->avc, frame->payload.data(), frame->payload.size());
+            int n = mpeg4_avc_to_nalu(&args_->avc, frame->data(), frame->size());
             if (n <= 0)
             {
                 return;
@@ -146,19 +146,18 @@ void rtmp_h264_decoder::demuxer_avpacket(const uint8_t* data, size_t bytes, int6
         }
 
         const static uint8_t header[] = {0x00, 0x00, 0x00, 0x01};
-        auto frame                    = std::make_shared<frame_buffer>(nalu_size + 4);
-        frame->media                  = simple_rtmp::rtmp_tag::video;
-        frame->codec                  = simple_rtmp::rtmp_codec::h264;
-        frame->pts                    = timestamp + cts;
-        frame->dts                    = timestamp;
-        frame->flag                   = keyframe;
+        auto frame                    = fixed_frame_buffer::create(nalu_size + 4);
+        frame->set_media(simple_rtmp::rtmp_tag::video);
+        frame->set_codec(simple_rtmp::rtmp_codec::h264);
+        frame->set_pts(timestamp + cts);
+        frame->set_dts(timestamp);
+        frame->set_flag(keyframe);
         frame->append(header, sizeof header);
         frame->append(data_offset + args_->avc.nalu, nalu_size);
         frames.push_back(frame);
         offset = offset + args_->avc.nalu + nalu_size;
     }
-    auto raw_frame = std::make_shared<frame_buffer>();
-
+    auto raw_frame = fixed_frame_buffer::create();
     for (const auto& frame : frames)
     {
         raw_frame->append(frame);

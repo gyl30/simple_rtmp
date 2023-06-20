@@ -32,15 +32,15 @@ void rtmp_demuxer::write(const frame_buffer::ptr& frame, const boost::system::er
         demuxer_audio(frame, ec);
         return;
     }
-    if (frame->codec == simple_rtmp::rtmp_tag::script)
+    if (frame->codec() == simple_rtmp::rtmp_tag::script)
     {
         demuxer_script(frame, ec);
     }
-    else if (frame->codec == simple_rtmp::rtmp_tag::video)
+    else if (frame->codec() == simple_rtmp::rtmp_tag::video)
     {
         demuxer_video(frame, ec);
     }
-    else if (frame->codec == simple_rtmp::rtmp_tag::audio)
+    else if (frame->codec() == simple_rtmp::rtmp_tag::audio)
     {
         demuxer_audio(frame, ec);
     }
@@ -67,8 +67,8 @@ void rtmp_demuxer::demuxer_script(const frame_buffer::ptr& frame, const boost::s
     {
         return;
     }
-    const uint8_t* data = frame->payload.data();
-    size_t bytes        = frame->payload.size();
+    const uint8_t* data = frame->data();
+    size_t bytes        = frame->size();
     const uint8_t* end;
     char buffer[64]        = {0};
     double audiocodecid    = 0;
@@ -91,12 +91,12 @@ void rtmp_demuxer::demuxer_script(const frame_buffer::ptr& frame, const boost::s
 
 #define AMF_OBJECT_ITEM_VALUE(v, amf_type, amf_name, amf_value, amf_size) \
     {                                                                     \
-        v.type  = amf_type;                                               \
-        v.name  = amf_name;                                               \
-        v.value = amf_value;                                              \
-        v.size  = amf_size;                                               \
+        (v).type  = amf_type;                                             \
+        (v).name  = amf_name;                                             \
+        (v).value = amf_value;                                            \
+        (v).size  = amf_size;                                             \
     }
-    AMF_OBJECT_ITEM_VALUE(keyframes[0], AMF_STRICT_ARRAY, "filepositions", NULL, 0);    // ignore keyframes
+    AMF_OBJECT_ITEM_VALUE(keyframes[0], AMF_STRICT_ARRAY, "filepositions", nullptr, 0);    // ignore keyframes
     AMF_OBJECT_ITEM_VALUE(keyframes[1], AMF_STRICT_ARRAY, "times", nullptr, 0);
 
     AMF_OBJECT_ITEM_VALUE(prop[0], AMF_NUMBER, "audiocodecid", &audiocodecid, sizeof(audiocodecid));

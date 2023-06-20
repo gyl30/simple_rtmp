@@ -106,7 +106,7 @@ static const struct rtmp_chunk_header_t* rtmp_chunk_header_zip_help(struct rtmp_
 
     // find previous chunk header
     struct rtmp_packet_t* pkt = rtmp_packet_find_help(rtmp, h.cid);
-    if (NULL == pkt)
+    if (nullptr == pkt)
     {
         // pkt = rtmp_packet_create(rtmp, h.cid);
         // if (NULL == pkt)
@@ -157,17 +157,17 @@ int rtmp_chunk_write_help(simple_rtmp::rtmp_server_context_args* args, const str
         headerSize += rtmp_chunk_extended_timestamp_write(p + headerSize, header->timestamp);
     }
 
-    const uint8_t* payload = frame->payload.data();
+    const uint8_t* payload = frame->data();
     uint32_t payloadSize   = header->length;
 
     while (payloadSize > 0 && 0 == r)
     {
         uint32_t chunkSize = std::min(payloadSize, args->rtmp.out_chunk_size);
-        auto frame         = std::make_shared<simple_rtmp::frame_buffer>();
+        auto frame         = simple_rtmp::fixed_frame_buffer::create();
         frame->append(p, headerSize);
         frame->append(payload, chunkSize);
         int ret = args->handler_.send(frame);
-        if (ret != frame->payload.size())
+        if (ret != frame->size())
         {
             r = -1;
         }
@@ -252,7 +252,7 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_send_handshake(simple_rtm
     n += rtmp_handshake_s1(ctx->handshake + n, (uint32_t)time(NULL), ctx->payload, RTMP_HANDSHAKE_SIZE);
     n += rtmp_handshake_s2(ctx->handshake + n, (uint32_t)time(NULL), ctx->payload, RTMP_HANDSHAKE_SIZE);
     assert(n == 1 + RTMP_HANDSHAKE_SIZE + RTMP_HANDSHAKE_SIZE);
-    auto frame = std::make_shared<simple_rtmp::frame_buffer>();
+    auto frame = fixed_frame_buffer::create();
     frame->append(ctx->handshake, n);
     int r = ctx->handler_.send(frame);
     return n == r ? 0 : r;
@@ -262,7 +262,7 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_send_handshake(simple_rtm
 int simple_rtmp::rtmp_server_context_args::rtmp_server_send_set_chunk_size(simple_rtmp::rtmp_server_context_args* ctx)
 {
     int n      = rtmp_set_chunk_size(ctx->payload, sizeof(ctx->payload), RTMP_OUTPUT_CHUNK_SIZE);
-    auto frame = std::make_shared<simple_rtmp::frame_buffer>();
+    auto frame = fixed_frame_buffer::create();
     frame->append(ctx->payload, n);
     int r                    = ctx->handler_.send(frame);
     ctx->rtmp.out_chunk_size = RTMP_OUTPUT_CHUNK_SIZE;
@@ -276,7 +276,7 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_send_acknowledgement(simp
     if (ctx->rtmp.window_size && ctx->recv_bytes[0] - ctx->recv_bytes[1] > ctx->rtmp.window_size)
     {
         int n      = rtmp_acknowledgement(ctx->payload, sizeof(ctx->payload), ctx->recv_bytes[0]);
-        auto frame = std::make_shared<simple_rtmp::frame_buffer>();
+        auto frame = fixed_frame_buffer::create();
         frame->append(ctx->payload, n);
         int r              = ctx->handler_.send(frame);
         ctx->recv_bytes[1] = ctx->recv_bytes[0];
@@ -289,7 +289,7 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_send_acknowledgement(simp
 int simple_rtmp::rtmp_server_context_args::rtmp_server_send_server_bandwidth(simple_rtmp::rtmp_server_context_args* ctx)
 {
     int n      = rtmp_window_acknowledgement_size(ctx->payload, sizeof(ctx->payload), ctx->rtmp.window_size);
-    auto frame = std::make_shared<simple_rtmp::frame_buffer>();
+    auto frame = fixed_frame_buffer::create();
     frame->append(ctx->payload, n);
     int r = ctx->handler_.send(frame);
     return n == r ? 0 : r;
@@ -299,7 +299,7 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_send_server_bandwidth(sim
 int simple_rtmp::rtmp_server_context_args::rtmp_server_send_client_bandwidth(simple_rtmp::rtmp_server_context_args* ctx)
 {
     int n      = rtmp_set_peer_bandwidth(ctx->payload, sizeof(ctx->payload), ctx->rtmp.peer_bandwidth, RTMP_BANDWIDTH_LIMIT_DYNAMIC);
-    auto frame = std::make_shared<simple_rtmp::frame_buffer>();
+    auto frame = fixed_frame_buffer::create();
     frame->append(ctx->payload, n);
     int r = ctx->handler_.send(frame);
     return n == r ? 0 : r;
@@ -308,7 +308,7 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_send_client_bandwidth(sim
 int simple_rtmp::rtmp_server_context_args::rtmp_server_send_stream_is_record(simple_rtmp::rtmp_server_context_args* ctx)
 {
     int n      = rtmp_event_stream_is_record(ctx->payload, sizeof(ctx->payload), ctx->stream_id);
-    auto frame = std::make_shared<simple_rtmp::frame_buffer>();
+    auto frame = fixed_frame_buffer::create();
     frame->append(ctx->payload, n);
     int r = ctx->handler_.send(frame);
     return n == r ? 0 : r;
@@ -317,7 +317,7 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_send_stream_is_record(sim
 int simple_rtmp::rtmp_server_context_args::rtmp_server_send_stream_begin(simple_rtmp::rtmp_server_context_args* ctx)
 {
     int n      = rtmp_event_stream_begin(ctx->payload, sizeof(ctx->payload), ctx->stream_id);
-    auto frame = std::make_shared<simple_rtmp::frame_buffer>();
+    auto frame = fixed_frame_buffer::create();
     frame->append(ctx->payload, n);
     int r = ctx->handler_.send(frame);
     return n == r ? 0 : r;
@@ -333,7 +333,7 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_rtmp_sample_access(simple
     header.length    = n;
     header.type      = RTMP_TYPE_DATA;
     header.stream_id = ctx->stream_id;
-    auto frame       = std::make_shared<simple_rtmp::frame_buffer>();
+    auto frame       = fixed_frame_buffer::create();
     frame->append(ctx->payload, n);
     return rtmp_chunk_write_help(ctx, &header, frame);
 }
@@ -348,33 +348,36 @@ void simple_rtmp::rtmp_server_context_args::rtmp_server_onabort(void* param, uin
 int simple_rtmp::rtmp_server_context_args::rtmp_server_onaudio(void* param, const uint8_t* data, size_t bytes, uint32_t timestamp)
 {
     simple_rtmp::rtmp_server_context_args* ctx = (simple_rtmp::rtmp_server_context_args*)param;
-    auto frame                                 = std::make_shared<simple_rtmp::frame_buffer>();
+    auto frame                                 = fixed_frame_buffer::create();
     frame->append(data, bytes);
-    frame->pts   = timestamp;
-    frame->dts   = timestamp;
-    frame->codec = simple_rtmp::rtmp_tag::audio;
+    frame->set_pts(timestamp);
+    frame->set_dts(timestamp);
+    frame->set_codec(simple_rtmp::rtmp_tag::audio);
     return ctx->handler_.onaudio(frame);
 }
 
 int simple_rtmp::rtmp_server_context_args::rtmp_server_onvideo(void* param, const uint8_t* data, size_t bytes, uint32_t timestamp)
 {
     simple_rtmp::rtmp_server_context_args* ctx = (simple_rtmp::rtmp_server_context_args*)param;
-    auto frame                                 = std::make_shared<simple_rtmp::frame_buffer>();
+    auto frame                                 = fixed_frame_buffer::create();
     frame->append(data, bytes);
-    frame->pts   = timestamp;
-    frame->dts   = timestamp;
-    frame->codec = simple_rtmp::rtmp_tag::video;
+    frame->set_pts(timestamp);
+    frame->set_dts(timestamp);
+    frame->set_codec(simple_rtmp::rtmp_tag::video);
+
     return ctx->handler_.onvideo(frame);
 }
 
 int simple_rtmp::rtmp_server_context_args::rtmp_server_onscript(void* param, const uint8_t* data, size_t bytes, uint32_t timestamp)
 {
     simple_rtmp::rtmp_server_context_args* ctx = (simple_rtmp::rtmp_server_context_args*)param;
-    auto frame                                 = std::make_shared<simple_rtmp::frame_buffer>();
+    auto frame                                 = fixed_frame_buffer::create();
     frame->append(data, bytes);
-    frame->pts   = timestamp;
-    frame->dts   = timestamp;
-    frame->codec = simple_rtmp::rtmp_tag::script;
+
+    frame->set_pts(timestamp);
+    frame->set_dts(timestamp);
+    frame->set_codec(simple_rtmp::rtmp_tag::script);
+
     return ctx->handler_.onscript(frame);
 }
 
@@ -576,7 +579,7 @@ int simple_rtmp::rtmp_server_context_args::rtmp_server_onreceive_video(void* par
 int simple_rtmp::rtmp_server_context_args::rtmp_server_send(void* param, const uint8_t* header, uint32_t headerBytes, const uint8_t* payload, uint32_t payloadBytes)
 {
     simple_rtmp::rtmp_server_context_args* ctx = (simple_rtmp::rtmp_server_context_args*)param;
-    auto frame                                 = std::make_shared<simple_rtmp::frame_buffer>();
+    auto frame                                 = fixed_frame_buffer::create();
     frame->append(header, headerBytes);
     frame->append(payload, payloadBytes);
     int r = ctx->handler_.send(frame);
@@ -727,8 +730,8 @@ int rtmp_server_context::rtmp_server_send_audio(const simple_rtmp::frame_buffer:
 
     header.fmt       = RTMP_CHUNK_TYPE_1;    // enable compact header
     header.cid       = RTMP_CHANNEL_AUDIO;
-    header.timestamp = frame->pts;
-    header.length    = frame->payload.size();
+    header.timestamp = frame->pts();
+    header.length    = frame->size();
     header.type      = RTMP_TYPE_AUDIO;
     header.stream_id = args_->stream_id;
 
@@ -745,8 +748,8 @@ int rtmp_server_context::rtmp_server_send_video(const simple_rtmp::frame_buffer:
 
     header.fmt       = RTMP_CHUNK_TYPE_1;    // enable compact header
     header.cid       = RTMP_CHANNEL_VIDEO;
-    header.timestamp = frame->pts;
-    header.length    = frame->payload.size();
+    header.timestamp = frame->pts();
+    header.length    = frame->size();
     header.type      = RTMP_TYPE_VIDEO;
     header.stream_id = args_->stream_id;
 
@@ -758,8 +761,8 @@ int rtmp_server_context::rtmp_server_send_script(const simple_rtmp::frame_buffer
     struct rtmp_chunk_header_t header;
     header.fmt       = RTMP_CHUNK_TYPE_1;    // enable compact header
     header.cid       = RTMP_CHANNEL_INVOKE;
-    header.timestamp = frame->pts;
-    header.length    = frame->payload.size();
+    header.timestamp = frame->pts();
+    header.length    = frame->size();
     header.type      = RTMP_TYPE_DATA;
     header.stream_id = args_->stream_id;
     return rtmp_chunk_write_help(args_, &header, frame);

@@ -38,12 +38,12 @@ void rtmp_sink::add_codec(int codec)
 
 static bool audio_config_frame(const simple_rtmp::frame_buffer::ptr& frame)
 {
-    return (frame->codec == simple_rtmp::rtmp_codec::aac || frame->codec == simple_rtmp::rtmp_codec::opus) && frame->payload[1] == 0;
+    return (frame->codec() == simple_rtmp::rtmp_codec::aac || frame->codec() == simple_rtmp::rtmp_codec::opus) && frame->data()[1] == 0;
 }
 
 static bool video_config_frame(const simple_rtmp::frame_buffer::ptr& frame)
 {
-    return frame->payload[1] == 0;
+    return frame->data()[1] == 0;
 }
 
 void rtmp_sink::on_frame(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
@@ -56,11 +56,11 @@ void rtmp_sink::on_frame(const frame_buffer::ptr& frame, const boost::system::er
         }
         return;
     }
-    if (frame->media == simple_rtmp::rtmp_tag::video)
+    if (frame->media() == simple_rtmp::rtmp_tag::video)
     {
         on_video_frame(frame);
     }
-    else if (frame->media == simple_rtmp::rtmp_tag::audio)
+    else if (frame->media() == simple_rtmp::rtmp_tag::audio)
     {
         on_audio_frame(frame);
     }
@@ -78,7 +78,7 @@ void rtmp_sink::on_video_frame(const frame_buffer::ptr& frame)
         return;
     }
 
-    if (frame->flag == 1)
+    if (frame->flag() == 1)
     {
         gop_cache_.clear();
         gop_cache_.push_back(frame);
@@ -116,12 +116,12 @@ void rtmp_sink::safe_add_channel(const channel::ptr& ch)
 {
     if (video_config_)
     {
-        LOG_DEBUG("write video config frame {} bytes", video_config_->payload.size());
+        LOG_DEBUG("write video config frame {} bytes", video_config_->size());
         ch->write(video_config_, {});
     }
     if (audio_config_)
     {
-        LOG_DEBUG("write audio config frame {} bytes", audio_config_->payload.size());
+        LOG_DEBUG("write audio config frame {} bytes", audio_config_->size());
         ch->write(audio_config_, {});
     }
     for (const auto& frame : gop_cache_)
@@ -146,11 +146,11 @@ void rtmp_sink::write(const frame_buffer::ptr& frame, const boost::system::error
         return;
     }
 
-    if (frame->media == simple_rtmp::rtmp_tag::video && video_encoder_)
+    if (frame->media() == simple_rtmp::rtmp_tag::video && video_encoder_)
     {
         video_encoder_->write(frame, ec);
     }
-    if (frame->media == simple_rtmp::rtmp_tag::audio && audio_encoder_)
+    if (frame->media() == simple_rtmp::rtmp_tag::audio && audio_encoder_)
     {
         audio_encoder_->write(frame, ec);
     }

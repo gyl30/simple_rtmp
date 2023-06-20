@@ -50,8 +50,8 @@ void rtmp_aac_decoder::write(const frame_buffer::ptr& frame, boost::system::erro
         return;
     }
 
-    const uint8_t* data = frame->payload.data();
-    size_t bytes        = frame->payload.size();
+    const uint8_t* data = frame->data();
+    size_t bytes        = frame->size();
 
     struct flv_audio_tag_header_t audio;
     int n = flv_audio_tag_header_read(&audio, data, bytes);
@@ -66,13 +66,13 @@ void rtmp_aac_decoder::write(const frame_buffer::ptr& frame, boost::system::erro
         mpeg4_aac_audio_specific_config_load(data + n, bytes - n, &args_->aac);
         return;
     }
-    auto aac_frame   = std::make_shared<frame_buffer>();
+    auto aac_frame = fixed_frame_buffer::create();
     aac_frame->resize(args_->aac.npce + 7 + 1);
-    aac_frame->media = simple_rtmp::rtmp_tag::audio;
-    aac_frame->codec = simple_rtmp::rtmp_codec::aac;
-    aac_frame->pts   = frame->pts;
-    aac_frame->dts   = frame->dts;
-    int ret          = mpeg4_aac_adts_save(&args_->aac, static_cast<uint16_t>(bytes - n), aac_frame->payload.data(), aac_frame->payload.size());
+    aac_frame->set_media(simple_rtmp::rtmp_tag::audio);
+    aac_frame->set_codec(simple_rtmp::rtmp_codec::aac);
+    aac_frame->set_pts(frame->pts());
+    aac_frame->set_dts(frame->dts());
+    int ret = mpeg4_aac_adts_save(&args_->aac, static_cast<uint16_t>(bytes - n), aac_frame->data(), aac_frame->size());
     if (ret < 7)
     {
         return;

@@ -66,7 +66,7 @@ void tcp_connection::do_read()
 
 void tcp_connection::on_read(const boost::system::error_code& ec, std::size_t bytes)
 {
-    auto frame = std::make_shared<frame_buffer>();
+    auto frame = fixed_frame_buffer::create();
     if (!ec)
     {
         frame->append(buf_, bytes);
@@ -114,7 +114,7 @@ void tcp_connection::safe_do_write()
     bufs.reserve(writing_queue_.size());
     for (const auto& frame : writing_queue_)
     {
-        bufs.emplace_back(boost::asio::buffer(frame->payload));
+        bufs.emplace_back(boost::asio::buffer(frame->data(), frame->size()));
     }
     boost::asio::async_write(socket_, bufs, std::bind(&tcp_connection::safe_on_write, self, std::placeholders::_1, std::placeholders::_2));
 }
