@@ -20,14 +20,14 @@ class frame_buffer
    public:
     virtual uint8_t* data()             = 0;
     virtual const uint8_t* data() const = 0;
-    virtual std::size_t size()          = 0;
+    virtual std::size_t size() const    = 0;
 
    public:
-    virtual int32_t media()               = 0;
-    virtual int32_t codec()               = 0;
-    virtual int32_t flag()                = 0;
-    virtual int64_t pts()                 = 0;
-    virtual int64_t dts()                 = 0;
+    virtual int32_t media() const         = 0;
+    virtual int32_t codec() const         = 0;
+    virtual int32_t flag() const          = 0;
+    virtual int64_t pts() const           = 0;
+    virtual int64_t dts() const           = 0;
     virtual void set_media(int32_t media) = 0;
     virtual void set_codec(int32_t codec) = 0;
     virtual void set_flag(int32_t flag)   = 0;
@@ -58,27 +58,27 @@ class ref_frame_buffer : public frame_buffer
     {
         return ref_data_;
     }
-    size_t size() override
+    size_t size() const override
     {
         return ref_data_size_;
     }
-    int32_t media() override
+    int32_t media() const override
     {
         return ref_->media();
     }
-    int32_t codec() override
+    int32_t codec() const override
     {
         return ref_->codec();
     }
-    int32_t flag() override
+    int32_t flag() const override
     {
         return ref_->flag();
     }
-    int64_t pts() override
+    int64_t pts() const override
     {
         return ref_->pts();
     }
-    int64_t dts() override
+    int64_t dts() const override
     {
         return ref_->dts();
     }
@@ -169,27 +169,27 @@ class fixed_frame_buffer : public frame_buffer
     {
         return payload_.data();
     }
-    size_t size() override
+    size_t size() const override
     {
         return payload_.size();
     }
-    int32_t media() override
+    int32_t media() const override
     {
         return media_;
     }
-    int32_t codec() override
+    int32_t codec() const override
     {
         return codec_;
     }
-    int32_t flag() override
+    int32_t flag() const override
     {
         return flag_;
     }
-    int64_t pts() override
+    int64_t pts() const override
     {
         return pts_;
     }
-    int64_t dts() override
+    int64_t dts() const override
     {
         return dts_;
     }
