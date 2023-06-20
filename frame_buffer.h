@@ -12,6 +12,9 @@ namespace simple_rtmp
 class frame_buffer
 {
    public:
+    using ptr = std::shared_ptr<frame_buffer>;
+
+   public:
     virtual ~frame_buffer() = default;
 
    public:
