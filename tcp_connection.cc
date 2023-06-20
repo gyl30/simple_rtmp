@@ -3,7 +3,7 @@
 #include "log.h"
 
 using simple_rtmp::tcp_connection;
-
+using namespace std::placeholders;
 tcp_connection::tcp_connection(simple_rtmp::executors::executor& ex) : ex_(ex)
 {
     LOG_DEBUG("create {}", static_cast<void*>(this));
@@ -61,7 +61,7 @@ void tcp_connection::set_write_cb(const write_cb& cb)
 
 void tcp_connection::do_read()
 {
-    socket_.async_read_some(boost::asio::buffer(buf_, kBufSize), std::bind(&tcp_connection::on_read, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
+    socket_.async_read_some(boost::asio::buffer(buf_, kBufSize), std::bind(&tcp_connection::on_read, shared_from_this(), _1, _2));
 }
 
 void tcp_connection::on_read(const boost::system::error_code& ec, std::size_t bytes)
@@ -116,7 +116,7 @@ void tcp_connection::safe_do_write()
     {
         bufs.emplace_back(boost::asio::buffer(frame->data(), frame->size()));
     }
-    boost::asio::async_write(socket_, bufs, std::bind(&tcp_connection::safe_on_write, self, std::placeholders::_1, std::placeholders::_2));
+    boost::asio::async_write(socket_, bufs, std::bind(&tcp_connection::safe_on_write, self, _1, _2));
 }
 
 void tcp_connection::safe_on_write(const boost::system::error_code& ec, std::size_t bytes)

@@ -5,6 +5,7 @@
 #include "log.h"
 
 using simple_rtmp::rtmp_sink;
+using namespace std::placeholders;
 
 rtmp_sink ::rtmp_sink(std::string id, simple_rtmp::executors::executor& ex) : id_(std::move(id)), ex_(ex)
 {
@@ -22,7 +23,7 @@ void rtmp_sink::add_codec(int codec)
     {
         video_encoder_ = std::make_shared<rtmp_h264_encoder>(id_);
         auto ch        = std::make_shared<simple_rtmp::channel>();
-        ch->set_output(std::bind(&rtmp_sink::on_frame, this, std::placeholders::_1, std::placeholders::_2));
+        ch->set_output(std::bind(&rtmp_sink::on_frame, this, _1, _2));
         video_encoder_->set_output(ch);
         LOG_DEBUG("{} add h264 encoder", id_);
     }
@@ -30,7 +31,7 @@ void rtmp_sink::add_codec(int codec)
     {
         audio_encoder_ = std::make_shared<rtmp_aac_encoder>(id_);
         auto ch        = std::make_shared<simple_rtmp::channel>();
-        ch->set_output(std::bind(&rtmp_sink::on_frame, this, std::placeholders::_1, std::placeholders::_2));
+        ch->set_output(std::bind(&rtmp_sink::on_frame, this, _1, _2));
         audio_encoder_->set_output(ch);
         LOG_DEBUG("{} add aac encoder", id_);
     }

@@ -5,9 +5,8 @@
 #include "log.h"
 
 using simple_rtmp::rtmp_publish_session;
-using std::placeholders::_1;
-using std::placeholders::_2;
-using std::placeholders::_3;
+using namespace std::placeholders;
+
 
 struct simple_rtmp::publish_args
 {
@@ -31,8 +30,8 @@ boost::asio::ip::tcp::socket& rtmp_publish_session::socket()
 void rtmp_publish_session::start()
 {
     startup();
-    conn_->set_read_cb(std::bind(&rtmp_publish_session::on_read, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
-    conn_->set_write_cb(std::bind(&rtmp_publish_session::on_write, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
+    conn_->set_read_cb(std::bind(&rtmp_publish_session::on_read, shared_from_this(), _1, _2));
+    conn_->set_write_cb(std::bind(&rtmp_publish_session::on_write, shared_from_this(), _1, _2));
     conn_->start();
 }
 void rtmp_publish_session::startup()

@@ -7,11 +7,7 @@
 #include "rtmp_server_context.h"
 
 using simple_rtmp::rtmp_forward_session;
-using std::placeholders::_1;
-using std::placeholders::_2;
-using std::placeholders::_3;
-using std::placeholders::_4;
-using std::placeholders::_5;
+using namespace std::placeholders;
 
 struct simple_rtmp::forward_args
 {
@@ -55,9 +51,9 @@ void rtmp_forward_session::start()
     args_           = std::make_shared<simple_rtmp::forward_args>();
     args_->rtmp_ctx = new rtmp_server_context(std::move(ctx_handler));
     channel_        = std::make_shared<simple_rtmp::channel>();
-    channel_->set_output(std::bind(&rtmp_forward_session::channel_out, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
-    conn_->set_read_cb(std::bind(&rtmp_forward_session::on_read, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
-    conn_->set_write_cb(std::bind(&rtmp_forward_session::on_write, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
+    channel_->set_output(std::bind(&rtmp_forward_session::channel_out, shared_from_this(), _1, _2));
+    conn_->set_read_cb(std::bind(&rtmp_forward_session::on_read, shared_from_this(), _1, _2));
+    conn_->set_write_cb(std::bind(&rtmp_forward_session::on_write, shared_from_this(), _1, _2));
     conn_->start();
 }
 

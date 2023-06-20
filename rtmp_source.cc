@@ -6,8 +6,7 @@
 #include "log.h"
 
 using simple_rtmp::rtmp_source;
-using std::placeholders::_1;
-using std::placeholders::_2;
+using namespace std::placeholders;
 using simple_rtmp::rtmp_demuxer;
 
 rtmp_source::rtmp_source(std::string id, simple_rtmp::executors::executor& ex) : id_(std::move(id)), ch_(std::make_shared<simple_rtmp::channel>()), demuxer_(std::make_shared<rtmp_demuxer>(id_))
