@@ -50,6 +50,18 @@ class ref_frame_buffer : public frame_buffer
     ~ref_frame_buffer() override = default;
 
    public:
+    static ptr create(uint8_t* data, std::size_t size, const std::shared_ptr<frame_buffer>& ref)
+    {
+        ptr f(new ref_frame_buffer(data, size, ref));
+        return f;
+    }
+    static ptr create(const uint8_t* data, std::size_t size, const std::shared_ptr<frame_buffer>& ref)
+    {
+        ptr f(new ref_frame_buffer(data, size, ref));
+        return f;
+    }
+
+   public:
     uint8_t* data() override
     {
         return ref_data_;
