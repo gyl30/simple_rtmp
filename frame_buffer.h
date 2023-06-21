@@ -238,7 +238,11 @@ class fixed_frame_buffer : public frame_buffer
         {
             return;
         }
-
+        media_ = frame->media();
+        codec_ = frame->codec();
+        pts_   = frame->pts();
+        dts_   = frame->dts();
+        flag_  = frame->flag();
         append(frame->data(), frame->size());
     }
     void append(const ptr& frame)
@@ -247,7 +251,11 @@ class fixed_frame_buffer : public frame_buffer
         {
             return;
         }
-
+        media_ = frame->media_;
+        codec_ = frame->codec_;
+        pts_   = frame->pts_;
+        dts_   = frame->dts_;
+        flag_  = frame->flag_;
         append(frame->payload_);
     }
     void append(const std::vector<uint8_t>& data)
