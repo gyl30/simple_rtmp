@@ -15,13 +15,13 @@ static std::string format_time(int64_t microseconds, bool mill, bool micro)
     gmtime_r(&seconds, &tm_time);
     if (micro)
     {
-        int micro_seconds = static_cast<int>(microseconds % kMicroSecondsPerSecond);
+        int const micro_seconds = static_cast<int>(microseconds % kMicroSecondsPerSecond);
         snprintf(buf, sizeof(buf), "%4d%02d%02d %02d:%02d:%02d.%06d", tm_time.tm_year + 1900, tm_time.tm_mon + 1, tm_time.tm_mday, tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec, micro_seconds);
     }
     else if (mill)
     {
-        int microseconds = static_cast<int>(microseconds % kMicroSecondsPerSecond);
-        int milliseconds = microseconds / kMicroSecondsPerMilli;
+        int const microseconds1 = static_cast<int>(microseconds % kMicroSecondsPerSecond);
+        int const milliseconds = microseconds1 / kMicroSecondsPerMilli;
         snprintf(buf, sizeof(buf), "%4d%02d%02d %02d:%02d:%02d.%03d", tm_time.tm_year + 1900, tm_time.tm_mon + 1, tm_time.tm_mday, tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec, milliseconds);
     }
     else
@@ -50,7 +50,7 @@ timestamp timestamp::now()
 {
     struct timeval tv;
     gettimeofday(&tv, nullptr);
-    int64_t seconds = tv.tv_sec;
+    int64_t const seconds = tv.tv_sec;
     return timestamp(seconds * kMicroSecondsPerSecond + tv.tv_usec);
 }
 std::string timestamp::fmt_micro_string() const

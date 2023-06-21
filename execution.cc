@@ -1,5 +1,4 @@
 #include <thread>
-#include <mutex>
 #include "execution.h"
 
 using simple_rtmp::executors;
@@ -15,7 +14,7 @@ executors::~executors()
 
 void executors::run()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> const lock(mutex_);
     for (auto &io : exs_)
     {
         works_.emplace_back(boost::asio::make_work_guard(io));
@@ -25,7 +24,7 @@ void executors::run()
 
 void executors::stop()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> const lock(mutex_);
     works_.clear();
     for (auto &&io : exs_)
     {
@@ -40,7 +39,7 @@ void executors::stop()
 
 boost::asio::io_context &executors::get_executor()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> const lock(mutex_);
     if (index_ == exs_.size())
     {
         index_ = 0;

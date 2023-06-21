@@ -84,7 +84,7 @@ void rtmp_aac_encoder::write(const frame_buffer::ptr &frame, const boost::system
     aac_frame->set_codec(kCodecId);
     aac_frame->set_media(kFrameTag);
     aac_frame->resize(frame->size() + 4);
-    int m = flv_audio_tag_header_write(&audio, aac_frame->data(), aac_frame->size());
+    int const m = flv_audio_tag_header_write(&audio, aac_frame->data(), aac_frame->size());
     if (m == -1)
     {
         return;

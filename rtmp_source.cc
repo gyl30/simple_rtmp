@@ -1,7 +1,6 @@
 #include <utility>
 #include "rtmp_source.h"
 #include "rtmp_demuxer.h"
-#include "rtmp_codec.h"
 #include "rtmp_sink.h"
 #include "log.h"
 
@@ -14,7 +13,7 @@ rtmp_source::rtmp_source(std::string id, simple_rtmp::executors::executor& ex) :
     ch_->set_output(std::bind(&rtmp_source::on_frame, this, _1, _2));
     demuxer_->set_channel(ch_);
     demuxer_->on_codec(std::bind(&rtmp_source::on_codec, this, _1));
-    std::string rtmp_sink_id = "rtmp_" + id_;
+    std::string const rtmp_sink_id = "rtmp_" + id_;
     rtmp_sink_               = std::make_shared<simple_rtmp::rtmp_sink>(rtmp_sink_id, ex);
     simple_rtmp::sink::add(rtmp_sink_);
 };

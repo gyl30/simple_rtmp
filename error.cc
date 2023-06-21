@@ -9,7 +9,7 @@ std::string errno_to_str()
     char* ret = strerror_r(errno, buf, sizeof buf);
     return ret;
 #else
-    int ret = strerror_r(errno, buf, sizeof buf);
+    int const ret = strerror_r(errno, buf, sizeof buf);
     if (ret != 0)
     {
         return "unknown error";

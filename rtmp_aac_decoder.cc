@@ -1,12 +1,9 @@
 #include <utility>
 #include "rtmp_aac_decoder.h"
-#include "flv-demuxer.h"
 #include "flv-header.h"
-#include "flv-proto.h"
 #include "mpeg4-aac.h"
 #include "rtmp_codec.h"
 #include "log.h"
-#include "execution.h"
 
 enum
 {
@@ -51,10 +48,10 @@ void rtmp_aac_decoder::write(const frame_buffer::ptr& frame, boost::system::erro
     }
 
     const uint8_t* data = frame->data();
-    size_t bytes        = frame->size();
+    size_t const bytes        = frame->size();
 
     struct flv_audio_tag_header_t audio;
-    int n = flv_audio_tag_header_read(&audio, data, bytes);
+    int const n = flv_audio_tag_header_read(&audio, data, bytes);
     if (sequence_header == audio.avpacket)
     {
         args_->aac.profile                  = MPEG4_AAC_LC;
@@ -72,7 +69,7 @@ void rtmp_aac_decoder::write(const frame_buffer::ptr& frame, boost::system::erro
     aac_frame->set_codec(simple_rtmp::rtmp_codec::aac);
     aac_frame->set_pts(frame->pts());
     aac_frame->set_dts(frame->dts());
-    int ret = mpeg4_aac_adts_save(&args_->aac, static_cast<uint16_t>(bytes - n), aac_frame->data(), aac_frame->size());
+    int const ret = mpeg4_aac_adts_save(&args_->aac, static_cast<uint16_t>(bytes - n), aac_frame->data(), aac_frame->size());
     if (ret < 7)
     {
         return;

@@ -1,4 +1,3 @@
-#include <utility>
 #include "channel.h"
 
 using simple_rtmp::channel;

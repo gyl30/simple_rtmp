@@ -1,6 +1,5 @@
 #include "rtmp_publish_session.h"
 #include "rtmp_server_context.h"
-#include "rtmp_codec.h"
 #include "socket.h"
 #include "log.h"
 
@@ -105,7 +104,7 @@ int rtmp_publish_session::rtmp_on_publish(const std::string& app, const std::str
 {
     app_           = app;
     stream_        = stream;
-    std::string id = app + "_" + stream;
+    std::string const id = app + "_" + stream;
     source_        = std::make_shared<rtmp_source>(id, ex_);
     LOG_DEBUG("publish app {} stream {} type {}", app, stream, type);
     return 0;
