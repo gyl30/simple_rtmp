@@ -140,8 +140,7 @@ static const struct rtmp_chunk_header_t* rtmp_chunk_header_zip_help(struct rtmp_
 
 int rtmp_chunk_write_help(simple_rtmp::rtmp_server_context_args* args, const struct rtmp_chunk_header_t* h, const simple_rtmp::frame_buffer::ptr& frame)
 {
-    int r = 0;
-    uint8_t p[MAX_CHUNK_HEADER];
+    uint8_t p[MAX_CHUNK_HEADER] = {0};
     const struct rtmp_chunk_header_t* header;
 
     // compression rtmp chunk header
@@ -160,21 +159,14 @@ int rtmp_chunk_write_help(simple_rtmp::rtmp_server_context_args* args, const str
     const uint8_t* payload = frame->data();
     uint32_t payloadSize   = header->length;
 
-    while (payloadSize > 0 && 0 == r)
+    while (payloadSize > 0)
     {
         uint32_t chunkSize = std::min(payloadSize, args->rtmp.out_chunk_size);
-        auto frame         = simple_rtmp::fixed_frame_buffer::create();
-        frame->append(p, headerSize);
-        frame->append(payload, chunkSize);
-        int ret = args->handler_.send(frame);
-        if (ret != frame->size())
-        {
-            r = -1;
-        }
-        else
-        {
-            r = 0;
-        }
+        auto ref_frame     = simple_rtmp::ref_frame_buffer::create(payload, chunkSize, frame);
+        auto header_frame  = simple_rtmp::fixed_frame_buffer::create(p, headerSize);
+        args->handler_.send(header_frame);
+        args->handler_.send(ref_frame);
+
         payload += chunkSize;
         payloadSize -= chunkSize;
 
@@ -188,7 +180,7 @@ int rtmp_chunk_write_help(simple_rtmp::rtmp_server_context_args* args, const str
         }
     }
 
-    return r;
+    return 0;
 }
 
 void simple_rtmp::rtmp_server_context_args::init(rtmp_server_context* ctx, rtmp_server_context_handler handler)
