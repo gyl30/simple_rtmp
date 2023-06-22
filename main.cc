@@ -1,7 +1,6 @@
 #include <iostream>
 #include <map>
 #include <memory>
-#include <string>
 #include "timestamp.h"
 #include "scoped_exit.h"
 #include "execution.h"
