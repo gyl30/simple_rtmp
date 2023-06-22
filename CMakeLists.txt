@@ -37,8 +37,8 @@ find_package(Boost 1.81 COMPONENTS system filesystem thread REQUIRED)
 
 list(APPEND LINK_LIBS ${Boost_LIBRARIES})
 
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}  SOURCE_FILE)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} SOURCE_FILE)
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILE} rtmp_server_context.cc)
+add_executable(${PROJECT_NAME} ${SOURCE_FILE})
 
 target_link_libraries(${PROJECT_NAME} ${LINK_LIBS})
