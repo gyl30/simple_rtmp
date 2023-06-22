@@ -39,6 +39,6 @@ list(APPEND LINK_LIBS ${Boost_LIBRARIES})
 
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}  SOURCE_FILE)
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILE})
+add_executable(${PROJECT_NAME} ${SOURCE_FILE} rtmp_server_context.cc)
 
 target_link_libraries(${PROJECT_NAME} ${LINK_LIBS})
