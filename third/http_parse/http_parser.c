@@ -281,11 +281,16 @@ enum state
 
   , s_start_req_or_res
   , s_res_or_resp_H
+  , s_res_or_resp_R
   , s_start_res
   , s_res_H
   , s_res_HT
   , s_res_HTT
   , s_res_HTTP
+  , s_res_R
+  , s_res_RT
+  , s_res_RTS
+  , s_res_RTSP
   , s_res_http_major
   , s_res_http_dot
   , s_res_http_minor
@@ -316,6 +321,10 @@ enum state
   , s_req_http_HT
   , s_req_http_HTT
   , s_req_http_HTTP
+  , s_req_http_R
+  , s_req_http_RT
+  , s_req_http_RTS
+  , s_req_http_RTSP
   , s_req_http_I
   , s_req_http_IC
   , s_req_http_major
@@ -740,6 +749,10 @@ reexecute:
           UPDATE_STATE(s_res_or_resp_H);
 
           CALLBACK_NOTIFY(message_begin);
+        } else if(ch == 'R'){
+          UPDATE_STATE(s_res_or_resp_R);
+
+          CALLBACK_NOTIFY(message_begin);
         } else {
           parser->type = HTTP_REQUEST;
           UPDATE_STATE(s_start_req);
@@ -765,7 +778,12 @@ reexecute:
           UPDATE_STATE(s_req_method);
         }
         break;
-
+      case s_res_or_resp_R:
+        if (ch == 'T') {
+          parser->type = HTTP_RESPONSE;
+          UPDATE_STATE(s_res_RT);
+        }
+        break;
       case s_start_res:
       {
         if (ch == CR || ch == LF)
@@ -776,7 +794,9 @@ reexecute:
 
         if (ch == 'H') {
           UPDATE_STATE(s_res_H);
-        } else {
+        }else if (ch == 'R') {
+          UPDATE_STATE(s_res_R);
+        }else {
           SET_ERRNO(HPE_INVALID_CONSTANT);
           goto error;
         }
@@ -805,6 +825,25 @@ reexecute:
         UPDATE_STATE(s_res_http_major);
         break;
 
+      case s_res_R:
+        STRICT_CHECK(ch != 'T');
+        UPDATE_STATE(s_res_RT);
+        break;
+
+      case s_res_RT:
+        STRICT_CHECK(ch != 'S');
+        UPDATE_STATE(s_res_RTS);
+        break;
+
+      case s_res_RTS:
+        STRICT_CHECK(ch != 'P');
+        UPDATE_STATE(s_res_RTSP);
+        break;
+
+      case s_res_RTSP:
+        STRICT_CHECK(ch != '/');
+        UPDATE_STATE(s_res_http_major);
+        break;
       case s_res_http_major:
         if (UNLIKELY(!IS_NUM(ch))) {
           SET_ERRNO(HPE_INVALID_VERSION);
@@ -943,7 +982,7 @@ reexecute:
           case 'A': parser->method = HTTP_ACL; break;
           case 'B': parser->method = HTTP_BIND; break;
           case 'C': parser->method = HTTP_CONNECT; /* or COPY, CHECKOUT */ break;
-          case 'D': parser->method = HTTP_DELETE; break;
+          case 'D': parser->method = HTTP_DELETE; /* or DESCRIBE(rtsp) */ break;
           case 'G': parser->method = HTTP_GET; break;
           case 'H': parser->method = HTTP_HEAD; break;
           case 'L': parser->method = HTTP_LOCK; /* or LINK */ break;
@@ -951,11 +990,11 @@ reexecute:
           case 'N': parser->method = HTTP_NOTIFY; break;
           case 'O': parser->method = HTTP_OPTIONS; break;
           case 'P': parser->method = HTTP_POST;
-            /* or PROPFIND|PROPPATCH|PUT|PATCH|PURGE */
+            /* or PROPFIND|PROPPATCH|PUT|PATCH|PURGE PLAY(rtsp) */
             break;
           case 'R': parser->method = HTTP_REPORT; /* or REBIND */ break;
-          case 'S': parser->method = HTTP_SUBSCRIBE; /* or SEARCH, SOURCE */ break;
-          case 'T': parser->method = HTTP_TRACE; break;
+          case 'S': parser->method = HTTP_SUBSCRIBE; /* or SEARCH, SOURCE, SETUP(rtsp) */ break;
+          case 'T': parser->method = HTTP_TRACE; /* TEARDOWN(rtsp) */ break;
           case 'U': parser->method = HTTP_UNLOCK; /* or UNSUBSCRIBE, UNBIND, UNLINK */ break;
           default:
             SET_ERRNO(HPE_INVALID_METHOD);
@@ -992,6 +1031,7 @@ reexecute:
             XX(POST,      1, 'A', PATCH)
             XX(POST,      1, 'R', PROPFIND)
             XX(PUT,       2, 'R', PURGE)
+            XX(DELETE,    2, 'S', DESCRIBE)
             XX(CONNECT,   1, 'H', CHECKOUT)
             XX(CONNECT,   2, 'P', COPY)
             XX(MKCOL,     1, 'O', MOVE)
@@ -1001,8 +1041,11 @@ reexecute:
             XX(MKCOL,     3, 'A', MKCALENDAR)
             XX(SUBSCRIBE, 1, 'E', SEARCH)
             XX(SUBSCRIBE, 1, 'O', SOURCE)
+            XX(SEARCH,    2, 'T', SETUP)
             XX(REPORT,    2, 'B', REBIND)
             XX(PROPFIND,  4, 'P', PROPPATCH)
+            XX(PROPFIND,  1, 'L', PLAY)
+            XX(TRACE,     1, 'E', TEARDOWN)
             XX(LOCK,      1, 'I', LINK)
             XX(UNLOCK,    2, 'S', UNSUBSCRIBE)
             XX(UNLOCK,    2, 'B', UNBIND)
@@ -1101,6 +1144,9 @@ reexecute:
           case 'H':
             UPDATE_STATE(s_req_http_H);
             break;
+          case 'R':
+            UPDATE_STATE(s_req_http_R);
+            break;
           case 'I':
             if (parser->method == HTTP_SOURCE) {
               UPDATE_STATE(s_req_http_I);
@@ -1127,7 +1173,20 @@ reexecute:
         STRICT_CHECK(ch != 'P');
         UPDATE_STATE(s_req_http_HTTP);
         break;
+      case s_req_http_R:
+        STRICT_CHECK(ch != 'T');
+        UPDATE_STATE(s_req_http_RT);
+        break;
 
+      case s_req_http_RT:
+        STRICT_CHECK(ch != 'S');
+        UPDATE_STATE(s_req_http_RTS);
+        break;
+
+      case s_req_http_RTS:
+        STRICT_CHECK(ch != 'P');
+        UPDATE_STATE(s_req_http_RTSP);
+        break;
       case s_req_http_I:
         STRICT_CHECK(ch != 'C');
         UPDATE_STATE(s_req_http_IC);
@@ -1142,7 +1201,10 @@ reexecute:
         STRICT_CHECK(ch != '/');
         UPDATE_STATE(s_req_http_major);
         break;
-
+      case s_req_http_RTSP:
+        STRICT_CHECK(ch != '/');
+        UPDATE_STATE(s_req_http_major);
+        break;
       case s_req_http_major:
         if (UNLIKELY(!IS_NUM(ch))) {
           SET_ERRNO(HPE_INVALID_VERSION);
