@@ -12,6 +12,7 @@ extern "C"
 #include "frame_buffer.h"
 #include "rtmp_codec.h"
 #include "rtmp_server_context.h"
+#include <cstring>
 #include <cassert>
 
 #define RTMP_FMSVER "FMS/3,0,1,123"
