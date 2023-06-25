@@ -6,7 +6,6 @@
 using simple_rtmp::rtmp_publish_session;
 using namespace std::placeholders;
 
-
 struct simple_rtmp::publish_args
 {
     rtmp_server_context* rtmp_ctx;
@@ -47,13 +46,9 @@ void rtmp_publish_session::startup()
 
 void rtmp_publish_session::on_write(const boost::system::error_code& ec, std::size_t /*bytes*/)
 {
-    if (ec && ec == boost::asio::error::bad_descriptor)
-    {
-        return;
-    }
-
     if (ec)
     {
+        LOG_ERROR("write failed {} {}", static_cast<void*>(this), ec.message());
         shutdown();
         return;
     }
@@ -61,11 +56,6 @@ void rtmp_publish_session::on_write(const boost::system::error_code& ec, std::si
 
 void rtmp_publish_session::on_read(const simple_rtmp::frame_buffer::ptr& frame, boost::system::error_code ec)
 {
-    if (ec && ec == boost::asio::error::bad_descriptor)
-    {
-        return;
-    }
-
     if (ec)
     {
         shutdown();
@@ -102,10 +92,10 @@ int rtmp_publish_session::rtmp_do_send(const simple_rtmp::frame_buffer::ptr& fra
 
 int rtmp_publish_session::rtmp_on_publish(const std::string& app, const std::string& stream, const std::string& type)
 {
-    app_           = app;
-    stream_        = stream;
+    app_                 = app;
+    stream_              = stream;
     std::string const id = app + "_" + stream;
-    source_        = std::make_shared<rtmp_source>(id, ex_);
+    source_              = std::make_shared<rtmp_source>(id, ex_);
     LOG_DEBUG("publish app {} stream {} type {}", app, stream, type);
     return 0;
 }

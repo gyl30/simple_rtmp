@@ -81,11 +81,6 @@ void rtmp_forward_session::channel_out(const frame_buffer::ptr& frame, const boo
 
 void rtmp_forward_session::on_read(const simple_rtmp::frame_buffer::ptr& frame, boost::system::error_code ec)
 {
-    if (ec && ec == boost::asio::error::bad_descriptor)
-    {
-        return;
-    }
-
     if (ec)
     {
         LOG_ERROR("read failed {} {}", static_cast<void*>(this), ec.message());
@@ -97,14 +92,9 @@ void rtmp_forward_session::on_read(const simple_rtmp::frame_buffer::ptr& frame, 
 
 void rtmp_forward_session::on_write(const boost::system::error_code& ec, std::size_t /*bytes*/)
 {
-    if (ec && ec == boost::asio::error::bad_descriptor)
-    {
-        return;
-    }
-
     if (ec)
     {
-        LOG_ERROR("read failed {} {}", static_cast<void*>(this), ec.message());
+        LOG_ERROR("write failed {} {}", static_cast<void*>(this), ec.message());
         shutdown();
         return;
     }
@@ -137,7 +127,10 @@ void rtmp_forward_session::safe_shutdown()
 
 int rtmp_forward_session::rtmp_server_send(const simple_rtmp::frame_buffer::ptr& frame)
 {
-    conn_->write_frame(frame);
+    if (conn_)
+    {
+        conn_->write_frame(frame);
+    }
     return static_cast<int>(frame->size());
 }
 
