@@ -87,8 +87,7 @@ class rtsp_parse
     static int on_headers_complete(http_parser* parser)
     {
         LOG_DEBUG("on headers complete");
-        auto* self        = reinterpret_cast<rtsp_parse*>(parser->data);
-        self->parse_step_ = kHeaderComplete;
+        auto* self = reinterpret_cast<rtsp_parse*>(parser->data);
         return 0;
     }
     static int on_message_complete(http_parser* parser)
