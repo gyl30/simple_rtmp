@@ -25,10 +25,10 @@ class tcp_server : public std::enable_shared_from_this<tcp_server<Session>>
     {
         LOG_INFO("{} server :{} destroy", name_, port_);
     }
-    tcp_server(const tcp_server &)            = delete;
-    tcp_server(tcp_server &&)                 = delete;
+    tcp_server(const tcp_server &) = delete;
+    tcp_server(tcp_server &&) = delete;
     tcp_server &operator=(const tcp_server &) = delete;
-    tcp_server &operator=(tcp_server &&)      = delete;
+    tcp_server &operator=(tcp_server &&) = delete;
 
    public:
     void run()
@@ -62,7 +62,7 @@ class tcp_server : public std::enable_shared_from_this<tcp_server<Session>>
             LOG_ERROR("{} server :{} open error {}", name_, port_, ec.message());
             return;
         }
-        int one  = 1;
+        int one = 1;
         int flag = SO_REUSEADDR;
 
 #ifdef __linux__
@@ -97,7 +97,7 @@ class tcp_server : public std::enable_shared_from_this<tcp_server<Session>>
             return;
         }
         LOG_INFO("{} server :{} accept count {}", name_, port_, count_++);
-        session_  = std::make_shared<Session>(pool_.get_executor());
+        session_ = std::make_shared<Session>(pool_.get_executor());
         auto self = tcp_server<Session>::shared_from_this();
         acceptor_.async_accept(session_->socket(), [this, self](boost::system::error_code ec) { on_accept(ec); });
     }
@@ -118,7 +118,7 @@ class tcp_server : public std::enable_shared_from_this<tcp_server<Session>>
     }
 
    private:
-    uint16_t port_  = 0;
+    uint16_t port_ = 0;
     uint32_t count_ = 0;
     std::string name_;
     boost::asio::ip::tcp::acceptor acceptor_;

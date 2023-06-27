@@ -21,7 +21,7 @@ boost::asio::ip::tcp::socket& tcp_connection::socket()
 
 void tcp_connection::start()
 {
-    local_addr_  = get_socket_local_address(socket_);
+    local_addr_ = get_socket_local_address(socket_);
     remote_addr_ = get_socket_remote_address(socket_);
     LOG_DEBUG("start {} <--> {}", local_addr_, remote_addr_);
     do_read();
@@ -45,7 +45,7 @@ void tcp_connection::safe_shutdown()
     {
         LOG_DEBUG("safe shutdown {}", static_cast<void*>(this));
     }
-    read_cb_  = nullptr;
+    read_cb_ = nullptr;
     write_cb_ = nullptr;
 }
 

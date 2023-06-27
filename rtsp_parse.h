@@ -25,10 +25,10 @@ class rtsp_parse
    public:
     int input(const frame_buffer::ptr& frame)
     {
-        const char* data    = reinterpret_cast<const char*>(frame->data());
+        const char* data = reinterpret_cast<const char*>(frame->data());
         const size_t length = frame->size();
-        size_t consumed     = http_parser_execute(&parser_, &settings_, data, length);
-        auto err_code       = static_cast<enum http_errno>(parser_.http_errno);
+        size_t consumed = http_parser_execute(&parser_, &settings_, data, length);
+        auto err_code = static_cast<enum http_errno>(parser_.http_errno);
         if (err_code != HPE_OK)
         {
             return -1;
@@ -81,12 +81,12 @@ class rtsp_parse
         parser_.data = this;
         // parser_.flags = F_SKIPBODY;
         http_parser_settings_init(&settings_);
-        settings_.on_message_begin    = on_message_begin;
-        settings_.on_url              = on_url;
-        settings_.on_header_field     = on_header_field;
-        settings_.on_header_value     = on_header_value;
+        settings_.on_message_begin = on_message_begin;
+        settings_.on_url = on_url;
+        settings_.on_header_field = on_header_field;
+        settings_.on_header_value = on_header_value;
         settings_.on_headers_complete = on_headers_complete;
-        settings_.on_body             = on_body;
+        settings_.on_body = on_body;
         settings_.on_message_complete = on_message_complete;
         field_.clear();
         value_.clear();
@@ -110,7 +110,7 @@ class rtsp_parse
     static int on_message_complete(http_parser* parser)
     {
         LOG_DEBUG("on message complete");
-        auto* self        = reinterpret_cast<rtsp_parse*>(parser->data);
+        auto* self = reinterpret_cast<rtsp_parse*>(parser->data);
         self->parse_step_ = kParseComplete;
         return 0;
     }

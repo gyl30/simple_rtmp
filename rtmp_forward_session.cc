@@ -42,15 +42,15 @@ boost::asio::ip::tcp::socket& rtmp_forward_session::socket()
 void rtmp_forward_session::start()
 {
     rtmp_server_context_handler ctx_handler;
-    ctx_handler.send          = std::bind(&rtmp_forward_session::rtmp_server_send, shared_from_this(), _1);
-    ctx_handler.onplay        = std::bind(&rtmp_forward_session::rtmp_server_onplay, shared_from_this(), _1, _2, _3, _4, _5);
-    ctx_handler.onpause       = std::bind(&rtmp_forward_session::rtmp_server_onpause, shared_from_this(), _1, _2);
-    ctx_handler.onseek        = std::bind(&rtmp_forward_session::rtmp_server_onseek, shared_from_this(), _1);
+    ctx_handler.send = std::bind(&rtmp_forward_session::rtmp_server_send, shared_from_this(), _1);
+    ctx_handler.onplay = std::bind(&rtmp_forward_session::rtmp_server_onplay, shared_from_this(), _1, _2, _3, _4, _5);
+    ctx_handler.onpause = std::bind(&rtmp_forward_session::rtmp_server_onpause, shared_from_this(), _1, _2);
+    ctx_handler.onseek = std::bind(&rtmp_forward_session::rtmp_server_onseek, shared_from_this(), _1);
     ctx_handler.ongetduration = std::bind(&rtmp_forward_session::rtmp_server_ongetduration, shared_from_this(), _1, _2, _3);
 
-    args_           = std::make_shared<simple_rtmp::forward_args>();
+    args_ = std::make_shared<simple_rtmp::forward_args>();
     args_->rtmp_ctx = new rtmp_server_context(std::move(ctx_handler));
-    channel_        = std::make_shared<simple_rtmp::channel>();
+    channel_ = std::make_shared<simple_rtmp::channel>();
     channel_->set_output(std::bind(&rtmp_forward_session::channel_out, shared_from_this(), _1, _2));
     conn_->set_read_cb(std::bind(&rtmp_forward_session::on_read, shared_from_this(), _1, _2));
     conn_->set_write_cb(std::bind(&rtmp_forward_session::on_write, shared_from_this(), _1, _2));
@@ -147,9 +147,9 @@ int rtmp_forward_session::rtmp_server_onplay(const std::string& app, const std::
         shutdown();
         return 0;
     }
-    sink_         = s;
-    stream_id_    = id;
-    args_->app    = app;
+    sink_ = s;
+    stream_id_ = id;
+    args_->app = app;
     args_->stream = stream;
     s->add_channel(channel_);
     return 0;

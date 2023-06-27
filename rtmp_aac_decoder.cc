@@ -8,7 +8,7 @@
 enum
 {
     sequence_header = 0,
-    avpacket        = 1,
+    avpacket = 1,
     end_of_sequence = 2,
 };
 
@@ -48,18 +48,18 @@ void rtmp_aac_decoder::write(const frame_buffer::ptr& frame, boost::system::erro
     }
 
     const uint8_t* data = frame->data();
-    size_t const bytes        = frame->size();
+    size_t const bytes = frame->size();
 
     struct flv_audio_tag_header_t audio;
     int const n = flv_audio_tag_header_read(&audio, data, bytes);
     if (sequence_header == audio.avpacket)
     {
-        args_->aac.profile                  = MPEG4_AAC_LC;
+        args_->aac.profile = MPEG4_AAC_LC;
         args_->aac.sampling_frequency_index = MPEG4_AAC_44100;
-        args_->aac.channel_configuration    = 2;
-        args_->aac.channels                 = 2;
-        args_->aac.sampling_frequency       = 44100;
-        args_->aac.extension_frequency      = 44100;
+        args_->aac.channel_configuration = 2;
+        args_->aac.channels = 2;
+        args_->aac.sampling_frequency = 44100;
+        args_->aac.extension_frequency = 44100;
         mpeg4_aac_audio_specific_config_load(data + n, bytes - n, &args_->aac);
         return;
     }

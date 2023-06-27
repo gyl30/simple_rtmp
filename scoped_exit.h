@@ -19,7 +19,7 @@ class scoped_exit
         mv.canceled = true;
     }
 
-    scoped_exit(const scoped_exit&)            = delete;
+    scoped_exit(const scoped_exit&) = delete;
     scoped_exit& operator=(const scoped_exit&) = delete;
 
     ~scoped_exit()
@@ -41,8 +41,8 @@ class scoped_exit
         if (this != &mv)
         {
             ~scoped_exit();
-            callback    = std::move(mv.callback);
-            canceled    = mv.canceled;
+            callback = std::move(mv.callback);
+            canceled = mv.canceled;
             mv.canceled = true;
         }
 

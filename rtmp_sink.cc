@@ -22,7 +22,7 @@ void rtmp_sink::add_codec(int codec)
     if (codec == simple_rtmp::rtmp_codec::h264)
     {
         video_encoder_ = std::make_shared<rtmp_h264_encoder>(id_);
-        auto ch        = std::make_shared<simple_rtmp::channel>();
+        auto ch = std::make_shared<simple_rtmp::channel>();
         ch->set_output(std::bind(&rtmp_sink::on_frame, this, _1, _2));
         video_encoder_->set_output(ch);
         LOG_DEBUG("{} add h264 encoder", id_);
@@ -30,7 +30,7 @@ void rtmp_sink::add_codec(int codec)
     else if (codec == simple_rtmp::rtmp_codec::aac)
     {
         audio_encoder_ = std::make_shared<rtmp_aac_encoder>(id_);
-        auto ch        = std::make_shared<simple_rtmp::channel>();
+        auto ch = std::make_shared<simple_rtmp::channel>();
         ch->set_output(std::bind(&rtmp_sink::on_frame, this, _1, _2));
         audio_encoder_->set_output(ch);
         LOG_DEBUG("{} add aac encoder", id_);

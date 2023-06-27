@@ -7,17 +7,17 @@ namespace simple_rtmp
 {
 static std::string make_log_path(const std::string& app)
 {
-    auto app_path        = boost::filesystem::canonical(app);
-    std::string const app_dir  = app_path.parent_path().string();
+    auto app_path = boost::filesystem::canonical(app);
+    std::string const app_dir = app_path.parent_path().string();
     std::string const app_name = app_path.filename().string();
-    std::string const log_dir  = app_dir + "/log";
+    std::string const log_dir = app_dir + "/log";
     std::string const log_file = app_name + ".log";
     return log_dir + "/" + log_file;
 }
 
 void init_log(const std::string& app)
 {
-    constexpr auto kFileSize  = 50 * 1024 * 1024;
+    constexpr auto kFileSize = 50 * 1024 * 1024;
     constexpr auto kFileCount = 5;
 
     std::string const log_file = make_log_path(app);

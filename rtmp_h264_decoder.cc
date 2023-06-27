@@ -10,7 +10,7 @@
 enum
 {
     sequence_header = 0,
-    avpacket        = 1,
+    avpacket = 1,
     end_of_sequence = 2,
 };
 
@@ -50,7 +50,7 @@ void rtmp_h264_decoder::write(const frame_buffer::ptr& frame, boost::system::err
     }
 
     const uint8_t* data = frame->data();
-    size_t bytes        = frame->size();
+    size_t bytes = frame->size();
 
     struct flv_video_tag_header_t video;
     int n = flv_video_tag_header_read(&video, data, bytes);
@@ -100,7 +100,7 @@ static int h264_sps_pps_size(const struct mpeg4_avc_t* avc)
 
 void rtmp_h264_decoder::demuxer_avpacket(const uint8_t* data, size_t bytes, int64_t timestamp, int64_t cts, int keyframe)
 {
-    size_t offset           = 0;
+    size_t offset = 0;
     const uint8_t* data_end = data + bytes;
     std::deque<frame_buffer::ptr> frames;
     while (true)
@@ -127,7 +127,7 @@ void rtmp_h264_decoder::demuxer_avpacket(const uint8_t* data, size_t bytes, int6
         if (nalu_type == 5 && args_->sps_pps_flag == 0)    // idr
         {
             int avc_length = h264_sps_pps_size(&args_->avc);
-            auto frame     = fixed_frame_buffer::create(avc_length);
+            auto frame = fixed_frame_buffer::create(avc_length);
             frame->set_media(simple_rtmp::rtmp_tag::video);
             frame->set_codec(simple_rtmp::rtmp_codec::h264);
             frame->set_flag(keyframe);
@@ -144,7 +144,7 @@ void rtmp_h264_decoder::demuxer_avpacket(const uint8_t* data, size_t bytes, int6
         }
 
         const static uint8_t header[] = {0x00, 0x00, 0x00, 0x01};
-        auto frame                    = fixed_frame_buffer::create(nalu_size + 4);
+        auto frame = fixed_frame_buffer::create(nalu_size + 4);
         frame->set_media(simple_rtmp::rtmp_tag::video);
         frame->set_codec(simple_rtmp::rtmp_codec::h264);
         frame->set_pts(timestamp + cts);

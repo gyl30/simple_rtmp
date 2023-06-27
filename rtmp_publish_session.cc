@@ -35,13 +35,13 @@ void rtmp_publish_session::start()
 void rtmp_publish_session::startup()
 {
     simple_rtmp::rtmp_server_context_handler ctx_handler;
-    ctx_handler.send      = std::bind(&rtmp_publish_session::rtmp_do_send, shared_from_this(), _1);
+    ctx_handler.send = std::bind(&rtmp_publish_session::rtmp_do_send, shared_from_this(), _1);
     ctx_handler.onpublish = std::bind(&rtmp_publish_session::rtmp_on_publish, shared_from_this(), _1, _2, _3);
-    ctx_handler.onscript  = std::bind(&rtmp_publish_session::rtmp_on_script, shared_from_this(), _1);
-    ctx_handler.onvideo   = std::bind(&rtmp_publish_session::rtmp_on_video, shared_from_this(), _1);
-    ctx_handler.onaudio   = std::bind(&rtmp_publish_session::rtmp_on_audio, shared_from_this(), _1);
-    args_                 = std::make_shared<publish_args>();
-    args_->rtmp_ctx       = new rtmp_server_context(std::move(ctx_handler));
+    ctx_handler.onscript = std::bind(&rtmp_publish_session::rtmp_on_script, shared_from_this(), _1);
+    ctx_handler.onvideo = std::bind(&rtmp_publish_session::rtmp_on_video, shared_from_this(), _1);
+    ctx_handler.onaudio = std::bind(&rtmp_publish_session::rtmp_on_audio, shared_from_this(), _1);
+    args_ = std::make_shared<publish_args>();
+    args_->rtmp_ctx = new rtmp_server_context(std::move(ctx_handler));
 }
 
 void rtmp_publish_session::on_write(const boost::system::error_code& ec, std::size_t /*bytes*/)
@@ -92,10 +92,10 @@ int rtmp_publish_session::rtmp_do_send(const simple_rtmp::frame_buffer::ptr& fra
 
 int rtmp_publish_session::rtmp_on_publish(const std::string& app, const std::string& stream, const std::string& type)
 {
-    app_                 = app;
-    stream_              = stream;
+    app_ = app;
+    stream_ = stream;
     std::string const id = app + "_" + stream;
-    source_              = std::make_shared<rtmp_source>(id, ex_);
+    source_ = std::make_shared<rtmp_source>(id, ex_);
     LOG_DEBUG("publish app {} stream {} type {}", app, stream, type);
     return 0;
 }

@@ -25,7 +25,7 @@ class executors
 
    private:
     using exec_work_t = boost::asio::executor_work_guard<executor::executor_type>;
-    uint32_t index_   = 0;
+    uint32_t index_ = 0;
     std::vector<std::thread> threads_;
     std::vector<executor> exs_;
     std::vector<exec_work_t> works_;

@@ -7,7 +7,7 @@
 enum
 {
     sequence_header = 0,
-    avpacket        = 1,
+    avpacket = 1,
     end_of_sequence = 2,
 };
 
@@ -52,11 +52,11 @@ void rtmp_h264_encoder::write(const frame_buffer::ptr &frame, const boost::syste
         return;
     }
 
-    const static uint8_t kCodecId  = simple_rtmp::rtmp_codec::h264;
+    const static uint8_t kCodecId = simple_rtmp::rtmp_codec::h264;
     const static uint8_t kFrameTag = simple_rtmp::rtmp_tag::video;
-    const uint8_t *data            = frame->data();
-    size_t const size                    = frame->size();
-    auto avc_frame                 = fixed_frame_buffer::create();
+    const uint8_t *data = frame->data();
+    size_t const size = frame->size();
+    auto avc_frame = fixed_frame_buffer::create();
     avc_frame->resize(frame->size() + sizeof(args_->avc));
 
     int ret = h264_annexbtomp4(&args_->avc, data, size, avc_frame->data(), avc_frame->size(), &args_->vcl, &args_->update);
@@ -69,17 +69,17 @@ void rtmp_h264_encoder::write(const frame_buffer::ptr &frame, const boost::syste
     avc_frame->set_dts(frame->dts());
     avc_frame->set_codec(kCodecId);
     avc_frame->set_media(kFrameTag);
-    const static int kBufferSize   = 4096;
+    const static int kBufferSize = 4096;
     const static int kVideoTagSize = 5;
 
     if ((args_->update != 0) && args_->avc.nb_sps > 0 && args_->avc.nb_pps > 0)
     {
         uint8_t buf[kBufferSize] = {0};
-        buf[0]                   = (1 << 4) | (kCodecId & 0x0F);
-        buf[1]                   = sequence_header;
-        buf[2]                   = (0 >> 16) & 0xFF;
-        buf[3]                   = (0 >> 8) & 0xFF;
-        buf[4]                   = 0 & 0xFF;
+        buf[0] = (1 << 4) | (kCodecId & 0x0F);
+        buf[1] = sequence_header;
+        buf[2] = (0 >> 16) & 0xFF;
+        buf[3] = (0 >> 8) & 0xFF;
+        buf[4] = 0 & 0xFF;
 
         ret = mpeg4_avc_decoder_configuration_record_save(&args_->avc, buf + kVideoTagSize, kBufferSize - kVideoTagSize);
         if (ret <= 0)
@@ -99,14 +99,14 @@ void rtmp_h264_encoder::write(const frame_buffer::ptr &frame, const boost::syste
     }
     if ((args_->vcl != 0) && (args_->video_sequence_header != 0U))
     {
-        uint8_t const keyframe           = args_->vcl == 1 ? 1 : 2;
+        uint8_t const keyframe = args_->vcl == 1 ? 1 : 2;
         uint8_t buf[kVideoTagSize] = {0};
-        buf[0]                     = (keyframe << 4) | (kCodecId & 0x0F);
-        buf[1]                     = avpacket;
-        buf[2]                     = (0 >> 16) & 0xFF;
-        buf[3]                     = (0 >> 8) & 0xFF;
-        buf[4]                     = 0 & 0xFF;
-        auto header_frame          = fixed_frame_buffer::create();
+        buf[0] = (keyframe << 4) | (kCodecId & 0x0F);
+        buf[1] = avpacket;
+        buf[2] = (0 >> 16) & 0xFF;
+        buf[3] = (0 >> 8) & 0xFF;
+        buf[4] = 0 & 0xFF;
+        auto header_frame = fixed_frame_buffer::create();
         header_frame->append(buf, kVideoTagSize);
         header_frame->set_pts(frame->pts());
         header_frame->set_dts(frame->dts());

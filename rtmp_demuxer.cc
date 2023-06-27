@@ -67,33 +67,33 @@ void rtmp_demuxer::demuxer_script(const frame_buffer::ptr& frame, const boost::s
         return;
     }
     const uint8_t* data = frame->data();
-    size_t bytes        = frame->size();
+    size_t bytes = frame->size();
     const uint8_t* end;
-    char buffer[64]        = {0};
-    double audiocodecid    = 0;
-    double audiodatarate   = 0;    // bitrate / 1024
-    double audiodelay      = 0;
+    char buffer[64] = {0};
+    double audiocodecid = 0;
+    double audiodatarate = 0;    // bitrate / 1024
+    double audiodelay = 0;
     double audiosamplerate = 0;
     double audiosamplesize = 0;
-    double videocodecid    = 0;
-    double videodatarate   = 0;    // bitrate / 1024
-    double framerate       = 0;
-    double height          = 0;
-    double width           = 0;
-    double duration        = 0;
-    double filesize        = 0;
-    int canSeekToEnd       = 0;
-    int stereo             = 0;
+    double videocodecid = 0;
+    double videodatarate = 0;    // bitrate / 1024
+    double framerate = 0;
+    double height = 0;
+    double width = 0;
+    double duration = 0;
+    double filesize = 0;
+    int canSeekToEnd = 0;
+    int stereo = 0;
     struct amf_object_item_t keyframes[2];
     struct amf_object_item_t prop[16];
     struct amf_object_item_t items[1];
 
 #define AMF_OBJECT_ITEM_VALUE(v, amf_type, amf_name, amf_value, amf_size) \
     {                                                                     \
-        (v).type  = amf_type;                                             \
-        (v).name  = amf_name;                                             \
+        (v).type = amf_type;                                              \
+        (v).name = amf_name;                                              \
         (v).value = amf_value;                                            \
-        (v).size  = amf_size;                                             \
+        (v).size = amf_size;                                              \
     }
     AMF_OBJECT_ITEM_VALUE(keyframes[0], AMF_STRICT_ARRAY, "filepositions", nullptr, 0);    // ignore keyframes
     AMF_OBJECT_ITEM_VALUE(keyframes[1], AMF_STRICT_ARRAY, "times", nullptr, 0);
@@ -173,7 +173,7 @@ void rtmp_demuxer::demuxer_script(const frame_buffer::ptr& frame, const boost::s
               duration,
               filesize);
     int64_t audio_codec_id = audiocodecid;
-    audio_codec_id         = audio_codec_id << 4;
+    audio_codec_id = audio_codec_id << 4;
 
     if (codec_cb_)
     {

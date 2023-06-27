@@ -13,7 +13,7 @@ namespace simple_rtmp
 class sink : public std::enable_shared_from_this<sink>
 {
    public:
-    using ptr  = std::shared_ptr<sink>;
+    using ptr = std::shared_ptr<sink>;
     using weak = std::weak_ptr<sink>;
 
    public:
@@ -22,15 +22,15 @@ class sink : public std::enable_shared_from_this<sink>
     static void del(const std::string& id);
 
    public:
-    sink()          = default;
+    sink() = default;
     virtual ~sink() = default;
 
    public:
-    virtual std::string id() const                                                          = 0;
+    virtual std::string id() const = 0;
     virtual void write(const frame_buffer::ptr& frame, const boost::system::error_code& ec) = 0;
-    virtual void add_channel(const channel::ptr& ch)                                        = 0;
-    virtual void del_channel(const channel::ptr& ch)                                        = 0;
-    virtual void add_codec(int codec)                                                       = 0;
+    virtual void add_channel(const channel::ptr& ch) = 0;
+    virtual void del_channel(const channel::ptr& ch) = 0;
+    virtual void add_codec(int codec) = 0;
 
    private:
     static std::map<std::string, sink::ptr> sinks_;

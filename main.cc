@@ -13,10 +13,10 @@ using simple_rtmp::rtmp_publish_session;
 using simple_rtmp::rtmp_forward_session;
 using simple_rtmp::tcp_server;
 
-static const std::string kRtmpServerName        = "rtmp publish";
+static const std::string kRtmpServerName = "rtmp publish";
 static const std::string kRtmpForwardServerName = "rtmp forward";
-static const uint16_t kRtmpPublishPort          = 1935;
-static const uint16_t kRtmpForwardPort          = 1936;
+static const uint16_t kRtmpPublishPort = 1935;
+static const uint16_t kRtmpForwardPort = 1936;
 
 int main(int argc, char* argv[])
 {
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     sig.async_wait(
         [&stop, &signal_number](boost::system::error_code, int s)
         {
-            stop          = true;
+            stop = true;
             signal_number = s;
         });
 

@@ -5,7 +5,7 @@
 using simple_rtmp::timestamp;
 
 static const int kMicroSecondsPerSecond = 1000 * 1000;
-static const int kMicroSecondsPerMilli  = 1000;
+static const int kMicroSecondsPerMilli = 1000;
 
 static std::string format_time(int64_t microseconds, bool mill, bool micro)
 {
@@ -55,19 +55,19 @@ timestamp timestamp::now()
 }
 std::string timestamp::fmt_micro_string() const
 {
-    constexpr bool mill  = false;
+    constexpr bool mill = false;
     constexpr bool micro = true;
     return format_time(microseconds_, mill, micro);
 }
 std::string timestamp::fmt_milli_string() const
 {
-    constexpr bool mill  = true;
+    constexpr bool mill = true;
     constexpr bool micro = false;
     return format_time(microseconds_, mill, micro);
 }
 std::string timestamp::fmt_second_string() const
 {
-    constexpr bool mill  = false;
+    constexpr bool mill = false;
     constexpr bool micro = false;
 
     return format_time(microseconds_, mill, micro);

@@ -18,21 +18,21 @@ class frame_buffer
     virtual ~frame_buffer() = default;
 
    public:
-    virtual uint8_t* data()             = 0;
+    virtual uint8_t* data() = 0;
     virtual const uint8_t* data() const = 0;
-    virtual std::size_t size() const    = 0;
+    virtual std::size_t size() const = 0;
 
    public:
-    virtual int32_t media() const         = 0;
-    virtual int32_t codec() const         = 0;
-    virtual int32_t flag() const          = 0;
-    virtual int64_t pts() const           = 0;
-    virtual int64_t dts() const           = 0;
+    virtual int32_t media() const = 0;
+    virtual int32_t codec() const = 0;
+    virtual int32_t flag() const = 0;
+    virtual int64_t pts() const = 0;
+    virtual int64_t dts() const = 0;
     virtual void set_media(int32_t media) = 0;
     virtual void set_codec(int32_t codec) = 0;
-    virtual void set_flag(int32_t flag)   = 0;
-    virtual void set_pts(int64_t pts)     = 0;
-    virtual void set_dts(int64_t dts)     = 0;
+    virtual void set_flag(int32_t flag) = 0;
+    virtual void set_pts(int64_t pts) = 0;
+    virtual void set_dts(int64_t dts) = 0;
 };
 class ref_frame_buffer : public frame_buffer
 {
@@ -116,8 +116,8 @@ class ref_frame_buffer : public frame_buffer
     }
 
    private:
-    uint8_t* ref_data_                 = nullptr;
-    std::size_t ref_data_size_         = 0;
+    uint8_t* ref_data_ = nullptr;
+    std::size_t ref_data_size_ = 0;
     std::shared_ptr<frame_buffer> ref_ = nullptr;
 };
 
@@ -129,9 +129,9 @@ class fixed_frame_buffer : public frame_buffer
    private:
     int32_t media_ = 0;
     int32_t codec_ = 0;
-    int32_t flag_  = 0;
-    int64_t pts_   = 0;
-    int64_t dts_   = 0;
+    int32_t flag_ = 0;
+    int64_t pts_ = 0;
+    int64_t dts_ = 0;
     std::vector<uint8_t> payload_;
 
    private:
@@ -252,9 +252,9 @@ class fixed_frame_buffer : public frame_buffer
         }
         media_ = frame->media();
         codec_ = frame->codec();
-        pts_   = frame->pts();
-        dts_   = frame->dts();
-        flag_  = frame->flag();
+        pts_ = frame->pts();
+        dts_ = frame->dts();
+        flag_ = frame->flag();
         append(frame->data(), frame->size());
     }
     void append(const ptr& frame)
@@ -265,9 +265,9 @@ class fixed_frame_buffer : public frame_buffer
         }
         media_ = frame->media_;
         codec_ = frame->codec_;
-        pts_   = frame->pts_;
-        dts_   = frame->dts_;
-        flag_  = frame->flag_;
+        pts_ = frame->pts_;
+        dts_ = frame->dts_;
+        flag_ = frame->flag_;
         append(frame->payload_);
     }
     void append(const std::vector<uint8_t>& data)

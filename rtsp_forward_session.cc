@@ -33,7 +33,7 @@ boost::asio::ip::tcp::socket& rtsp_forward_session::socket()
 }
 void rtsp_forward_session::start()
 {
-    args_    = std::make_shared<simple_rtmp::rtsp_forward_args>();
+    args_ = std::make_shared<simple_rtmp::rtsp_forward_args>();
     channel_ = std::make_shared<simple_rtmp::channel>();
     channel_->set_output(std::bind(&rtsp_forward_session::channel_out, shared_from_this(), _1, _2));
     conn_->set_read_cb(std::bind(&rtsp_forward_session::on_read, shared_from_this(), _1, _2));

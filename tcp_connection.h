@@ -21,7 +21,7 @@ class tcp_connection : public std::enable_shared_from_this<tcp_connection>
     boost::asio::ip::tcp::socket& socket();
 
    public:
-    using read_cb  = std::function<void(const simple_rtmp::frame_buffer::ptr&, boost::system::error_code)>;
+    using read_cb = std::function<void(const simple_rtmp::frame_buffer::ptr&, boost::system::error_code)>;
     using write_cb = std::function<void(boost::system::error_code, std::size_t)>;
     void set_read_cb(const read_cb& cb);
     void set_write_cb(const write_cb& cb);
@@ -41,9 +41,9 @@ class tcp_connection : public std::enable_shared_from_this<tcp_connection>
     std::string remote_addr_;
 
     const static int kBufSize = 64 * 1024;
-    uint8_t buf_[kBufSize]    = {0};
-    read_cb read_cb_          = nullptr;
-    write_cb write_cb_        = nullptr;
+    uint8_t buf_[kBufSize] = {0};
+    read_cb read_cb_ = nullptr;
+    write_cb write_cb_ = nullptr;
     simple_rtmp::executors::executor& ex_;
     boost::asio::ip::tcp::socket socket_{ex_};
     std::vector<frame_buffer::ptr> write_queue_;

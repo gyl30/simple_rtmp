@@ -16,10 +16,10 @@ class rtmp_publish_session : public std::enable_shared_from_this<rtmp_publish_se
    public:
     explicit rtmp_publish_session(executors::executor& ex);
     ~rtmp_publish_session();
-    rtmp_publish_session(const rtmp_publish_session&)            = delete;
-    rtmp_publish_session(rtmp_publish_session&&)                 = delete;
+    rtmp_publish_session(const rtmp_publish_session&) = delete;
+    rtmp_publish_session(rtmp_publish_session&&) = delete;
     rtmp_publish_session& operator=(const rtmp_publish_session&) = delete;
-    rtmp_publish_session& operator=(rtmp_publish_session&&)      = delete;
+    rtmp_publish_session& operator=(rtmp_publish_session&&) = delete;
 
    public:
     void start();

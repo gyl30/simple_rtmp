@@ -58,7 +58,7 @@ std::string get_socket_local_address(boost::asio::ip::udp::socket& socket)
 }
 boost::asio::ip::tcp::socket change_socket_io_context(boost::asio::ip::tcp::socket sock, boost::asio::io_context& io)
 {
-    std::string local  = get_socket_local_address(sock);
+    std::string local = get_socket_local_address(sock);
     std::string remote = get_socket_remote_address(sock);
     boost::system::error_code ec;
     boost::asio::ip::tcp::socket tmp(io);

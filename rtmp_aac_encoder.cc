@@ -6,7 +6,7 @@
 enum
 {
     sequence_header = 0,
-    avpacket        = 1,
+    avpacket = 1,
     end_of_sequence = 2,
 };
 
@@ -52,14 +52,14 @@ void rtmp_aac_encoder::write(const frame_buffer::ptr &frame, const boost::system
     {
         return;
     }
-    const static uint8_t kCodecId  = simple_rtmp::rtmp_codec::aac;
+    const static uint8_t kCodecId = simple_rtmp::rtmp_codec::aac;
     const static uint8_t kFrameTag = simple_rtmp::rtmp_tag::audio;
 
     struct flv_audio_tag_header_t audio;
 
-    audio.codecid  = simple_rtmp::rtmp_codec::aac;
-    audio.rate     = 3;    // 44k-SoundRate
-    audio.bits     = 1;    // 16-bit samples
+    audio.codecid = simple_rtmp::rtmp_codec::aac;
+    audio.rate = 3;        // 44k-SoundRate
+    audio.bits = 1;        // 16-bit samples
     audio.channels = 1;    // Stereo sound
     if (args_->audio_sequence_header == 0)
     {
@@ -70,7 +70,7 @@ void rtmp_aac_encoder::write(const frame_buffer::ptr &frame, const boost::system
         aac_frame->set_media(kFrameTag);
         aac_frame->resize(frame->size() + 4);
 
-        audio.avpacket               = sequence_header;
+        audio.avpacket = sequence_header;
         args_->audio_sequence_header = 1;    // once only
         flv_audio_tag_header_write(&audio, aac_frame->data(), aac_frame->size());
         n = mpeg4_aac_audio_specific_config_save(&args_->aac, aac_frame->data() + 2, aac_frame->size() - 2);
