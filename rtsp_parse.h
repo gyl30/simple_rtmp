@@ -46,6 +46,23 @@ class rtsp_parse
     {
         return body_;
     }
+    std::string schema() const
+    {
+        return url_schema_;
+    }
+    uint16_t port() const
+    {
+        return url_port_;
+    }
+    std::string path()
+    {
+        return url_path_;
+    }
+    std::string host()
+    {
+        return url_host_;
+    }
+
     boost::optional<std::string> header(const std::string& key) const
     {
         auto it = headers_.find(key);
@@ -94,7 +111,7 @@ class rtsp_parse
     {
         LOG_DEBUG("on message complete");
         auto* self        = reinterpret_cast<rtsp_parse*>(parser->data);
-        self->parse_step_ = kMessageComplete;
+        self->parse_step_ = kParseComplete;
         return 0;
     }
     static int on_url(http_parser* parser, const char* at, size_t length)
@@ -143,25 +160,16 @@ class rtsp_parse
         }
         return 0;
     }
-    static int on_status(http_parser* parser, const char* at, size_t length)
-    {
-        auto* self = reinterpret_cast<rtsp_parse*>(parser->data);
-
-        if (length > 0)
-        {
-            std::string str(at, at + length);
-            self->status_ += str;
-        }
-        LOG_DEBUG("on status {}", self->status_);
-        return 0;
-    }
 
    private:
     int parse_step_ = 0;
+    uint16_t url_port_;
     std::string field_;
     std::string value_;
     std::string url_;
-    std::string status_;
+    std::string url_schema_;
+    std::string url_host_;
+    std::string url_path_;
     std::string body_;
     http_parser parser_;
     http_parser_settings settings_;
