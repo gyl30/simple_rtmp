@@ -40,6 +40,10 @@ class rtsp_parser
         }
         return 0;
     }
+    std::string method() const
+    {
+        return method_;
+    }
     std::string url() const
     {
         return url_;
@@ -112,6 +116,7 @@ class rtsp_parser
         LOG_DEBUG("on message complete");
         auto* self = reinterpret_cast<rtsp_parser*>(parser->data);
         self->parse_step_ = kParseComplete;
+        self->method_ = http_method_str(static_cast<enum http_method>(parser->method));
         return 0;
     }
     static void update_url_field(const http_parser_url& url_parse, const char* at, int field, std::string& value)
@@ -193,6 +198,7 @@ class rtsp_parser
     std::string url_schema_;
     std::string url_host_;
     std::string url_path_;
+    std::string method_;
     std::string body_;
     http_parser parser_;
     http_parser_settings settings_;
