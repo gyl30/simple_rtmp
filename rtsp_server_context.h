@@ -4,7 +4,7 @@
 #include <string>
 #include <functional>
 #include "frame_buffer.h"
-#include "rtsp_parse.h"
+#include "rtsp_parser.h"
 
 namespace simple_rtmp
 {
@@ -39,6 +39,7 @@ class rtsp_server_context
     void input(const simple_rtmp::frame_buffer::ptr& frame);
 
    private:
+    simple_rtmp::rtsp_parser parser_;
     rtsp_server_context_handler handler_;
 };
 
