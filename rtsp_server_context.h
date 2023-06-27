@@ -4,6 +4,7 @@
 #include <string>
 #include <functional>
 #include "frame_buffer.h"
+#include "rtsp_parse.h"
 
 namespace simple_rtmp
 {

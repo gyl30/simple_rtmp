@@ -25,8 +25,10 @@ class rtsp_parse
    public:
     int input(const frame_buffer::ptr& frame)
     {
-        size_t consumed = http_parser_execute(&parser_, &settings_, data, length);
-        auto err_code   = static_cast<enum http_errno>(parser_.http_errno);
+        const char* data    = reinterpret_cast<const char*>(frame->data());
+        const size_t length = frame->size();
+        size_t consumed     = http_parser_execute(&parser_, &settings_, data, length);
+        auto err_code       = static_cast<enum http_errno>(parser_.http_errno);
         if (err_code != HPE_OK)
         {
             return -1;
@@ -62,13 +64,12 @@ class rtsp_parse
     {
         return url_host_;
     }
-
     boost::optional<std::string> header(const std::string& key) const
     {
         auto it = headers_.find(key);
         if (it == headers_.end())
         {
-            return "";
+            return {};
         }
         return it->second;
     }
@@ -82,7 +83,6 @@ class rtsp_parse
         http_parser_settings_init(&settings_);
         settings_.on_message_begin    = on_message_begin;
         settings_.on_url              = on_url;
-        settings_.on_status           = on_status;
         settings_.on_header_field     = on_header_field;
         settings_.on_header_value     = on_header_value;
         settings_.on_headers_complete = on_headers_complete;
@@ -114,6 +114,13 @@ class rtsp_parse
         self->parse_step_ = kParseComplete;
         return 0;
     }
+    static void update_url_field(const http_parser_url& url_parse, const char* at, int field, std::string& value)
+    {
+        if ((url_parse.field_set & (1 << field)) != 0)
+        {
+            value.assign(at + url_parse.field_data[field].off, url_parse.field_data[field].len);
+        }
+    }
     static int on_url(http_parser* parser, const char* at, size_t length)
     {
         auto* self = reinterpret_cast<rtsp_parse*>(parser->data);
@@ -122,6 +129,22 @@ class rtsp_parse
             self->url_.append(at, at + length);
         }
 
+        http_parser_url url_parse;
+        http_parser_url_init(&url_parse);
+        int ret = http_parser_parse_url(at, length, 0, &url_parse);
+        if (ret != 0)
+        {
+            return 0;
+        }
+        update_url_field(url_parse, at, UF_SCHEMA, self->url_schema_);
+        update_url_field(url_parse, at, UF_HOST, self->url_host_);
+        update_url_field(url_parse, at, UF_PATH, self->url_path_);
+        std::string port_url;
+        update_url_field(url_parse, at, UF_PORT, port_url);
+        if (!port_url.empty())
+        {
+            self->url_port_ = atoi(port_url.c_str());
+        }
         return 0;
     }
     static int on_header_field(http_parser* parser, const char* at, size_t length)
