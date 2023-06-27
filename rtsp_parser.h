@@ -10,14 +10,14 @@
 
 namespace simple_rtmp
 {
-class rtsp_parse
+class rtsp_parser
 {
    public:
-    rtsp_parse()
+    rtsp_parser()
     {
         reset();
     }
-    ~rtsp_parse() = default;
+    ~rtsp_parser() = default;
 
    private:
     const static int kParseComplete = 1;
@@ -104,13 +104,13 @@ class rtsp_parse
     static int on_headers_complete(http_parser* parser)
     {
         LOG_DEBUG("on headers complete");
-        auto* self = reinterpret_cast<rtsp_parse*>(parser->data);
+        auto* self = reinterpret_cast<rtsp_parser*>(parser->data);
         return 0;
     }
     static int on_message_complete(http_parser* parser)
     {
         LOG_DEBUG("on message complete");
-        auto* self = reinterpret_cast<rtsp_parse*>(parser->data);
+        auto* self = reinterpret_cast<rtsp_parser*>(parser->data);
         self->parse_step_ = kParseComplete;
         return 0;
     }
@@ -123,7 +123,7 @@ class rtsp_parse
     }
     static int on_url(http_parser* parser, const char* at, size_t length)
     {
-        auto* self = reinterpret_cast<rtsp_parse*>(parser->data);
+        auto* self = reinterpret_cast<rtsp_parser*>(parser->data);
         if (length > 0)
         {
             self->url_.append(at, at + length);
@@ -149,7 +149,7 @@ class rtsp_parse
     }
     static int on_header_field(http_parser* parser, const char* at, size_t length)
     {
-        auto* self = reinterpret_cast<rtsp_parse*>(parser->data);
+        auto* self = reinterpret_cast<rtsp_parser*>(parser->data);
         if (!self->value_.empty())
         {
             self->headers_.emplace(self->field_, self->value_);
@@ -165,7 +165,7 @@ class rtsp_parse
     }
     static int on_header_value(http_parser* parser, const char* at, size_t length)
     {
-        auto* self = reinterpret_cast<rtsp_parse*>(parser->data);
+        auto* self = reinterpret_cast<rtsp_parser*>(parser->data);
         if (length > 0)
         {
             std::string str(at, at + length);
@@ -175,7 +175,7 @@ class rtsp_parse
     }
     static int on_body(http_parser* parser, const char* at, size_t length)
     {
-        auto* self = reinterpret_cast<rtsp_parse*>(parser->data);
+        auto* self = reinterpret_cast<rtsp_parser*>(parser->data);
         if (length > 0)
         {
             std::string str(at, at + length);
