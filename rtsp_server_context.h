@@ -36,7 +36,16 @@ class rtsp_server_context
     ~rtsp_server_context() = default;
 
    public:
-    void input(const simple_rtmp::frame_buffer::ptr& frame);
+    // -1 error 0 success
+    int input(const simple_rtmp::frame_buffer::ptr& frame);
+
+   private:
+    void process_request(const simple_rtmp::rtsp_parser& parser);
+    void options_request(const simple_rtmp::rtsp_parser& parser);
+    void describe_request(const simple_rtmp::rtsp_parser& parser);
+    void setup_request(const simple_rtmp::rtsp_parser& parser);
+    void play_request(const simple_rtmp::rtsp_parser& parser);
+    void teardown_request(const simple_rtmp::rtsp_parser& parser);
 
    private:
     simple_rtmp::rtsp_parser parser_;
