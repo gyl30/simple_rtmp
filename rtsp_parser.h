@@ -3,7 +3,6 @@
 
 #include <string>
 #include <map>
-#include <boost/optional.hpp>
 #include "http_parser.h"
 #include "frame_buffer.h"
 #include "log.h"
@@ -68,12 +67,12 @@ class rtsp_parser
     {
         return url_host_;
     }
-    boost::optional<std::string> header(const std::string& key) const
+    std::string header(const std::string& key) const
     {
         auto it = headers_.find(key);
         if (it == headers_.end())
         {
-            return {};
+            return "";
         }
         return it->second;
     }

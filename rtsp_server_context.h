@@ -10,14 +10,12 @@ namespace simple_rtmp
 {
 struct rtsp_transport
 {
-    int transport;    // 1 udp,2 tcp
-    int multicast;    // 0 unicast,1-multicast
-    uint16_t client_port1;
-    uint16_t client_port2;
-    int interleaved1;
-    int interleaved2;
-    uint16_t server_port1;
-    uint16_t server_port2;
+    int transport = 0;    // 0 udp,1 tcp
+    int multicast = 0;    // 0 unicast,1-multicast
+    uint16_t client_port1 = 0;
+    uint16_t client_port2 = 0;
+    int interleaved1 = -1;
+    int interleaved2 = -1;
 };
 
 struct rtsp_server_context_handler
