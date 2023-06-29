@@ -38,6 +38,8 @@ class rtsp_server_context
     int input(const simple_rtmp::frame_buffer::ptr& frame);
 
    private:
+    int parse_rtsp_message(const simple_rtmp::frame_buffer::ptr& frame);
+    int parse_rtcp_message(const simple_rtmp::frame_buffer::ptr& frame);
     void process_request(const simple_rtmp::rtsp_parser& parser);
     void options_request(const simple_rtmp::rtsp_parser& parser);
     void describe_request(const simple_rtmp::rtsp_parser& parser);
@@ -46,6 +48,7 @@ class rtsp_server_context
     void teardown_request(const simple_rtmp::rtsp_parser& parser);
 
    private:
+    int need_more_data_ = 0;
     simple_rtmp::rtsp_parser parser_;
     rtsp_server_context_handler handler_;
 };

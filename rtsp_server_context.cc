@@ -3,23 +3,65 @@
 
 using simple_rtmp::rtsp_server_context;
 
+enum RTSP_PARSE_RESULT
+{
+    RTSP_PARSE_OK = 0,
+    RTSP_PARSE_ERROR = -1,
+    RTSP_PARSE_CONTINUE = -2
+};
+
 rtsp_server_context::rtsp_server_context(rtsp_server_context_handler handler) : handler_(std::move(handler))
 {
 }
 
 int rtsp_server_context::input(const simple_rtmp::frame_buffer::ptr& frame)
 {
-    int ret = parser_.input(frame);
-    if (ret < 0)
+    int ret = RTSP_PARSE_OK;
+    while (!frame->empty())
     {
-        return ret;
-    }
-    if (ret == 0)
-    {
-        process_request(parser_);
+        if (need_more_data_ != RTSP_PARSE_CONTINUE && frame->peek() == '$')
+        {
+            // rtcp
+            ret = parse_rtcp_message(frame);
+        }
+        else
+        {
+            ret = parse_rtsp_message(frame);
+        }
+        if (ret == RTSP_PARSE_ERROR)
+        {
+            return -1;
+        }
     }
     return ret;
 }
+
+int rtsp_server_context::parse_rtsp_message(const simple_rtmp::frame_buffer::ptr& frame)
+{
+    int ret = parser_.input(frame);
+    if (ret == RTSP_PARSE_ERROR)
+    {
+        return ret;
+    }
+    if (ret == RTSP_PARSE_CONTINUE)
+    {
+        need_more_data_ = RTSP_PARSE_CONTINUE;
+        return RTSP_PARSE_OK;
+    }
+    need_more_data_ = RTSP_PARSE_OK;
+    if (parser_.complete())
+    {
+        process_request(parser_);
+    }
+    frame->erase(ret);
+    return 0;
+}
+
+int rtsp_server_context::parse_rtcp_message(const simple_rtmp::frame_buffer::ptr& frame)
+{
+    return RTSP_PARSE_OK;
+}
+
 void rtsp_server_context::process_request(const simple_rtmp::rtsp_parser& parser)
 {
     std::string method = parser_.method();
