@@ -21,6 +21,8 @@ class frame_buffer
     virtual uint8_t* data() = 0;
     virtual const uint8_t* data() const = 0;
     virtual std::size_t size() const = 0;
+    virtual void erase(uint32_t size) = 0;
+    virtual bool empty() const = 0;
 
    public:
     virtual int32_t media() const = 0;
@@ -74,6 +76,16 @@ class ref_frame_buffer : public frame_buffer
     {
         return ref_data_size_;
     }
+    void erase(uint32_t size) override
+    {
+        ref_->erase(size);
+    }
+    bool empty() const override
+    {
+        return ref_->empty();
+    }
+
+    //
     int32_t media() const override
     {
         return ref_->media();
@@ -185,6 +197,16 @@ class fixed_frame_buffer : public frame_buffer
     {
         return payload_.size();
     }
+    void erase(uint32_t size) override
+    {
+        payload_.erase(payload_.begin() + size);
+    }
+    bool empty() const override
+    {
+        return payload_.empty();
+    }
+
+    //
     int32_t media() const override
     {
         return media_;
