@@ -39,6 +39,10 @@ class rtsp_parser
         }
         return static_cast<int>(consumed);
     }
+    bool complete() const
+    {
+        return parse_step_ == kParseComplete;
+    }
     std::string method() const
     {
         return method_;
