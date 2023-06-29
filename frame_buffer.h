@@ -23,6 +23,7 @@ class frame_buffer
     virtual std::size_t size() const = 0;
     virtual void erase(uint32_t size) = 0;
     virtual bool empty() const = 0;
+    virtual uint8_t peek() const = 0;
 
    public:
     virtual int32_t media() const = 0;
@@ -83,6 +84,10 @@ class ref_frame_buffer : public frame_buffer
     bool empty() const override
     {
         return ref_->empty();
+    }
+    uint8_t peek() const override
+    {
+        return ref_->peek();
     }
 
     //
@@ -204,6 +209,10 @@ class fixed_frame_buffer : public frame_buffer
     bool empty() const override
     {
         return payload_.empty();
+    }
+    uint8_t peek() const override
+    {
+        return payload_.front();
     }
 
     //
