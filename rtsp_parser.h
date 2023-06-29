@@ -35,9 +35,9 @@ class rtsp_parser
         if (parse_step_ != kParseComplete)
         {
             // 1 need more data
-            return 1;
+            return -2;
         }
-        return 0;
+        return static_cast<int>(consumed);
     }
     std::string method() const
     {
