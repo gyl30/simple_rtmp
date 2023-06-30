@@ -32,6 +32,7 @@ int rtsp_server_context::input(const simple_rtmp::frame_buffer::ptr& frame)
         {
             return -1;
         }
+        frame->erase(ret);
     }
     return ret;
 }
@@ -41,24 +42,44 @@ int rtsp_server_context::parse_rtsp_message(const simple_rtmp::frame_buffer::ptr
     int ret = parser_.input(frame);
     if (ret == RTSP_PARSE_ERROR)
     {
+        need_more_data_ = RTSP_PARSE_ERROR;
         return ret;
     }
     if (ret == RTSP_PARSE_CONTINUE)
     {
         need_more_data_ = RTSP_PARSE_CONTINUE;
-        return RTSP_PARSE_OK;
+        return static_cast<int>(frame->size());
     }
     need_more_data_ = RTSP_PARSE_OK;
     if (parser_.complete())
     {
         process_request(parser_);
     }
-    frame->erase(ret);
-    return 0;
+    return ret;
 }
 
 int rtsp_server_context::parse_rtcp_message(const simple_rtmp::frame_buffer::ptr& frame)
 {
+    // 4 byte (1 prefix 1 interleaved 2 length)
+    if (frame->size() < 4)
+    {
+        // 数据不够
+        return RTSP_PARSE_OK;
+    }
+
+    const uint8_t* data = frame->data();
+    int interleaved = data[1];
+    uint32_t length = (data[2] << 8) | data[3];
+    if (length < 12)
+    {
+        return RTSP_PARSE_ERROR;
+    }
+    if (frame->size() < (length + 4))
+    {
+        // 需要更多数据
+        return RTSP_PARSE_OK;
+    }
+    // rtcp
     return RTSP_PARSE_OK;
 }
 
