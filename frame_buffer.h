@@ -204,7 +204,14 @@ class fixed_frame_buffer : public frame_buffer
     }
     void erase(uint32_t size) override
     {
-        payload_.erase(payload_.begin() + size);
+        if (payload_.size() < size)
+        {
+            payload_.clear();
+        }
+        else
+        {
+            payload_.erase(payload_.begin(), payload_.begin() + size);
+        }
     }
     bool empty() const override
     {
@@ -212,6 +219,7 @@ class fixed_frame_buffer : public frame_buffer
     }
     uint8_t peek() const override
     {
+        // assert(!payload_.empty());
         return payload_.front();
     }
 
