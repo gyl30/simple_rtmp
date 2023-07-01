@@ -39,10 +39,32 @@ class rtsp_parser
         }
         return static_cast<int>(consumed);
     }
+
     bool complete() const
     {
         return parse_step_ == kParseComplete;
     }
+
+    void reset()
+    {
+        http_parser_init(&parser_, HTTP_BOTH);
+        parser_.data = this;
+        // parser_.flags = F_SKIPBODY;
+        http_parser_settings_init(&settings_);
+        settings_.on_message_begin = on_message_begin;
+        settings_.on_url = on_url;
+        settings_.on_header_field = on_header_field;
+        settings_.on_header_value = on_header_value;
+        settings_.on_headers_complete = on_headers_complete;
+        settings_.on_body = on_body;
+        settings_.on_message_complete = on_message_complete;
+        field_.clear();
+        value_.clear();
+        headers_.clear();
+        url_.clear();
+        parse_step_ = 0;
+    }
+
     std::string method() const
     {
         return method_;
@@ -79,27 +101,6 @@ class rtsp_parser
             return "";
         }
         return it->second;
-    }
-
-   private:
-    void reset()
-    {
-        http_parser_init(&parser_, HTTP_BOTH);
-        parser_.data = this;
-        // parser_.flags = F_SKIPBODY;
-        http_parser_settings_init(&settings_);
-        settings_.on_message_begin = on_message_begin;
-        settings_.on_url = on_url;
-        settings_.on_header_field = on_header_field;
-        settings_.on_header_value = on_header_value;
-        settings_.on_headers_complete = on_headers_complete;
-        settings_.on_body = on_body;
-        settings_.on_message_complete = on_message_complete;
-        field_.clear();
-        value_.clear();
-        headers_.clear();
-        url_.clear();
-        parse_step_ = 0;
     }
 
    private:
