@@ -54,6 +54,7 @@ int rtsp_server_context::parse_rtsp_message(const simple_rtmp::frame_buffer::ptr
     if (parser_.complete())
     {
         process_request(parser_);
+        parser_.reset();
     }
     return ret;
 }
@@ -86,6 +87,7 @@ int rtsp_server_context::parse_rtcp_message(const simple_rtmp::frame_buffer::ptr
 void rtsp_server_context::process_request(const simple_rtmp::rtsp_parser& parser)
 {
     std::string method = parser_.method();
+    seq_ = atoi(parser_.header("CSeq").data());
     if (method == "OPTIONS")
     {
         options_request(parser);

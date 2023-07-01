@@ -36,6 +36,10 @@ class rtsp_server_context
    public:
     // -1 error 0 success
     int input(const simple_rtmp::frame_buffer::ptr& frame);
+    int seq() const
+    {
+        return seq_;
+    }
 
    private:
     int parse_rtsp_message(const simple_rtmp::frame_buffer::ptr& frame);
@@ -48,6 +52,7 @@ class rtsp_server_context
     void teardown_request(const simple_rtmp::rtsp_parser& parser);
 
    private:
+    int seq_ = -1;
     int need_more_data_ = 0;
     simple_rtmp::rtsp_parser parser_;
     rtsp_server_context_handler handler_;
