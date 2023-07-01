@@ -14,6 +14,7 @@
 
 namespace simple_rtmp
 {
+struct rtsp_transport;
 
 class rtsp_forward_session : public std::enable_shared_from_this<rtsp_forward_session>
 {
@@ -32,6 +33,13 @@ class rtsp_forward_session : public std::enable_shared_from_this<rtsp_forward_se
     void on_write(const boost::system::error_code& ec, std::size_t bytes);
     void channel_out(const frame_buffer::ptr& frame, const boost::system::error_code& ec);
     void safe_shutdown();
+
+   private:
+    int on_options(const std::string& url);
+    int on_describe(const std::string& url);
+    int on_setup(const std::string& url, const std::string& session, rtsp_transport* transport);
+    int on_play(const std::string& url, const std::string& session);
+    int on_teardown(const std::string& url, const std::string& session);
 
    private:
     std::string stream_id_;
