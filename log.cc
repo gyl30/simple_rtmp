@@ -29,7 +29,7 @@ void init_log(const std::string& app)
     spdlog::set_default_logger(logger);
     spdlog::flush_every(std::chrono::seconds(3));
     spdlog::set_pattern("%Y%m%d %T.%f %t %L %v %s:%#");
-    spdlog::set_level(spdlog::level::debug);
+    spdlog::set_level(spdlog::level::trace);
 }
 void shutdown_log()
 {
