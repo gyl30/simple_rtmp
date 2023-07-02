@@ -10,6 +10,7 @@ class rtmp_aac_encoder : public rtmp_encoder
 {
    public:
     explicit rtmp_aac_encoder(std::string id);
+    ~rtmp_aac_encoder() override = default;
 
    public:
     std::string id() override;

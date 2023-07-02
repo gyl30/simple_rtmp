@@ -17,6 +17,7 @@ class rtmp_sink : public sink
 {
    public:
     rtmp_sink(std::string id, simple_rtmp::executors::executor& ex);
+    ~rtmp_sink() override = default;
 
    public:
     std::string id() const override;

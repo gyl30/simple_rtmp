@@ -11,6 +11,7 @@ class rtmp_h264_encoder : public rtmp_encoder
 {
    public:
     explicit rtmp_h264_encoder(std::string id);
+    ~rtmp_h264_encoder() override = default;
 
    public:
     std::string id() override;
