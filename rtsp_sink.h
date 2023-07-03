@@ -15,6 +15,9 @@
 
 namespace simple_rtmp
 {
+const static char kRtspVideoTrackId[] = "track1";
+const static char kRtspAudioTrackId[] = "track2";
+
 class rtsp_track
 {
    public:

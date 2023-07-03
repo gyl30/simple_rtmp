@@ -11,7 +11,7 @@ rtsp_track::ptr simple_rtmp::rtsp_video_track::clone() const
 
 std::string simple_rtmp::rtsp_video_track::id() const
 {
-    return std::string();
+    return kRtspVideoTrackId;
 }
 std::string simple_rtmp::rtsp_video_track::sdp() const
 {
@@ -28,7 +28,7 @@ std::string simple_rtmp::rtsp_audio_track::sdp() const
 }
 std::string simple_rtmp::rtsp_audio_track::id() const
 {
-    return std::string();
+    return kRtspAudioTrackId;
 }
 simple_rtmp::rtsp_sink::rtsp_sink(std::string id, simple_rtmp::executors::executor& ex) : id_(id), ex_(ex)
 {
