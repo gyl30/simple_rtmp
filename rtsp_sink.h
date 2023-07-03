@@ -22,6 +22,7 @@ class rtsp_track
     virtual ~rtsp_track() = default;
 
    public:
+    virtual ptr clone() const = 0;
     virtual std::string sdp() const = 0;
     virtual std::string id() const = 0;
 };
@@ -32,6 +33,7 @@ class rtsp_video_track : public rtsp_track
     ~rtsp_video_track() override = default;
 
    public:
+    ptr clone() const override;
     std::string sdp() const override;
     std::string id() const override;
 };
@@ -42,6 +44,7 @@ class rtsp_audio_track : public rtsp_track
     ~rtsp_audio_track() override = default;
 
    public:
+    ptr clone() const override;
     std::string sdp() const override;
     std::string id() const override;
 };

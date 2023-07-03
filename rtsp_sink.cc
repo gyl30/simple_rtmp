@@ -1,4 +1,14 @@
 #include "rtsp_sink.h"
+
+using simple_rtmp::rtsp_video_track;
+using simple_rtmp::rtsp_audio_track;
+using simple_rtmp::rtsp_track;
+
+rtsp_track::ptr simple_rtmp::rtsp_video_track::clone() const
+{
+    return std::shared_ptr<rtsp_track>(new rtsp_video_track(*this));
+}
+
 std::string simple_rtmp::rtsp_video_track::id() const
 {
     return std::string();
@@ -6,6 +16,11 @@ std::string simple_rtmp::rtsp_video_track::id() const
 std::string simple_rtmp::rtsp_video_track::sdp() const
 {
     return std::string();
+}
+
+rtsp_track::ptr simple_rtmp::rtsp_audio_track::clone() const
+{
+    return std::shared_ptr<rtsp_track>(new rtsp_audio_track(*this));
 }
 std::string simple_rtmp::rtsp_audio_track::sdp() const
 {
@@ -43,8 +58,8 @@ void simple_rtmp::rtsp_sink::tracks(simple_rtmp::rtsp_sink::track_cb cb)
             if (cb)
             {
                 std::vector<rtsp_track::ptr> tracks;
-                tracks.push_back(video_track_);
-                tracks.push_back(audio_track_);
+                tracks.push_back(video_track_->clone());
+                tracks.push_back(audio_track_->clone());
                 cb(tracks);
             }
         });
