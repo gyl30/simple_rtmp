@@ -33,6 +33,7 @@ class rtsp_track
 class rtsp_video_track : public rtsp_track
 {
    public:
+    rtsp_video_track() = default;
     rtsp_video_track(std::string sps, std::string pps);
     ~rtsp_video_track() override = default;
 
@@ -42,14 +43,14 @@ class rtsp_video_track : public rtsp_track
     std::string id() const override;
 
    private:
-    std::string sps_;
-    std::string pps_;
+    std::stringstream ss_;
 };
 
 class rtsp_audio_track : public rtsp_track
 {
    public:
-    rtsp_audio_track(std::string cfg, int sample_rate, int channels, int bitrate);
+    rtsp_audio_track() = default;
+    rtsp_audio_track(const std::string& cfg, int sample_rate, int channels, int bitrate);
     ~rtsp_audio_track() override = default;
 
    public:
