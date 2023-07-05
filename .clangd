@@ -2,3 +2,5 @@ InlayHints:
   Enabled: No
   ParameterNames: No
   DeducedTypes: No
+CompileFlags:
+  CompilationDatabase: build/ 

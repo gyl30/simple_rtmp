@@ -12,55 +12,10 @@
 #include "sink.h"
 #include "execution.h"
 #include "rtsp_encoder.h"
+#include "rtsp_track.h"
 
 namespace simple_rtmp
 {
-const static char kRtspVideoTrackId[] = "track1";
-const static char kRtspAudioTrackId[] = "track2";
-
-class rtsp_track
-{
-   public:
-    using ptr = std::shared_ptr<rtsp_track>;
-    virtual ~rtsp_track() = default;
-
-   public:
-    virtual ptr clone() const = 0;
-    virtual std::string sdp() const = 0;
-    virtual std::string id() const = 0;
-};
-
-class rtsp_video_track : public rtsp_track
-{
-   public:
-    rtsp_video_track() = default;
-    rtsp_video_track(std::string sps, std::string pps);
-    ~rtsp_video_track() override = default;
-
-   public:
-    ptr clone() const override;
-    std::string sdp() const override;
-    std::string id() const override;
-
-   private:
-    std::stringstream ss_;
-};
-
-class rtsp_audio_track : public rtsp_track
-{
-   public:
-    rtsp_audio_track() = default;
-    rtsp_audio_track(const std::string& cfg, int sample_rate, int channels, int bitrate);
-    ~rtsp_audio_track() override = default;
-
-   public:
-    ptr clone() const override;
-    std::string sdp() const override;
-    std::string id() const override;
-
-   private:
-    std::stringstream ss_;
-};
 
 class rtsp_sink : public sink
 {
