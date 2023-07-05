@@ -13,6 +13,7 @@
 #include "execution.h"
 #include "rtsp_encoder.h"
 #include "rtsp_track.h"
+#include "rtmp_codec.h"
 
 namespace simple_rtmp
 {
@@ -28,7 +29,7 @@ class rtsp_sink : public sink
     void write(const frame_buffer::ptr& frame, const boost::system::error_code& ec) override;
     void add_channel(const channel::ptr& ch) override;
     void del_channel(const channel::ptr& ch) override;
-    void add_codec(int codec) override;
+    void add_codec(int codec, codec_option op) override;
 
    public:
     using track_cb = std::function<void(std::vector<rtsp_track::ptr>)>;

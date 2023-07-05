@@ -1,10 +1,24 @@
 #ifndef SIMPLE_RTMP_RTMP_CODEC_H
 #define SIMPLE_RTMP_RTMP_CODEC_H
 
+#include <map>
+#include <string>
+#include "frame_buffer.h"
+
 namespace simple_rtmp
 {
 std::string rtmp_tag_to_str(int tag);
 std::string rtmp_codec_to_str(int codec);
+
+struct codec_option
+{
+    int paylod_type;
+    int bitrate;
+    int sample_rate;
+    std::map<std::string, std::string> config;
+    std::vector<frame_buffer::ptr> frame;
+};
+
 enum rtmp_tag
 {
     script,

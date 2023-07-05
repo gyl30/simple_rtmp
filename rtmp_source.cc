@@ -12,15 +12,15 @@ rtmp_source::rtmp_source(std::string id, simple_rtmp::executors::executor& ex) :
 {
     ch_->set_output(std::bind(&rtmp_source::on_frame, this, _1, _2));
     demuxer_->set_channel(ch_);
-    demuxer_->on_codec(std::bind(&rtmp_source::on_codec, this, _1));
+    demuxer_->on_codec(std::bind(&rtmp_source::on_codec, this, _1, _2));
     std::string const rtmp_sink_id = "rtmp_" + id_;
     rtmp_sink_ = std::make_shared<simple_rtmp::rtmp_sink>(rtmp_sink_id, ex);
     simple_rtmp::sink::add(rtmp_sink_);
 };
 
-void rtmp_source::on_codec(int codec)
+void rtmp_source::on_codec(int codec, codec_option op)
 {
-    rtmp_sink_->add_codec(codec);
+    rtmp_sink_->add_codec(codec, std::move(op));
 }
 
 void rtmp_source::on_frame(const frame_buffer::ptr& frame, const boost::system::error_code& ec)

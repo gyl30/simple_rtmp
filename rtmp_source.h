@@ -7,6 +7,7 @@
 #include <boost/system/error_code.hpp>
 #include "frame_buffer.h"
 #include "rtmp_demuxer.h"
+#include "rtmp_codec.h"
 #include "execution.h"
 #include "channel.h"
 #include "sink.h"
@@ -23,7 +24,7 @@ class rtmp_source : public std::enable_shared_from_this<rtmp_source>
 
    public:
     void write(const frame_buffer::ptr& frame, const boost::system::error_code& ec);
-    void on_codec(int codec);
+    void on_codec(int codec, codec_option op);
     void set_channel(const channel::ptr& ch);
 
    private:

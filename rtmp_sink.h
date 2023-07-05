@@ -10,6 +10,7 @@
 #include "sink.h"
 #include "execution.h"
 #include "rtmp_encoder.h"
+#include "rtmp_codec.h"
 
 namespace simple_rtmp
 {
@@ -24,7 +25,7 @@ class rtmp_sink : public sink
     void write(const frame_buffer::ptr& frame, const boost::system::error_code& ec) override;
     void add_channel(const channel::ptr& ch) override;
     void del_channel(const channel::ptr& ch) override;
-    void add_codec(int codec) override;
+    void add_codec(int codec, codec_option op) override;
 
    private:
     void on_frame(const frame_buffer::ptr& frame, const boost::system::error_code& ec);

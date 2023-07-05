@@ -16,7 +16,7 @@ std::string rtmp_sink::id() const
     return id_;
 }
 
-void rtmp_sink::add_codec(int codec)
+void rtmp_sink::add_codec(int codec, codec_option /*op*/)
 {
     LOG_DEBUG("{} add codec {}", id_, codec);
     if (codec == simple_rtmp::rtmp_codec::h264)

@@ -17,7 +17,7 @@ void rtmp_demuxer::set_channel(const channel::ptr& ch)
     ch_ = ch;
 }
 
-void rtmp_demuxer::on_codec(const std::function<void(int)>& codec_cb)
+void rtmp_demuxer::on_codec(const std::function<void(int, codec_option)>& codec_cb)
 {
     codec_cb_ = codec_cb;
 }
@@ -175,10 +175,12 @@ void rtmp_demuxer::demuxer_script(const frame_buffer::ptr& frame, const boost::s
     int64_t audio_codec_id = audiocodecid;
     audio_codec_id = audio_codec_id << 4;
 
+    codec_option ap;
+    codec_option vp;
     if (codec_cb_)
     {
-        codec_cb_(videocodecid);
-        codec_cb_(audio_codec_id);
+        codec_cb_(videocodecid, vp);
+        codec_cb_(audio_codec_id, ap);
     }
     if (videocodecid == simple_rtmp::rtmp_codec::h264)
     {

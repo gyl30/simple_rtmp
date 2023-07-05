@@ -17,7 +17,7 @@ void simple_rtmp::rtsp_sink::add_channel(const simple_rtmp::channel::ptr& ch)
 void simple_rtmp::rtsp_sink::del_channel(const simple_rtmp::channel::ptr& ch)
 {
 }
-void simple_rtmp::rtsp_sink::add_codec(int codec)
+void simple_rtmp::rtsp_sink::add_codec(int codec, codec_option op)
 {
 }
 void simple_rtmp::rtsp_sink::tracks(simple_rtmp::rtsp_sink::track_cb cb)

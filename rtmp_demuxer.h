@@ -7,6 +7,7 @@
 #include "frame_buffer.h"
 #include "channel.h"
 #include "rtmp_decoder.h"
+#include "rtmp_codec.h"
 
 namespace simple_rtmp
 {
@@ -20,7 +21,7 @@ class rtmp_demuxer : public std::enable_shared_from_this<rtmp_demuxer>
 
    public:
     void write(const frame_buffer::ptr& frame, const boost::system::error_code& ec);
-    void on_codec(const std::function<void(int)>& codec_cb);
+    void on_codec(const std::function<void(int, codec_option)>& codec_cb);
     void set_channel(const channel::ptr& ch);
 
    private:
@@ -31,7 +32,7 @@ class rtmp_demuxer : public std::enable_shared_from_this<rtmp_demuxer>
    private:
     std::string id_;
     channel::ptr ch_;
-    std::function<void(int)> codec_cb_;
+    std::function<void(int, codec_option)> codec_cb_;
     std::shared_ptr<rtmp_decoder> audio_decoder_;
     std::shared_ptr<rtmp_decoder> video_decoder_;
 };
