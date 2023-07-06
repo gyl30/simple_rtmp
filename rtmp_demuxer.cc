@@ -177,17 +177,22 @@ void rtmp_demuxer::demuxer_script(const frame_buffer::ptr& frame, const boost::s
 
     codec_option ap;
     codec_option vp;
-    if (codec_cb_)
-    {
-        codec_cb_(videocodecid, vp);
-        codec_cb_(audio_codec_id, ap);
-    }
     if (videocodecid == simple_rtmp::rtmp_codec::h264)
     {
+        vp.paylod_type = simple_rtmp::rtmp_codec::h264;
+        vp.sample_rate = videodatarate;
+        vp.config["framerate"] = std::to_string(static_cast<int64_t>(framerate));
+        vp.config["width"] = std::to_string(static_cast<int64_t>(width));
+        vp.config["height"] = std::to_string(static_cast<int64_t>(height));
+        vp.config["duration"] = std::to_string(static_cast<int64_t>(duration));
+        vp.config["filesize"] = std::to_string(static_cast<int64_t>(filesize));
         video_decoder_ = std::make_shared<rtmp_h264_decoder>(id_);
     }
     if (audio_codec_id == simple_rtmp::rtmp_codec::aac)
     {
+        ap.paylod_type = simple_rtmp::rtmp_codec::aac;
+        ap.sample_rate = audiodatarate;
+        ap.config["audiosamplesize"] = std::to_string(static_cast<int64_t>(audiosamplesize));
         audio_decoder_ = std::make_shared<rtmp_aac_decoder>(id_);
     }
     if (video_decoder_)
@@ -197,5 +202,10 @@ void rtmp_demuxer::demuxer_script(const frame_buffer::ptr& frame, const boost::s
     if (audio_decoder_)
     {
         audio_decoder_->set_output(ch_);
+    }
+    if (codec_cb_)
+    {
+        codec_cb_(videocodecid, vp);
+        codec_cb_(audio_codec_id, ap);
     }
 }

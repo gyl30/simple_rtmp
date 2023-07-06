@@ -13,8 +13,8 @@ std::string rtmp_codec_to_str(int codec);
 struct codec_option
 {
     int paylod_type;
-    int bitrate;
-    int sample_rate;
+    int64_t bitrate;
+    int64_t sample_rate;
     std::map<std::string, std::string> config;
     std::vector<frame_buffer::ptr> frame;
 };
