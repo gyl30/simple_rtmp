@@ -33,7 +33,7 @@ class rtsp_sink : public sink
 
    public:
     using track_cb = std::function<void(std::vector<rtsp_track::ptr>)>;
-    void tracks(track_cb cb);
+    void tracks(const track_cb& cb);
 
    private:
     std::string id_;
