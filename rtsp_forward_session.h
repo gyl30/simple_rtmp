@@ -9,6 +9,7 @@
 #include "execution.h"
 #include "channel.h"
 #include "frame_buffer.h"
+#include "rtsp_track.h"
 #include "sink.h"
 #include "tcp_connection.h"
 
@@ -40,6 +41,7 @@ class rtsp_forward_session : public std::enable_shared_from_this<rtsp_forward_se
     int on_setup(const std::string& url, const std::string& session, rtsp_transport* transport);
     int on_play(const std::string& url, const std::string& session);
     int on_teardown(const std::string& url, const std::string& session);
+    void on_track(std::vector<rtsp_track::ptr> track);
 
    private:
     std::string stream_id_;

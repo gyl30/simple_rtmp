@@ -1,10 +1,13 @@
+#include <ctime>
+#include <boost/algorithm/string.hpp>
 #include "rtsp_forward_session.h"
 #include "socket.h"
 #include "log.h"
 #include "sink.h"
+#include "rtsp_sink.h"
 #include "frame_buffer.h"
 #include "rtsp_server_context.h"
-#include <ctime>
+
 using simple_rtmp::rtsp_forward_session;
 using namespace std::placeholders;
 
@@ -146,7 +149,39 @@ int rtsp_forward_session::on_options(const std::string& url)
 int rtsp_forward_session::on_describe(const std::string& url)
 {
     LOG_INFO("describe {}", url);
+    std::vector<std::string> result;
+    boost::algorithm::split(result, url, boost::is_any_of("/"));
+    // host app stream
+    // rtsp://127.0.0.1:8554/live/test
+    if (result.size() < 5)
+    {
+        shutdown();
+        return;
+    }
+    std::string sink_id = "rtsp_" + result[result.size() - 2] + "_" + result[result.size() - 1];
+    auto s = simple_rtmp::sink::get(sink_id);
+    if (s == nullptr)
+    {
+        shutdown();
+        return;
+    }
+    auto rtsp_s = std::dynamic_pointer_cast<simple_rtmp::rtsp_sink>(s);
+    if (rtsp_s == nullptr)
+    {
+        shutdown();
+        return;
+    }
+    rtsp_s->tracks(std::bind(&rtsp_forward_session::on_track, shared_from_this(), _1));
+
     return 0;
+}
+void rtsp_forward_session::on_track(std::vector<rtsp_track::ptr> tracks)
+{
+    std::string sdp;
+    for (const auto& track : tracks)
+    {
+        sdp += track->sdp();
+    }
 }
 int rtsp_forward_session::on_setup(const std::string& url, const std::string& session, rtsp_transport* transport)
 {
