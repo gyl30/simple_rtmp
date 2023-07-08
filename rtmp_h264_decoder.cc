@@ -102,7 +102,6 @@ void rtmp_h264_decoder::demuxer_avpacket(const uint8_t* data, size_t bytes, int6
 {
     size_t offset = 0;
     const uint8_t* data_end = data + bytes;
-    std::deque<frame_buffer::ptr> frames;
     while (true)
     {
         const uint8_t* data_offset = data + offset;
@@ -139,7 +138,7 @@ void rtmp_h264_decoder::demuxer_avpacket(const uint8_t* data, size_t bytes, int6
             {
                 return;
             }
-            frames.push_front(frame);
+            on_frame(frame, {});
             args_->sps_pps_flag = 1;
         }
 
@@ -152,14 +151,8 @@ void rtmp_h264_decoder::demuxer_avpacket(const uint8_t* data, size_t bytes, int6
         frame->set_flag(keyframe);
         frame->append(header, sizeof header);
         frame->append(data_offset + args_->avc.nalu, nalu_size);
-        frames.push_back(frame);
+        on_frame(frame, {});
         offset = offset + args_->avc.nalu + nalu_size;
     }
-    auto raw_frame = fixed_frame_buffer::create();
-    for (const auto& frame : frames)
-    {
-        raw_frame->append(frame);
-    }
-    on_frame(raw_frame, {});
     assert(data + offset == data_end);
 }
