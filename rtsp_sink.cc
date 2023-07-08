@@ -29,8 +29,15 @@ void simple_rtmp::rtsp_sink::tracks(const simple_rtmp::rtsp_sink::track_cb& cb)
             if (cb)
             {
                 std::vector<rtsp_track::ptr> tracks;
-                tracks.push_back(video_track_->clone());
-                tracks.push_back(audio_track_->clone());
+                if (video_encoder_)
+                {
+                    tracks.push_back(video_encoder_->track());
+                }
+                if (audio_encoder_)
+                {
+                    tracks.push_back(audio_encoder_->track());
+                }
+
                 cb(tracks);
             }
         });
