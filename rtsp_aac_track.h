@@ -17,7 +17,6 @@ class rtsp_aac_track : public rtsp_track
     ~rtsp_aac_track() override = default;
 
    public:
-    ptr clone() const override;
     std::string sdp() const override;
     std::string id() const override;
 

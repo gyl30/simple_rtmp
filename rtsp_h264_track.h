@@ -18,7 +18,6 @@ class rtsp_h264_track : public rtsp_track
     ~rtsp_h264_track() override = default;
 
    public:
-    ptr clone() const override;
     std::string sdp() const override;
     std::string id() const override;
 

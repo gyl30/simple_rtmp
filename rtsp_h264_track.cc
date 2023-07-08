@@ -4,6 +4,15 @@
 using simple_rtmp::rtsp_h264_track;
 using simple_rtmp::rtsp_track;
 
+std::string simple_rtmp::rtsp_h264_track::id() const
+{
+    return kRtspVideoTrackId;
+}
+std::string simple_rtmp::rtsp_h264_track::sdp() const
+{
+    return ss_.str();
+}
+
 rtsp_h264_track::rtsp_h264_track(const frame_buffer::ptr &sps, const frame_buffer::ptr &pps)
 {
     ss_ << "m=video 0 RTP/AVP 96\r\n";
@@ -21,19 +30,4 @@ rtsp_h264_track::rtsp_h264_track(const frame_buffer::ptr &sps, const frame_buffe
     ss_ << profile << "; sprop-parameter-sets=";
     ss_ << base64_encode(sps->data(), sps->size()) << "," << base64_encode(pps->data(), pps->size()) << "\r\n";
     ss_ << "a=control:" << kRtspVideoTrackId << "\r\n";
-}
-rtsp_track::ptr simple_rtmp::rtsp_h264_track::clone() const
-{
-    auto *self = new rtsp_h264_track();
-    self->ss_ << this->ss_.rdbuf();
-    return std::shared_ptr<rtsp_track>(self);
-}
-
-std::string simple_rtmp::rtsp_h264_track::id() const
-{
-    return kRtspVideoTrackId;
-}
-std::string simple_rtmp::rtsp_h264_track::sdp() const
-{
-    return ss_.str();
 }

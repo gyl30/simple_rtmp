@@ -3,6 +3,16 @@
 using simple_rtmp::rtsp_aac_track;
 using simple_rtmp::rtsp_track;
 
+std::string simple_rtmp::rtsp_aac_track::sdp() const
+{
+    return ss_.str();
+}
+
+std::string simple_rtmp::rtsp_aac_track::id() const
+{
+    return kRtspAudioTrackId;
+}
+
 rtsp_aac_track::rtsp_aac_track(const std::string& cfg, int sample_rate, int channels, int bitrate)
 {
     ss_ << "m=audio 0 RTP/AVP 98\r\n";
@@ -21,18 +31,4 @@ rtsp_aac_track::rtsp_aac_track(const std::string& cfg, int sample_rate, int chan
     ss_ << "a=fmtp:98 streamtype=5;profile-level-id=1;mode=AAC-hbr;"
         << "sizelength=13;indexlength=3;indexdeltalength=3;config=" << config << "\r\n";
     ss_ << "a=control:" << kRtspAudioTrackId << "\r\n";
-}
-rtsp_track::ptr simple_rtmp::rtsp_aac_track::clone() const
-{
-    auto* self = new rtsp_aac_track();
-    self->ss_ << this->ss_.rdbuf();
-    return std::shared_ptr<rtsp_track>(self);
-}
-std::string simple_rtmp::rtsp_aac_track::sdp() const
-{
-    return ss_.str();
-}
-std::string simple_rtmp::rtsp_aac_track::id() const
-{
-    return kRtspAudioTrackId;
 }

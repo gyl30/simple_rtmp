@@ -22,7 +22,6 @@ class rtsp_track
     virtual ~rtsp_track() = default;
 
    public:
-    virtual ptr clone() const = 0;
     virtual std::string sdp() const = 0;
     virtual std::string id() const = 0;
 };
