@@ -156,20 +156,20 @@ int rtsp_forward_session::on_describe(const std::string& url)
     if (result.size() < 5)
     {
         shutdown();
-        return;
+        return -1;
     }
     std::string sink_id = "rtsp_" + result[result.size() - 2] + "_" + result[result.size() - 1];
     auto s = simple_rtmp::sink::get(sink_id);
     if (s == nullptr)
     {
         shutdown();
-        return;
+        return -1;
     }
     auto rtsp_s = std::dynamic_pointer_cast<simple_rtmp::rtsp_sink>(s);
     if (rtsp_s == nullptr)
     {
         shutdown();
-        return;
+        return -1;
     }
     rtsp_s->tracks(std::bind(&rtsp_forward_session::on_track, shared_from_this(), _1));
 
