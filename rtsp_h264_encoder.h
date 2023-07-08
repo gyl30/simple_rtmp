@@ -4,7 +4,6 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <sstream>
 #include "rtsp_encoder.h"
 #include "rtsp_h264_track.h"
 
@@ -24,9 +23,9 @@ class rtsp_h264_encoder : public rtsp_encoder
 
    private:
     std::string id_;
+    channel::ptr ch_;
     frame_buffer::ptr sps_;
     frame_buffer::ptr pps_;
-    rtsp_track::ptr track_;
 };
 }    // namespace simple_rtmp
 #endif
