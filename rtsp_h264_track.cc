@@ -12,6 +12,10 @@ std::string simple_rtmp::rtsp_h264_track::sdp() const
 {
     return ss_.str();
 }
+uint32_t simple_rtmp::rtsp_h264_track::ssrc() const
+{
+    return rtsp_track::video_ssrc();
+}
 
 rtsp_h264_track::rtsp_h264_track(const frame_buffer::ptr &sps, const frame_buffer::ptr &pps)
 {

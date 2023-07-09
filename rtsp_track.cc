@@ -1,3 +1,4 @@
+#include <atomic>
 #include <boost/beast/core/detail/base64.hpp>
 #include "rtsp_track.h"
 
@@ -24,5 +25,18 @@ std::string base64_decode(const std::string& data)
     auto const result = boost::beast::detail::base64::decode(&dest[0], data.data(), data.size());
     dest.resize(result.first);
     return dest;
+}
+
+uint32_t rtsp_track::audio_ssrc()
+{
+    static std::atomic<uint32_t> ssrc = 1;
+    ssrc += 2;
+    return ssrc;
+}
+uint32_t rtsp_track::video_ssrc()
+{
+    static std::atomic<uint32_t> ssrc = 0;
+    ssrc += 2;
+    return ssrc;
 }
 }    // namespace simple_rtmp

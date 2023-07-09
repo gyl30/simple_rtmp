@@ -18,6 +18,7 @@ class rtsp_aac_track : public rtsp_track
 
    public:
     std::string sdp() const override;
+    uint32_t ssrc() const override;
     std::string id() const override;
 
    private:
