@@ -19,9 +19,11 @@ class rtsp_track
    public:
     using ptr = std::shared_ptr<rtsp_track>;
     virtual ~rtsp_track() = default;
+
    public:
     static uint32_t audio_ssrc();
     static uint32_t video_ssrc();
+
    public:
     virtual std::string sdp() const = 0;
     virtual uint32_t ssrc() const = 0;

@@ -36,4 +36,3 @@ rtsp_aac_track::rtsp_aac_track(const std::string& cfg, int sample_rate, int chan
         << "sizelength=13;indexlength=3;indexdeltalength=3;config=" << config << "\r\n";
     ss_ << "a=control:" << kRtspAudioTrackId << "\r\n";
 }
-
