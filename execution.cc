@@ -18,7 +18,12 @@ void executors::run()
     for (auto &io : exs_)
     {
         works_.emplace_back(boost::asio::make_work_guard(io));
-        threads_.emplace_back([&io] { io.run(); });
+        threads_.emplace_back(
+            [&io]
+            {
+                boost::system::error_code ignore;
+                io.run(ignore);
+            });
     }
 }
 
