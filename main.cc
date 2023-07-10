@@ -1,14 +1,14 @@
 #include <iostream>
 #include <map>
 #include <memory>
-#include "timestamp.h"
-#include "scoped_exit.h"
-#include "execution.h"
-#include "tcp_server.h"
-#include "log.h"
 #include "rtmp_publish_session.h"
 #include "rtmp_forward_session.h"
 #include "rtsp_forward_session.h"
+#include "timestamp.h"
+#include "execution.h"
+#include "tcp_server.h"
+#include "scoped_exit.h"
+#include "log.h"
 
 using simple_rtmp::rtmp_publish_session;
 using simple_rtmp::rtmp_forward_session;
@@ -33,37 +33,20 @@ int main(int argc, char* argv[])
     uint32_t thread_num = std::thread::hardware_concurrency();
 
     simple_rtmp::executors exs(thread_num);
+
     std::atomic<bool> stop{false};
-    static const std::map<int, std::string> kSignals = {
-        {SIGABRT, "SIGABRT"},
-        {SIGFPE, "SIGFPE"},
-        {SIGILL, "SIGILL"},
-        {SIGSEGV, "SIGSEGV"},
-        {SIGTERM, "SIGTERM"},
-        {SIGINT, "SIGINT"},
-    };
-    boost::asio::signal_set sig(exs.get_executor());
+
     boost::system::error_code ec;
-    for (const auto& pair : kSignals)
+
+    boost::asio::signal_set signals(exs.get_executor());
+    signals.add(SIGINT, ec);
+    if (ec)
     {
-        sig.add(pair.first, ec);
-        if (ec)
-        {
-            LOG_WARN("add {} -> {} signal failed {}", pair.first, pair.second, ec.message());
-        }
-        else
-        {
-            LOG_INFO("add {} -> {} signal", pair.first, pair.second);
-        }
+        LOG_ERROR("add signal failed");
+        return -1;
     }
-    // 注册退出信号
-    int signal_number = 0;
-    sig.async_wait(
-        [&stop, &signal_number](boost::system::error_code, int s)
-        {
-            stop = true;
-            signal_number = s;
-        });
+
+    signals.async_wait([&stop](boost::system::error_code, int) { stop = true; });
 
     std::make_shared<tcp_server<rtmp_publish_session>>(kRtmpPublishPort, kRtmpServerName, exs.get_executor(), exs)->run();
     std::make_shared<tcp_server<rtmp_forward_session>>(kRtmpForwardPort, kRtmpForwardServerName, exs.get_executor(), exs)->run();
@@ -74,10 +57,6 @@ int main(int argc, char* argv[])
     while (!stop)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(30));
-    }
-    if (signal_number != 0)
-    {
-        LOG_WARN("recv {} signal", signal_number);
     }
 
     exs.stop();
