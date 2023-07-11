@@ -41,7 +41,7 @@ class rtsp_forward_session : public std::enable_shared_from_this<rtsp_forward_se
     int on_setup(const std::string& url, const std::string& session, rtsp_transport* transport);
     int on_play(const std::string& url, const std::string& session);
     int on_teardown(const std::string& url, const std::string& session);
-    void on_track(std::vector<rtsp_track::ptr> track);
+    void on_track(const std::string& url, std::vector<rtsp_track::ptr> track);
 
    private:
     std::string stream_id_;

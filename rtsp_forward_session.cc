@@ -7,6 +7,7 @@
 #include "rtsp_sink.h"
 #include "frame_buffer.h"
 #include "rtsp_server_context.h"
+#include "timestamp.h"
 
 using simple_rtmp::rtsp_forward_session;
 using namespace std::placeholders;
@@ -171,17 +172,44 @@ int rtsp_forward_session::on_describe(const std::string& url)
         shutdown();
         return -1;
     }
-    rtsp_s->tracks(std::bind(&rtsp_forward_session::on_track, shared_from_this(), _1));
+    rtsp_s->tracks(std::bind(&rtsp_forward_session::on_track, shared_from_this(), url, _1));
 
     return 0;
 }
-void rtsp_forward_session::on_track(std::vector<rtsp_track::ptr> tracks)
+void rtsp_forward_session::on_track(const std::string& url, std::vector<rtsp_track::ptr> tracks)
 {
-    std::string sdp;
+    uint64_t now = timestamp::now().milliseconds();
+    std::stringstream ss;
+    ss << "v=0\n";
+    ss << "0=- " << now << " " << now << "IN IP4 0.0.0.0\n";
+    ss << "s=Simple\n";
+    ss << "c=IN IP4 0.0.0.0\n";
+    ss << "t=0 0\n";
+    ss << "a=range:npt=now-\n";
+    ss << "a=control:*\n";
+    ss << "a=x-qt-text-nam:Simple/Media\n";
+    ss << "a=x-qt-text-inf:" << url << "\n";
     for (const auto& track : tracks)
     {
-        sdp += track->sdp();
+        if (track)
+        {
+            ss << track->sdp() << "\n";
+            ss << "a=control:" << track->id() << "\n";
+        }
     }
+    std::string sdp = ss.str();
+    // clear stringstream
+    ss.str("");
+    ss << "RTSP/1.0 200 OK\r\n";
+    ss << "CSeq: " << args_->ctx->seq() << "\r\n";
+    ss << "Date: " << rfc822_now_format().data() << "\r\n";
+    ss << "Content-Base: " << url << " \r\n";
+    ss << "Content-Type: application/sdp\r\n";
+    ss << "Content-Length: " << sdp.length() << "\r\n\r\n";
+    ss << sdp;
+    std::string response = ss.str();
+    auto frame = fixed_frame_buffer::create(response.data(), response.size());
+    conn_->write_frame(frame);
 }
 int rtsp_forward_session::on_setup(const std::string& url, const std::string& session, rtsp_transport* transport)
 {
