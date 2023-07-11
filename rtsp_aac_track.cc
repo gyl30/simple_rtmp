@@ -14,7 +14,7 @@ std::string simple_rtmp::rtsp_aac_track::id() const
 
 uint32_t simple_rtmp::rtsp_aac_track::ssrc() const
 {
-    return rtsp_track::audio_ssrc();
+    return ssrc_;
 }
 
 rtsp_aac_track::rtsp_aac_track(const std::string& cfg, int sample_rate, int channels, int bitrate)
@@ -35,4 +35,5 @@ rtsp_aac_track::rtsp_aac_track(const std::string& cfg, int sample_rate, int chan
     ss_ << "a=fmtp:98 streamtype=5;profile-level-id=1;mode=AAC-hbr;"
         << "sizelength=13;indexlength=3;indexdeltalength=3;config=" << config << "\r\n";
     ss_ << "a=control:" << kRtspAudioTrackId << "\r\n";
+    ssrc_ = rtsp_track::audio_ssrc();
 }

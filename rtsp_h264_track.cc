@@ -14,7 +14,7 @@ std::string simple_rtmp::rtsp_h264_track::sdp() const
 }
 uint32_t simple_rtmp::rtsp_h264_track::ssrc() const
 {
-    return rtsp_track::video_ssrc();
+    return ssrc_;
 }
 
 rtsp_h264_track::rtsp_h264_track(const frame_buffer::ptr &sps, const frame_buffer::ptr &pps)
@@ -34,4 +34,5 @@ rtsp_h264_track::rtsp_h264_track(const frame_buffer::ptr &sps, const frame_buffe
     ss_ << profile << "; sprop-parameter-sets=";
     ss_ << base64_encode(sps->data(), sps->size()) << "," << base64_encode(pps->data(), pps->size()) << "\r\n";
     ss_ << "a=control:" << kRtspVideoTrackId << "\r\n";
+    ssrc_ = rtsp_track::video_ssrc();
 }

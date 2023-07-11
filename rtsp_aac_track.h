@@ -22,6 +22,7 @@ class rtsp_aac_track : public rtsp_track
     std::string id() const override;
 
    private:
+    uint32_t ssrc_ = 0;
     std::stringstream ss_;
 };
 }    // namespace simple_rtmp

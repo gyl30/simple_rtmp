@@ -23,6 +23,7 @@ class rtsp_h264_track : public rtsp_track
     std::string id() const override;
 
    private:
+    uint32_t ssrc_ = 0;
     std::stringstream ss_;
 };
 
