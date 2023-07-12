@@ -30,6 +30,7 @@ class rtsp_sink : public sink
     void add_channel(const channel::ptr& ch) override;
     void del_channel(const channel::ptr& ch) override;
     void add_codec(int codec, codec_option op) override;
+    void on_frame(const frame_buffer::ptr& frame, const boost::system::error_code& ec);
 
    public:
     using track_cb = std::function<void(std::vector<rtsp_track::ptr>)>;
