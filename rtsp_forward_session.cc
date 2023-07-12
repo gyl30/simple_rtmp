@@ -194,7 +194,6 @@ void rtsp_forward_session::on_track(const std::string& url, std::vector<rtsp_tra
         if (track)
         {
             ss << track->sdp() << "\n";
-            ss << "a=control:" << track->id() << "\n";
         }
     }
     std::string sdp = ss.str();
@@ -203,7 +202,7 @@ void rtsp_forward_session::on_track(const std::string& url, std::vector<rtsp_tra
     ss << "RTSP/1.0 200 OK\r\n";
     ss << "CSeq: " << args_->ctx->seq() << "\r\n";
     ss << "Date: " << rfc822_now_format().data() << "\r\n";
-    ss << "Content-Base: " << url << " \r\n";
+    ss << "Content-Base: " << url << "\r\n";
     ss << "Content-Type: application/sdp\r\n";
     ss << "Content-Length: " << sdp.length() << "\r\n\r\n";
     ss << sdp;
