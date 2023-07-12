@@ -13,7 +13,7 @@ namespace simple_rtmp
 class rtsp_aac_encoder : public rtsp_encoder
 {
    public:
-    rtsp_aac_encoder(std::string id);
+    explicit rtsp_aac_encoder(std::string id);
     ~rtsp_aac_encoder() override = default;
 
    public:
