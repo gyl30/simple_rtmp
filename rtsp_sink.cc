@@ -47,6 +47,7 @@ void simple_rtmp::rtsp_sink::del_channel(const simple_rtmp::channel::ptr& ch)
 {
     chs_.erase(ch);
 }
+
 void simple_rtmp::rtsp_sink::add_codec(int codec, codec_option op)
 {
     if (codec == simple_rtmp::rtmp_codec::h264)
