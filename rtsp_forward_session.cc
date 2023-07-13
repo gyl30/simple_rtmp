@@ -191,10 +191,12 @@ void rtsp_forward_session::on_track(const std::string& url, std::vector<rtsp_tra
     ss << "a=x-qt-text-inf:" << url << "\n";
     for (const auto& track : tracks)
     {
-        if (track)
+        if (track == nullptr)
         {
-            ss << track->sdp() << "\n";
+            continue;
         }
+        ss << track->sdp() << "\n";
+        tracks_[track->id()] = track;
     }
     std::string sdp = ss.str();
     // clear stringstream
@@ -209,10 +211,79 @@ void rtsp_forward_session::on_track(const std::string& url, std::vector<rtsp_tra
     std::string response = ss.str();
     auto frame = fixed_frame_buffer::create(response.data(), response.size());
     conn_->write_frame(frame);
+    LOG_DEBUG("{} describe response -> {}", url, response);
 }
 int rtsp_forward_session::on_setup(const std::string& url, const std::string& session, rtsp_transport* transport)
 {
     LOG_INFO("setup {} session {} transport {}", url, session, transport->transport);
+    std::vector<std::string> result;
+    boost::algorithm::split(result, url, boost::is_any_of("/"));
+    if (result.size() < 5)
+    {
+        shutdown();
+        return -1;
+    }
+    std::string track_id = result.back();
+    if (track_id != kRtspVideoTrackId && track_id != kRtspAudioTrackId)
+    {
+        LOG_ERROR("{} invalid track id {}", url, track_id);
+        shutdown();
+        return -1;
+    }
+    auto track = tracks_[track_id];
+    if (track == nullptr)
+    {
+        LOG_ERROR("{} invalid track id {}", url, track_id);
+        shutdown();
+        return -1;
+    }
+    setup_tracks_[track_id] = track;
+    if (transport->multicast)
+    {
+        std::stringstream ss;
+        ss << "RTSP/1.0 461 Unsupported Transport\r\n";
+        ss << "CSeq: " << args_->ctx->seq() << "\r\n";
+        ss << "Date: " << rfc822_now_format().data() << "\r\n";
+        ss << "User-Agent: Simple/Rtsp\r\n\r\n";
+        std::string response = ss.str();
+        auto frame = fixed_frame_buffer::create(response.data(), response.size());
+        conn_->write_frame(frame);
+        LOG_ERROR("{} no support multicast {}", url, track_id);
+        shutdown();
+        return -1;
+    }
+    if (transport->transport == 0)
+    {
+        std::stringstream ss;
+        ss << "RTSP/1.0 461 Unsupported Transport\r\n";
+        ss << "CSeq: " << args_->ctx->seq() << "\r\n";
+        ss << "Date: " << rfc822_now_format().data() << "\r\n";
+        ss << "User-Agent: Simple/Rtsp\r\n\r\n";
+        std::string response = ss.str();
+        auto frame = fixed_frame_buffer::create(response.data(), response.size());
+        conn_->write_frame(frame);
+        LOG_ERROR("{} no support udp {}", url, track_id);
+        return -1;
+    }
+    static const int kRtpChannel = 0;
+    static const int kRtcpChannel = 1;
+    std::stringstream ss;
+    ss << "RTSP/1.0 200 OK\r\n";
+    ss << "CSeq: " << args_->ctx->seq() << "\r\n";
+    ss << "Date: " << rfc822_now_format().data() << "\r\n";
+    ss << "Transport: RTP/AVP/TCP;unicast;destination=" << get_socket_local_ip(conn_->socket()) << ";";
+    ss << "source=" << get_socket_remote_ip(conn_->socket()) << ";";
+    ss << "interleaved=" << kRtpChannel << "-" << kRtcpChannel << "\r\n";
+    ss << "Session: " << (const void*)this << ";timeout=65\r\n\r\n";
+    std::string response = ss.str();
+    auto frame = fixed_frame_buffer::create(response.data(), response.size());
+    conn_->write_frame(frame);
+    LOG_DEBUG("{} setup response -> {}", url, response);
+    // RTSP/1.0 200 OK
+    // CSeq: 3
+    // Date: Wed, Jun 28 2023 14:15:31 GMT
+    // Transport: RTP/AVP/TCP;unicast;destination=172.20.50.180;source=172.20.50.180;interleaved=0-1
+    // Session: 665CEE5E;timeout=65
     return 0;
 }
 int rtsp_forward_session::on_play(const std::string& url, const std::string& session)

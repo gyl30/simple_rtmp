@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <atomic>
+#include <map>
 #include "execution.h"
 #include "channel.h"
 #include "frame_buffer.h"
@@ -47,6 +48,8 @@ class rtsp_forward_session : public std::enable_shared_from_this<rtsp_forward_se
     std::string stream_id_;
     sink::weak sink_;
     channel::ptr channel_ = nullptr;
+    std::map<std::string, rtsp_track::ptr> tracks_;
+    std::map<std::string, rtsp_track::ptr> setup_tracks_;
     simple_rtmp::executors::executor& ex_;
     std::shared_ptr<tcp_connection> conn_;
     std::vector<frame_buffer::ptr> write_queue_;

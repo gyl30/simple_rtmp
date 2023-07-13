@@ -40,8 +40,6 @@ class rtsp_sink : public sink
     std::string id_;
     simple_rtmp::executors::executor& ex_;
     std::set<channel::ptr> chs_;
-    rtsp_track::ptr video_track_;
-    rtsp_track::ptr audio_track_;
     std::shared_ptr<rtsp_encoder> video_encoder_;
     std::shared_ptr<rtsp_encoder> audio_encoder_;
 };
