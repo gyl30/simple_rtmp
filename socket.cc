@@ -56,6 +56,56 @@ std::string get_socket_local_address(boost::asio::ip::udp::socket& socket)
     }
     return get_endpoint_address(ed);
 }
+std::string get_socket_local_ip(boost::asio::ip::udp::socket& socket)
+{
+    boost::system::error_code ec;
+    auto ed = socket.local_endpoint(ec);
+    if (ec)
+    {
+        return "";
+    }
+    const std::string ip = ed.address().to_string(ec);
+    if (ec)
+    {
+        return "";
+    }
+    return ip;
+}
+uint16_t get_socket_local_port(boost::asio::ip::udp::socket& socket)
+{
+    boost::system::error_code ec;
+    auto ed = socket.local_endpoint(ec);
+    if (ec)
+    {
+        return 0;
+    }
+    return ed.port();
+}
+std::string get_socket_remote_ip(boost::asio::ip::udp::socket& socket)
+{
+    boost::system::error_code ec;
+    auto ed = socket.remote_endpoint(ec);
+    if (ec)
+    {
+        return "";
+    }
+    const std::string ip = ed.address().to_string(ec);
+    if (ec)
+    {
+        return "";
+    }
+    return ip;
+}
+uint16_t get_socket_remote_port(boost::asio::ip::udp::socket& socket)
+{
+    boost::system::error_code ec;
+    auto ed = socket.remote_endpoint(ec);
+    if (ec)
+    {
+        return 0;
+    }
+    return ed.port();
+}
 boost::asio::ip::tcp::socket change_socket_io_context(boost::asio::ip::tcp::socket sock, boost::asio::io_context& io)
 {
     std::string local = get_socket_local_address(sock);
