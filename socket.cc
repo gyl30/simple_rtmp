@@ -73,7 +73,7 @@ static uint16_t get_socket_remote_port_(Socket& socket)
 }
 std::string get_socket_local_ip(boost::asio::ip::udp::socket& socket)
 {
-    return get_socket_local_ip_(sock);
+    return get_socket_local_ip_(socket);
 }
 
 uint16_t get_socket_local_port(boost::asio::ip::udp::socket& socket)
