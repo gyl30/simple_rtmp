@@ -110,12 +110,12 @@ void rtsp_forward_session::safe_shutdown()
         conn_.reset();
     }
 }
-static const char* s_month[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-
-static const char* s_week[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-
 std::string rfc822_now_format()
 {
+    static const char* s_month[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+    static const char* s_week[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+
     time_t t = ::time(nullptr);
     struct tm* tm = gmtime(&t);
     char buf[64] = {0};
@@ -131,6 +131,17 @@ std::string rfc822_now_format()
              tm->tm_sec);
     return buf;
 }
+static simple_rtmp::fixed_frame_buffer::ptr make_461_response(int req)
+{
+    std::stringstream ss;
+    ss << "RTSP/1.0 461 Unsupported Transport\r\n";
+    ss << "CSeq: " << req << "\r\n";
+    ss << "Date: " << rfc822_now_format().data() << "\r\n";
+    ss << "User-Agent: Simple/Rtsp\r\n\r\n";
+    std::string response = ss.str();
+    return simple_rtmp::fixed_frame_buffer::create(response.data(), response.size());
+}
+
 int rtsp_forward_session::on_options(const std::string& url)
 {
     LOG_INFO("options {}", url);
@@ -240,13 +251,7 @@ int rtsp_forward_session::on_setup(const std::string& url, const std::string& se
     setup_tracks_[track_id] = track;
     if (transport->multicast)
     {
-        std::stringstream ss;
-        ss << "RTSP/1.0 461 Unsupported Transport\r\n";
-        ss << "CSeq: " << args_->ctx->seq() << "\r\n";
-        ss << "Date: " << rfc822_now_format().data() << "\r\n";
-        ss << "User-Agent: Simple/Rtsp\r\n\r\n";
-        std::string response = ss.str();
-        auto frame = fixed_frame_buffer::create(response.data(), response.size());
+        auto frame = make_461_response(args_->ctx->seq());
         conn_->write_frame(frame);
         LOG_ERROR("{} no support multicast {}", url, track_id);
         shutdown();
@@ -254,13 +259,7 @@ int rtsp_forward_session::on_setup(const std::string& url, const std::string& se
     }
     if (transport->transport == 0)
     {
-        std::stringstream ss;
-        ss << "RTSP/1.0 461 Unsupported Transport\r\n";
-        ss << "CSeq: " << args_->ctx->seq() << "\r\n";
-        ss << "Date: " << rfc822_now_format().data() << "\r\n";
-        ss << "User-Agent: Simple/Rtsp\r\n\r\n";
-        std::string response = ss.str();
-        auto frame = fixed_frame_buffer::create(response.data(), response.size());
+        auto frame = make_461_response(args_->ctx->seq());
         conn_->write_frame(frame);
         LOG_ERROR("{} no support udp {}", url, track_id);
         return -1;
