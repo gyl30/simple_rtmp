@@ -18,6 +18,11 @@ struct simple_rtmp::rtsp_forward_args
     std::string stream;
     std::shared_ptr<rtsp_server_context> ctx;
 };
+static std::string make_session_id()
+{
+    std::atomic<uint64_t> id = 0xff1fcc;
+    return std::to_string(id++);
+}
 
 rtsp_forward_session::rtsp_forward_session(simple_rtmp::executors::executor& ex) : ex_(ex), conn_(std::make_shared<tcp_connection>(ex_))
 {
@@ -264,27 +269,37 @@ int rtsp_forward_session::on_setup(const std::string& url, const std::string& se
         LOG_ERROR("{} no support udp {}", url, track_id);
         return -1;
     }
-    static const int kRtpChannel = 0;
-    static const int kRtcpChannel = 1;
+    static const int kRtpVideoChannel = 0;
+    static const int kRtcpVideoChannel = 1;
+    static const int kRtpAudioChannel = 2;
+    static const int kRtcpAudioChannel = 3;
+
     std::stringstream ss;
     ss << "RTSP/1.0 200 OK\r\n";
     ss << "CSeq: " << args_->ctx->seq() << "\r\n";
     ss << "Date: " << rfc822_now_format().data() << "\r\n";
     ss << "Transport: RTP/AVP/TCP;unicast;destination=" << get_socket_local_ip(conn_->socket()) << ";";
     ss << "source=" << get_socket_remote_ip(conn_->socket()) << ";";
-    ss << "interleaved=" << kRtpChannel << "-" << kRtcpChannel << "\r\n";
-    ss << "Session: " << (const void*)this << ";timeout=65\r\n\r\n";
+    if (track_id == kRtspVideoTrackId)
+    {
+        ss << "interleaved=" << kRtpVideoChannel << "-" << kRtcpVideoChannel << "\r\n";
+    }
+    else
+    {
+        ss << "interleaved=" << kRtpAudioChannel << "-" << kRtcpAudioChannel << "\r\n";
+    }
+    if (session_id_.empty())
+    {
+        session_id_ = make_session_id();
+    }
+    ss << "Session: " << session_id_ << ";timeout=65\r\n\r\n";
     std::string response = ss.str();
     auto frame = fixed_frame_buffer::create(response.data(), response.size());
     conn_->write_frame(frame);
     LOG_DEBUG("{} setup response -> {}", url, response);
-    // RTSP/1.0 200 OK
-    // CSeq: 3
-    // Date: Wed, Jun 28 2023 14:15:31 GMT
-    // Transport: RTP/AVP/TCP;unicast;destination=172.20.50.180;source=172.20.50.180;interleaved=0-1
-    // Session: 665CEE5E;timeout=65
     return 0;
 }
+
 int rtsp_forward_session::on_play(const std::string& url, const std::string& session)
 {
     LOG_INFO("play {} session {}", url, session);
