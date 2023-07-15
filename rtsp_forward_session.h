@@ -46,6 +46,7 @@ class rtsp_forward_session : public std::enable_shared_from_this<rtsp_forward_se
 
    private:
     std::string stream_id_;
+    std::string session_id_;
     sink::weak sink_;
     channel::ptr channel_ = nullptr;
     std::map<std::string, rtsp_track::ptr> tracks_;

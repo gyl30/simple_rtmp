@@ -68,6 +68,7 @@ void rtsp_forward_session::channel_out(const frame_buffer::ptr& frame, const boo
         shutdown();
         return;
     }
+    // 收到编码后的数据包
 }
 
 void rtsp_forward_session::on_read(const simple_rtmp::frame_buffer::ptr& frame, boost::system::error_code ec)
@@ -189,7 +190,7 @@ int rtsp_forward_session::on_describe(const std::string& url)
         return -1;
     }
     rtsp_s->tracks(std::bind(&rtsp_forward_session::on_track, shared_from_this(), url, _1));
-
+    sink_ = s;
     return 0;
 }
 void rtsp_forward_session::on_track(const std::string& url, std::vector<rtsp_track::ptr> tracks)
@@ -302,6 +303,29 @@ int rtsp_forward_session::on_setup(const std::string& url, const std::string& se
 
 int rtsp_forward_session::on_play(const std::string& url, const std::string& session)
 {
+    if (session != session_id_)
+    {
+        LOG_ERROR("play {} invalid session {}", url, session);
+        shutdown();
+        return -1;
+    }
+    auto s = sink_.lock();
+    if (s == nullptr)
+    {
+        LOG_ERROR("play {} session sink not found {}", url, session);
+        shutdown();
+        return -1;
+    }
+    s->add_channel(channel_);
+    std::stringstream ss;
+    ss << "RTSP/1.0 200 OK\r\n";
+    ss << "CSeq: " << args_->ctx->seq() << "\r\n";
+    ss << "Date: " << rfc822_now_format().data() << "\r\n";
+    ss << "Session: " << session_id_ << "\r\n";
+    ss << "RTP-Info: url=" << url << "\r\n";
+    std::string response = ss.str();
+    auto frame = fixed_frame_buffer::create(response.data(), response.size());
+    conn_->write_frame(frame);
     LOG_INFO("play {} session {}", url, session);
     return 0;
 }
