@@ -1,4 +1,9 @@
 #include "rtsp_h264_encoder.h"
+#include "rtmp_codec.h"
+extern "C"
+{
+#include "rtp-payload.h"
+}
 
 using simple_rtmp::rtsp_h264_encoder;
 
@@ -10,21 +15,59 @@ std::string simple_rtmp::rtsp_h264_encoder::id()
 {
     return id_;
 }
+void rtsp_h264_encoder::set_output(const simple_rtmp::channel::ptr& ch)
+{
+    ch_ = ch;
+}
 
+simple_rtmp::rtsp_track::ptr rtsp_h264_encoder::track()
+{
+    return track_;
+}
 static const uint8_t* h264_startcode(const uint8_t* data, size_t bytes)
 {
     size_t i;
     for (i = 2; i + 1 < bytes; i++)
     {
         if (0x01 == data[i] && 0x00 == data[i - 1] && 0x00 == data[i - 2])
+        {
             return data + i + 1;
+        }
     }
 
     return nullptr;
 }
 
+static void* rtp_alloc(void* /*param*/, int bytes)
+{
+    return malloc(bytes);
+}
+
+static void rtp_free(void* /*param*/, void* packet)
+{
+    free(packet);
+}
+
+int rtsp_h264_encoder::rtp_encode_packet(void* param, const void* packet, int bytes, uint32_t timestamp, int flags)
+{
+    auto* self = static_cast<rtsp_h264_encoder*>(param);
+    auto frame = fixed_frame_buffer::create();
+    frame->append(packet, bytes);
+    frame->set_pts(timestamp);
+    frame->set_dts(timestamp);
+    frame->set_media(simple_rtmp::rtmp_tag::video);
+    frame->set_codec(flags);
+    self->ch_->write(frame, {});
+    return 0;
+}
 void rtsp_h264_encoder::write(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
 {
+    if (ec)
+    {
+        ch_->write(frame, ec);
+        return;
+    }
+
     // clang-format off
     enum { NAL_NIDR = 1, NAL_PARTITION_A = 2, NAL_IDR = 5, NAL_SEI = 6, NAL_SPS = 7, NAL_PPS = 8, NAL_AUD = 9, };
     // clang-format on
@@ -34,10 +77,10 @@ void rtsp_h264_encoder::write(const frame_buffer::ptr& frame, const boost::syste
     const uint8_t* end = data + bytes;
     const uint8_t* p = h264_startcode(data, bytes);
     uint32_t n = 0;
-    while (p)
+    while (p != nullptr)
     {
         const uint8_t* next = h264_startcode(p, static_cast<int>(end - p));
-        if (next)
+        if (next != nullptr)
         {
             n = next - p - 3;
         }
@@ -46,7 +89,10 @@ void rtsp_h264_encoder::write(const frame_buffer::ptr& frame, const boost::syste
             n = end - p;
         }
 
-        while (n > 0 && 0 == p[n - 1]) n--;    // filter tailing zero
+        while (n > 0 && 0 == p[n - 1])
+        {
+            n--;
+        }
 
         assert(n > 0);
         if (n > 0)
@@ -60,25 +106,22 @@ void rtsp_h264_encoder::write(const frame_buffer::ptr& frame, const boost::syste
             {
                 pps_ = fixed_frame_buffer::create(p, n);
             }
-            // handler(param, p, (int)n);
         }
 
         p = next;
     }
 
-    // encode frame
-}
-
-void rtsp_h264_encoder::set_output(const simple_rtmp::channel::ptr& ch)
-{
-    ch_ = ch;
-}
-
-simple_rtmp::rtsp_track::ptr rtsp_h264_encoder::track()
-{
-    if (sps_ && pps_)
+    if (track_ == nullptr && sps_ && pps_)
     {
-        return std::make_shared<rtsp_h264_track>(sps_, pps_);
+        track_ = std::make_shared<rtsp_h264_track>(sps_, pps_);
     }
-    return nullptr;
+    if (ctx_ == nullptr && track_ != nullptr)
+    {
+        ctx_ = rtp_payload_encode_create(96, "H264", 0, track_->ssrc(), nullptr, this);
+    }
+    if (ctx_ != nullptr)
+    {
+        rtp_payload_decode_input(ctx_, frame->data(), static_cast<int>(frame->size()));
+    }
+    // encode frame
 }

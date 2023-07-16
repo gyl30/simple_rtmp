@@ -28,6 +28,7 @@ list(APPEND LINK_LIBS http_parse)
 
 include_directories(third/media-server/librtp/include)
 aux_source_directory(third/media-server/librtp/source RTP_SRC)
+aux_source_directory(third/media-server/librtp/payload RTP_SRC)
 add_library(rtp STATIC ${RTP_SRC})
 list(APPEND LINK_LIBS rtp)
 

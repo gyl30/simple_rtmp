@@ -22,10 +22,15 @@ class rtsp_h264_encoder : public rtsp_encoder
     void set_output(const channel::ptr& ch) override;
 
    private:
+    static int rtp_encode_packet(void* param, const void* packet, int bytes, uint32_t timestamp, int /*flags*/);
+
+   private:
     std::string id_;
     channel::ptr ch_;
     frame_buffer::ptr sps_;
     frame_buffer::ptr pps_;
+    rtsp_track::ptr track_;
+    void* ctx_ = nullptr;
 };
 }    // namespace simple_rtmp
 #endif
