@@ -117,11 +117,15 @@ void rtsp_h264_encoder::write(const frame_buffer::ptr& frame, const boost::syste
     }
     if (ctx_ == nullptr && track_ != nullptr)
     {
-        ctx_ = rtp_payload_encode_create(96, "H264", 0, track_->ssrc(), nullptr, this);
+        struct rtp_payload_t handler;
+        handler.alloc = rtp_alloc;
+        handler.free = rtp_free;
+        handler.packet = rtp_encode_packet;
+        ctx_ = rtp_payload_encode_create(96, "H264", 0, track_->ssrc(), &handler, this);
     }
-    if (ctx_ != nullptr)
+    if (ctx_ == nullptr)
     {
-        rtp_payload_decode_input(ctx_, frame->data(), static_cast<int>(frame->size()));
+        return;
     }
-    // encode frame
+    rtp_payload_decode_input(ctx_, frame->data(), static_cast<int>(frame->size()));
 }
