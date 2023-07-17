@@ -22,10 +22,15 @@ class rtsp_aac_encoder : public rtsp_encoder
     void write(const frame_buffer::ptr& frame, const boost::system::error_code& ec) override;
     void set_output(const channel::ptr& ch) override;
 
-   public:
+   private:
+    static int rtp_encode_packet(void* param, const void* packet, int bytes, uint32_t timestamp, int /*flags*/);
+
    private:
     std::string id_;
+    channel::ptr ch_;
     rtsp_track::ptr track_;
+    frame_buffer::ptr specific_config_;
+    void* ctx_ = nullptr;
 };
 }    // namespace simple_rtmp
 #endif
