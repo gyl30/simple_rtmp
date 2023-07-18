@@ -1,5 +1,6 @@
 #include "rtsp_aac_encoder.h"
 #include "rtmp_codec.h"
+#include "rtsp_aac_track.h"
 
 extern "C"
 {
@@ -55,14 +56,24 @@ void simple_rtmp::rtsp_aac_encoder::write(const simple_rtmp::frame_buffer::ptr& 
     {
         struct mpeg4_aac_t aac;
         memset(&aac, 0, sizeof(aac));
-        if (mpeg4_aac_adts_load(frame->data(), frame->size(), &aac) > 0)
+        if (mpeg4_aac_adts_load(frame->data(), frame->size(), &aac) < 0)
         {
-            char buf[32] = {0};
-            int len = mpeg4_aac_audio_specific_config_save(&aac, reinterpret_cast<uint8_t*>(buf), sizeof(buf));
-            if (len > 0)
-            {
-                specific_config_ = fixed_frame_buffer::create(buf, len);
-            }
+            return;
         }
+        char buf[32] = {0};
+        int len = mpeg4_aac_audio_specific_config_save(&aac, reinterpret_cast<uint8_t*>(buf), sizeof(buf));
+        if (len < 0)
+        {
+            return;
+        }
+        int sample_rate = mpeg4_aac_audio_frequency_to(static_cast<enum mpeg4_aac_frequency>(aac.sampling_frequency_index));
+        int channel_count = aac.channel_configuration;
+        char buf[32] = {0};
+        len = mpeg4_aac_audio_specific_config_save(&aac, (uint8_t*)buf, sizeof(buf));
+        if (len > 0)
+        {
+            track_ = std::make_shared<simple_rtmp::rtsp_aac_track>(std::string(buf, len), sample_rate, channel_count, 0);
+        }
+        specific_config_ = fixed_frame_buffer::create(buf, len);
     }
 }
