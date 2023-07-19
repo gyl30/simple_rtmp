@@ -52,7 +52,7 @@ int rtsp_aac_encoder::rtp_encode_packet(void* param, const void* packet, int byt
 
 void simple_rtmp::rtsp_aac_encoder::write(const simple_rtmp::frame_buffer::ptr& frame, const boost::system::error_code& ec)
 {
-    if (specific_config_ == nullptr)
+    if (track_ == nullptr)
     {
         struct mpeg4_aac_t aac;
         memset(&aac, 0, sizeof(aac));
@@ -68,12 +68,19 @@ void simple_rtmp::rtsp_aac_encoder::write(const simple_rtmp::frame_buffer::ptr& 
         }
         int sample_rate = mpeg4_aac_audio_frequency_to(static_cast<enum mpeg4_aac_frequency>(aac.sampling_frequency_index));
         int channel_count = aac.channel_configuration;
-        char buf[32] = {0};
-        len = mpeg4_aac_audio_specific_config_save(&aac, (uint8_t*)buf, sizeof(buf));
-        if (len > 0)
-        {
-            track_ = std::make_shared<simple_rtmp::rtsp_aac_track>(std::string(buf, len), sample_rate, channel_count, 0);
-        }
-        specific_config_ = fixed_frame_buffer::create(buf, len);
+        track_ = std::make_shared<simple_rtmp::rtsp_aac_track>(std::string(buf, len), sample_rate, channel_count, 0);
     }
+    if (ctx_ == nullptr && track_ != nullptr)
+    {
+        struct rtp_payload_t handler;
+        handler.alloc = rtp_alloc;
+        handler.free = rtp_free;
+        handler.packet = rtp_encode_packet;
+        ctx_ = rtp_payload_encode_create(96, "mpeg4-generic", 0, track_->ssrc(), &handler, this);
+    }
+    if (ctx_ == nullptr)
+    {
+        return;
+    }
+    rtp_payload_decode_input(ctx_, frame->data(), static_cast<int>(frame->size()));
 }
