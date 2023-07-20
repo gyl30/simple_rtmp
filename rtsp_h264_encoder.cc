@@ -56,7 +56,7 @@ int rtsp_h264_encoder::rtp_encode_packet(void* param, const void* packet, int by
     frame->set_pts(timestamp);
     frame->set_dts(timestamp);
     frame->set_media(simple_rtmp::rtmp_tag::video);
-    frame->set_codec(flags);
+    frame->set_flag(flags);
     self->ch_->write(frame, {});
     return 0;
 }
@@ -127,5 +127,5 @@ void rtsp_h264_encoder::write(const frame_buffer::ptr& frame, const boost::syste
     {
         return;
     }
-    rtp_payload_encode_input(ctx_, frame->data(), static_cast<int>(frame->size()),frame->pts());
+    rtp_payload_encode_input(ctx_, frame->data(), static_cast<int>(frame->size()), frame->pts());
 }

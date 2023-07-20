@@ -45,7 +45,7 @@ int rtsp_aac_encoder::rtp_encode_packet(void* param, const void* packet, int byt
     frame->set_pts(timestamp);
     frame->set_dts(timestamp);
     frame->set_media(simple_rtmp::rtmp_tag::audio);
-    frame->set_codec(flags);
+    frame->set_flag(flags);
     self->ch_->write(frame, {});
     return 0;
 }
