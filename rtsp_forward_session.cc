@@ -69,6 +69,7 @@ void rtsp_forward_session::channel_out(const frame_buffer::ptr& frame, const boo
         return;
     }
     // 收到编码后的数据包
+    conn_->write_frame(frame);
 }
 
 void rtsp_forward_session::on_read(const simple_rtmp::frame_buffer::ptr& frame, boost::system::error_code ec)

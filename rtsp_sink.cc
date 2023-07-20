@@ -75,7 +75,6 @@ void rtsp_sink::on_frame(const frame_buffer::ptr& frame, const boost::system::er
         {
             ch->write(frame, ec);
         }
-        return;
     }
 }
 void simple_rtmp::rtsp_sink::tracks(const simple_rtmp::rtsp_sink::track_cb& cb)
