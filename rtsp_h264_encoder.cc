@@ -127,5 +127,5 @@ void rtsp_h264_encoder::write(const frame_buffer::ptr& frame, const boost::syste
     {
         return;
     }
-    rtp_payload_decode_input(ctx_, frame->data(), static_cast<int>(frame->size()));
+    rtp_payload_encode_input(ctx_, frame->data(), static_cast<int>(frame->size()),frame->pts());
 }

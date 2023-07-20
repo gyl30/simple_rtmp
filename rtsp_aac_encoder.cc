@@ -82,5 +82,5 @@ void simple_rtmp::rtsp_aac_encoder::write(const simple_rtmp::frame_buffer::ptr& 
     {
         return;
     }
-    rtp_payload_decode_input(ctx_, frame->data(), static_cast<int>(frame->size()));
+    rtp_payload_encode_input(ctx_, frame->data(), static_cast<int>(frame->size()), frame->pts());
 }
