@@ -69,12 +69,9 @@ void simple_rtmp::rtsp_sink::add_codec(int codec, codec_option op)
 }
 void rtsp_sink::on_frame(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
 {
-    if (ec)
+    for (const auto& ch : chs_)
     {
-        for (const auto& ch : chs_)
-        {
-            ch->write(frame, ec);
-        }
+        ch->write(frame, ec);
     }
 }
 void simple_rtmp::rtsp_sink::tracks(const simple_rtmp::rtsp_sink::track_cb& cb)
