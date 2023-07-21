@@ -52,6 +52,11 @@ int rtsp_aac_encoder::rtp_encode_packet(void* param, const void* packet, int byt
 
 void simple_rtmp::rtsp_aac_encoder::write(const simple_rtmp::frame_buffer::ptr& frame, const boost::system::error_code& ec)
 {
+    if (ec)
+    {
+        ch_->write(nullptr, ec);
+        return;
+    }
     if (track_ == nullptr)
     {
         struct mpeg4_aac_t aac;
