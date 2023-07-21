@@ -317,17 +317,18 @@ int rtsp_forward_session::on_play(const std::string& url, const std::string& ses
         shutdown();
         return -1;
     }
-    s->add_channel(channel_);
     std::stringstream ss;
     ss << "RTSP/1.0 200 OK\r\n";
     ss << "CSeq: " << args_->ctx->seq() << "\r\n";
     ss << "Date: " << rfc822_now_format().data() << "\r\n";
     ss << "Session: " << session_id_ << "\r\n";
-    ss << "RTP-Info: url=" << url << "\r\n";
+    ss << "RTP-Info: url=" << url << "\r\n\r\n";
     std::string response = ss.str();
     auto frame = fixed_frame_buffer::create(response.data(), response.size());
     conn_->write_frame(frame);
     LOG_INFO("play {} session {}", url, session);
+    s->add_channel(channel_);
+
     return 0;
 }
 int rtsp_forward_session::on_teardown(const std::string& url, const std::string& session)
