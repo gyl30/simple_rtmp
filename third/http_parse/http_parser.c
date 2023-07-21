@@ -1029,6 +1029,7 @@ reexecute:
 
             XX(POST,      1, 'U', PUT)
             XX(POST,      1, 'A', PATCH)
+            XX(POST,      1, 'L', PLAY)
             XX(POST,      1, 'R', PROPFIND)
             XX(PUT,       2, 'R', PURGE)
             XX(DELETE,    2, 'S', DESCRIBE)
@@ -1044,7 +1045,6 @@ reexecute:
             XX(SEARCH,    2, 'T', SETUP)
             XX(REPORT,    2, 'B', REBIND)
             XX(PROPFIND,  4, 'P', PROPPATCH)
-            XX(PROPFIND,  1, 'L', PLAY)
             XX(TRACE,     1, 'E', TEARDOWN)
             XX(LOCK,      1, 'I', LINK)
             XX(UNLOCK,    2, 'S', UNSUBSCRIBE)
