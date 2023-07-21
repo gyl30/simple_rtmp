@@ -113,6 +113,10 @@ class rtsp_parser
     {
         LOG_DEBUG("on headers complete");
         auto* self = reinterpret_cast<rtsp_parser*>(parser->data);
+        if(!self->field_.empty())
+        {
+            self->headers_.emplace(self->field_, self->value_);
+        }
         return 0;
     }
     static int on_message_complete(http_parser* parser)
