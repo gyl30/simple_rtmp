@@ -49,7 +49,7 @@ class rtsp_parser
     {
         http_parser_init(&parser_, HTTP_BOTH);
         parser_.data = this;
-        // parser_.flags = F_SKIPBODY;
+        parser_.flags = F_SKIPBODY;
         http_parser_settings_init(&settings_);
         settings_.on_message_begin = on_message_begin;
         settings_.on_url = on_url;
@@ -117,7 +117,7 @@ class rtsp_parser
         {
             self->headers_.emplace(self->field_, self->value_);
         }
-        return 0;
+        return 2;
     }
     static int on_message_complete(http_parser* parser)
     {
