@@ -24,6 +24,10 @@ class frame_buffer
     virtual void erase(uint32_t size) = 0;
     virtual bool empty() const = 0;
     virtual uint8_t peek() const = 0;
+    virtual void append(const uint8_t* data, size_t len) = 0;
+    virtual void append(const void* data, size_t len) = 0;
+    virtual void append(const ptr& frame) = 0;
+    virtual void append(const std::vector<uint8_t>& data) = 0;
 
    public:
     virtual int32_t media() const = 0;
@@ -130,6 +134,41 @@ class ref_frame_buffer : public frame_buffer
     void set_dts(int64_t dts) override
     {
         ref_->set_dts(dts);
+    }
+    void append(const uint8_t* data, size_t len) override
+    {
+        if (data == nullptr)
+        {
+            return;
+        }
+        ref_->append(data, len);
+    }
+    void append(const void* data, size_t len) override
+    {
+        if (data == nullptr)
+        {
+            return;
+        }
+
+        append(static_cast<const uint8_t*>(data), len);
+    }
+
+    void append(const frame_buffer::ptr& frame) override
+    {
+        if (!frame)
+        {
+            return;
+        }
+        ref_->append(frame);
+    }
+
+    void append(const std::vector<uint8_t>& data) override
+    {
+        if (data.empty())
+        {
+            return;
+        }
+        ref_->append(data);
     }
 
    private:
@@ -265,7 +304,7 @@ class fixed_frame_buffer : public frame_buffer
         dts_ = dts;
     }
 
-    void append(const uint8_t* data, size_t len)
+    void append(const uint8_t* data, size_t len) override
     {
         if (data == nullptr)
         {
@@ -273,7 +312,7 @@ class fixed_frame_buffer : public frame_buffer
         }
         payload_.insert(payload_.end(), data, data + len);
     }
-    void append(const void* data, size_t len)
+    void append(const void* data, size_t len) override
     {
         if (data == nullptr)
         {
@@ -283,7 +322,7 @@ class fixed_frame_buffer : public frame_buffer
         append(static_cast<const uint8_t*>(data), len);
     }
 
-    void append(const frame_buffer::ptr& frame)
+    void append(const frame_buffer::ptr& frame) override
     {
         if (!frame)
         {
@@ -296,20 +335,8 @@ class fixed_frame_buffer : public frame_buffer
         flag_ = frame->flag();
         append(frame->data(), frame->size());
     }
-    void append(const ptr& frame)
-    {
-        if (!frame)
-        {
-            return;
-        }
-        media_ = frame->media_;
-        codec_ = frame->codec_;
-        pts_ = frame->pts_;
-        dts_ = frame->dts_;
-        flag_ = frame->flag_;
-        append(frame->payload_);
-    }
-    void append(const std::vector<uint8_t>& data)
+
+    void append(const std::vector<uint8_t>& data) override
     {
         if (data.empty())
         {
