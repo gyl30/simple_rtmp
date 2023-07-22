@@ -9,30 +9,39 @@ enum RTSP_PARSE_RESULT
     RTSP_PARSE_ERROR = -1,
     RTSP_PARSE_CONTINUE = -2
 };
+static const int kRtcpPrefixLength = 4;
 
 rtsp_server_context::rtsp_server_context(rtsp_server_context_handler handler) : handler_(std::move(handler))
 {
+    cache_ = fixed_frame_buffer::create();
 }
 
 int rtsp_server_context::input(const simple_rtmp::frame_buffer::ptr& frame)
 {
+    cache_->append(frame);
     int ret = RTSP_PARSE_OK;
-    while (!frame->empty())
+    while (!cache_->empty())
     {
-        if (need_more_data_ != RTSP_PARSE_CONTINUE && frame->peek() == '$')
+        if (cache_->peek() == '$')
         {
             // rtcp
-            ret = parse_rtcp_message(frame);
+            ret = parse_rtcp_message(cache_);
         }
         else
         {
-            ret = parse_rtsp_message(frame);
+            ret = parse_rtsp_message(cache_);
+        }
+        // 需要更多数据
+        if (ret == RTSP_PARSE_CONTINUE)
+        {
+            return 0;
         }
         if (ret == RTSP_PARSE_ERROR)
         {
             return -1;
         }
-        frame->erase(ret);
+        assert(ret > 0);
+        cache_->erase(ret);
     }
     return ret;
 }
@@ -42,30 +51,30 @@ int rtsp_server_context::parse_rtsp_message(const simple_rtmp::frame_buffer::ptr
     int ret = parser_.input(frame);
     if (ret == RTSP_PARSE_ERROR)
     {
-        need_more_data_ = RTSP_PARSE_ERROR;
         return ret;
     }
+    // 如果数据不够，重置本次解析状态，等待更多数据到来时继续解析
     if (ret == RTSP_PARSE_CONTINUE)
     {
-        need_more_data_ = RTSP_PARSE_CONTINUE;
-        return static_cast<int>(frame->size());
-    }
-    need_more_data_ = RTSP_PARSE_OK;
-    if (parser_.complete())
-    {
-        process_request(parser_);
         parser_.reset();
+        return ret;
     }
+    // 解析完成
+    assert(parser_.complete());
+    // 处理消息
+    process_request(parser_);
+    // 重置解析器
+    parser_.reset();
     return ret;
 }
 
 int rtsp_server_context::parse_rtcp_message(const simple_rtmp::frame_buffer::ptr& frame)
 {
     // 4 byte (1 prefix 1 interleaved 2 length)
-    if (frame->size() < 4)
+    if (frame->size() < kRtcpPrefixLength)
     {
         // 数据不够
-        return RTSP_PARSE_OK;
+        return RTSP_PARSE_CONTINUE;
     }
 
     const uint8_t* data = frame->data();
@@ -78,10 +87,9 @@ int rtsp_server_context::parse_rtcp_message(const simple_rtmp::frame_buffer::ptr
     if (frame->size() < (length + 4))
     {
         // 需要更多数据
-        return RTSP_PARSE_OK;
+        return RTSP_PARSE_CONTINUE;
     }
-    // rtcp
-    return RTSP_PARSE_OK;
+    return length + kRtcpPrefixLength;
 }
 
 void rtsp_server_context::process_request(const simple_rtmp::rtsp_parser& parser)

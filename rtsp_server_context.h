@@ -53,7 +53,7 @@ class rtsp_server_context
 
    private:
     int seq_ = -1;
-    int need_more_data_ = 0;
+    simple_rtmp::frame_buffer::ptr cache_;
     simple_rtmp::rtsp_parser parser_;
     rtsp_server_context_handler handler_;
 };

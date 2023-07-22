@@ -104,7 +104,13 @@ void rtsp_forward_session::on_read(const simple_rtmp::frame_buffer::ptr& frame, 
         shutdown();
         return;
     }
-    args_->ctx->input(frame);
+    int ret = args_->ctx->input(frame);
+    if (ret < 0)
+    {
+        LOG_ERROR("parse request failed {}", static_cast<void*>(this));
+        shutdown();
+        return;
+    }
 }
 
 void rtsp_forward_session::on_write(const boost::system::error_code& ec, std::size_t /*bytes*/)
