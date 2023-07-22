@@ -12,6 +12,11 @@
 using simple_rtmp::rtsp_forward_session;
 using namespace std::placeholders;
 
+static const int kRtpVideoChannel = 0;
+static const int kRtcpVideoChannel = 1;
+static const int kRtpAudioChannel = 2;
+static const int kRtcpAudioChannel = 3;
+
 struct simple_rtmp::rtsp_forward_args
 {
     std::string app;
@@ -59,7 +64,21 @@ void rtsp_forward_session::start()
     conn_->set_write_cb(std::bind(&rtsp_forward_session::on_write, shared_from_this(), _1, _2));
     conn_->start();
 }
-
+static simple_rtmp::frame_buffer::ptr make_frame_header(const simple_rtmp::frame_buffer::ptr& frame)
+{
+    int rtp_channel = kRtpVideoChannel;
+    if (frame->media() == simple_rtmp::rtmp_tag::audio)
+    {
+        rtp_channel = kRtpAudioChannel;
+    }
+    uint32_t bytes = frame->size();
+    uint8_t rtp_header[4] = {0};
+    rtp_header[0] = '$';
+    rtp_header[1] = rtp_channel;
+    rtp_header[2] = (bytes >> 8) & 0xFF;
+    rtp_header[3] = bytes & 0xff;
+    return simple_rtmp::fixed_frame_buffer::create(rtp_header, 4);
+}
 void rtsp_forward_session::channel_out(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
 {
     if (ec)
@@ -69,6 +88,11 @@ void rtsp_forward_session::channel_out(const frame_buffer::ptr& frame, const boo
         return;
     }
     // 收到编码后的数据包
+
+    auto header_frame = make_frame_header(frame);
+
+    conn_->write_frame(header_frame);
+
     conn_->write_frame(frame);
 }
 
@@ -271,10 +295,6 @@ int rtsp_forward_session::on_setup(const std::string& url, const std::string& se
         LOG_ERROR("{} no support udp {}", url, track_id);
         return -1;
     }
-    static const int kRtpVideoChannel = 0;
-    static const int kRtcpVideoChannel = 1;
-    static const int kRtpAudioChannel = 2;
-    static const int kRtcpAudioChannel = 3;
 
     std::stringstream ss;
     ss << "RTSP/1.0 200 OK\r\n";
