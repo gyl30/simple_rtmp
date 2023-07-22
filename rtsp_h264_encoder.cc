@@ -51,8 +51,7 @@ static void rtp_free(void* /*param*/, void* packet)
 int rtsp_h264_encoder::rtp_encode_packet(void* param, const void* packet, int bytes, uint32_t timestamp, int flags)
 {
     auto* self = static_cast<rtsp_h264_encoder*>(param);
-    auto frame = fixed_frame_buffer::create();
-    frame->append(packet, bytes);
+    auto frame = fixed_frame_buffer::create(packet, bytes);
     frame->set_pts(timestamp);
     frame->set_dts(timestamp);
     frame->set_media(simple_rtmp::rtmp_tag::video);
