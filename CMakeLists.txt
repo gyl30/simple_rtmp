@@ -30,6 +30,7 @@ include_directories(third/media-server/librtp/include)
 aux_source_directory(third/media-server/librtp/source RTP_SRC)
 aux_source_directory(third/media-server/librtp/payload RTP_SRC)
 add_library(rtp STATIC ${RTP_SRC})
+target_compile_options(rtp PRIVATE -DRTP_MPEG4_GENERIC_SKIP_ADTS)
 list(APPEND LINK_LIBS rtp)
 
 include_directories(third/media-server/librtmp/include)
