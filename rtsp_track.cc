@@ -29,13 +29,13 @@ std::string base64_decode(const std::string& data)
 
 uint32_t rtsp_track::audio_ssrc()
 {
-    static std::atomic<uint32_t> ssrc = 1;
+    static std::atomic<uint32_t> ssrc = 0xff1;
     ssrc += 2;
     return ssrc;
 }
 uint32_t rtsp_track::video_ssrc()
 {
-    static std::atomic<uint32_t> ssrc = 0;
+    static std::atomic<uint32_t> ssrc = 0xff2;
     ssrc += 2;
     return ssrc;
 }

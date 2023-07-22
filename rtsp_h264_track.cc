@@ -20,6 +20,7 @@ uint32_t simple_rtmp::rtsp_h264_track::ssrc() const
 rtsp_h264_track::rtsp_h264_track(const frame_buffer::ptr &sps, const frame_buffer::ptr &pps)
 {
     ss_ << "m=video 0 RTP/AVP 96\r\n";
+    ss_ << "c=IN IP4 0.0.0.0\n";
     ss_ << "a=rtpmap:96 H264/90000\r\n";
     ss_ << "a=fmtp:96 packetization-mode=1; profile-level-id=";
     uint32_t profile_level_id = 0;

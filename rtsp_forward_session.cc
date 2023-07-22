@@ -223,9 +223,8 @@ void rtsp_forward_session::on_track(const std::string& url, std::vector<rtsp_tra
     uint64_t now = timestamp::now().milliseconds();
     std::stringstream ss;
     ss << "v=0\n";
-    ss << "0=- " << now << " " << now << "IN IP4 0.0.0.0\n";
+    ss << "o=- " << now << " " << now << " IN IP4 " << get_socket_local_ip(conn_->socket()) << "\n";
     ss << "s=Simple\n";
-    ss << "c=IN IP4 0.0.0.0\n";
     ss << "t=0 0\n";
     ss << "a=range:npt=now-\n";
     ss << "a=control:*\n";
@@ -237,7 +236,7 @@ void rtsp_forward_session::on_track(const std::string& url, std::vector<rtsp_tra
         {
             continue;
         }
-        ss << track->sdp() << "\n";
+        ss << track->sdp();
         tracks_[track->id()] = track;
     }
     std::string sdp = ss.str();

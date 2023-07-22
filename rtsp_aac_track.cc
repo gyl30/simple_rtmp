@@ -20,6 +20,8 @@ uint32_t simple_rtmp::rtsp_aac_track::ssrc() const
 rtsp_aac_track::rtsp_aac_track(const std::string& cfg, int sample_rate, int channels, int bitrate)
 {
     ss_ << "m=audio 0 RTP/AVP 98\r\n";
+    ss_ << "c=IN IP4 0.0.0.0\r\n";
+
     if (bitrate != 0)
     {
         ss_ << "b=AS:" << bitrate << "\r\n";
