@@ -195,6 +195,7 @@ int rtsp_forward_session::on_options(const std::string& url)
     conn_->write_frame(frame);
     return 0;
 }
+
 int rtsp_forward_session::on_describe(const std::string& url)
 {
     LOG_INFO("describe {}", url);
@@ -243,7 +244,8 @@ void rtsp_forward_session::on_track(const std::string& url, std::vector<rtsp_tra
             continue;
         }
         ss << track->sdp();
-        tracks_[track->id()] = track;
+        std::string id = url + "/" + track->id();
+        tracks_[id] = track;
     }
     std::string sdp = ss.str();
     // clear stringstream
@@ -263,20 +265,7 @@ void rtsp_forward_session::on_track(const std::string& url, std::vector<rtsp_tra
 int rtsp_forward_session::on_setup(const std::string& url, const std::string& session, rtsp_transport* transport)
 {
     LOG_INFO("setup {} session {} transport {}", url, session, transport->transport);
-    std::vector<std::string> result;
-    boost::algorithm::split(result, url, boost::is_any_of("/"));
-    if (result.size() < 5)
-    {
-        shutdown();
-        return -1;
-    }
-    std::string track_id = result.back();
-    if (track_id != kRtspVideoTrackId && track_id != kRtspAudioTrackId)
-    {
-        LOG_ERROR("{} invalid track id {}", url, track_id);
-        shutdown();
-        return -1;
-    }
+    std::tring track_id = url;
     auto track = tracks_[track_id];
     if (track == nullptr)
     {
@@ -285,7 +274,7 @@ int rtsp_forward_session::on_setup(const std::string& url, const std::string& se
         return -1;
     }
     setup_tracks_[track_id] = track;
-    if (transport->multicast)
+    if (transport->multicast != 0)
     {
         auto frame = make_461_response(args_->ctx->seq());
         conn_->write_frame(frame);
@@ -350,7 +339,6 @@ int rtsp_forward_session::on_play(const std::string& url, const std::string& ses
     ss << "Date: " << rfc822_now_format().data() << "\r\n";
     ss << "Range: npt=0.000-\r\n";
     ss << "Session: " << session_id_ << "\r\n\r\n";
-    // ss << "RTP-Info: url=" << url << "\r\n\r\n";
     std::string response = ss.str();
     auto frame = fixed_frame_buffer::create(response.data(), response.size());
     conn_->write_frame(frame);
