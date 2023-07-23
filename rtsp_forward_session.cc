@@ -309,16 +309,18 @@ int rtsp_forward_session::on_setup(const std::string& url, const std::string& se
     ss << "source=" << get_socket_remote_ip(conn_->socket()) << ";";
     if (track_id == kRtspVideoTrackId)
     {
-        ss << "interleaved=" << kRtpVideoChannel << "-" << kRtcpVideoChannel << "\r\n";
+        ss << "interleaved=" << kRtpVideoChannel << "-" << kRtcpVideoChannel << ";ssrc=" << track->ssrc() << "\r\n";
     }
     else
     {
-        ss << "interleaved=" << kRtpAudioChannel << "-" << kRtcpAudioChannel << "\r\n";
+        ss << "interleaved=" << kRtpAudioChannel << "-" << kRtcpAudioChannel << ";ssrc=" << track->ssrc() << "\r\n";
     }
     if (session_id_.empty())
     {
         session_id_ = make_session_id();
     }
+    ss << "x-Dynamic-Rate: 1\r\n";
+    ss << "x-Transport-Options: late-tolerance=1.400000\r\n";
     ss << "Session: " << session_id_ << ";timeout=65\r\n\r\n";
     std::string response = ss.str();
     auto frame = fixed_frame_buffer::create(response.data(), response.size());
@@ -346,8 +348,9 @@ int rtsp_forward_session::on_play(const std::string& url, const std::string& ses
     ss << "RTSP/1.0 200 OK\r\n";
     ss << "CSeq: " << args_->ctx->seq() << "\r\n";
     ss << "Date: " << rfc822_now_format().data() << "\r\n";
-    ss << "Session: " << session_id_ << "\r\n";
-    ss << "RTP-Info: url=" << url << "\r\n\r\n";
+    ss << "Range: npt=0.000-\r\n";
+    ss << "Session: " << session_id_ << "\r\n\r\n";
+    // ss << "RTP-Info: url=" << url << "\r\n\r\n";
     std::string response = ss.str();
     auto frame = fixed_frame_buffer::create(response.data(), response.size());
     conn_->write_frame(frame);
