@@ -265,7 +265,7 @@ void rtsp_forward_session::on_track(const std::string& url, std::vector<rtsp_tra
 int rtsp_forward_session::on_setup(const std::string& url, const std::string& session, rtsp_transport* transport)
 {
     LOG_INFO("setup {} session {} transport {}", url, session, transport->transport);
-    std::tring track_id = url;
+    std::string track_id = url;
     auto track = tracks_[track_id];
     if (track == nullptr)
     {
@@ -296,7 +296,7 @@ int rtsp_forward_session::on_setup(const std::string& url, const std::string& se
     ss << "Date: " << rfc822_now_format().data() << "\r\n";
     ss << "Transport: RTP/AVP/TCP;unicast;destination=" << get_socket_local_ip(conn_->socket()) << ";";
     ss << "source=" << get_socket_remote_ip(conn_->socket()) << ";";
-    if (track_id == kRtspVideoTrackId)
+    if (boost::algorithm::ends_with(track_id, kRtspVideoTrackId))
     {
         ss << "interleaved=" << kRtpVideoChannel << "-" << kRtcpVideoChannel << ";ssrc=" << track->ssrc() << "\r\n";
     }
