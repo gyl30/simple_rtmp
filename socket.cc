@@ -89,19 +89,19 @@ uint16_t get_socket_remote_port(boost::asio::ip::udp::socket& socket)
 {
     return get_socket_remote_port_(socket);
 }
-std::string simple_rtmp::get_socket_local_ip(boost::asio::ip::tcp::socket& socket)
+std::string get_socket_local_ip(boost::asio::ip::tcp::socket& socket)
 {
     return get_socket_local_ip_(socket);
 }
-uint16_t simple_rtmp::get_socket_local_port(boost::asio::ip::tcp::socket& socket)
+uint16_t get_socket_local_port(boost::asio::ip::tcp::socket& socket)
 {
     return get_socket_local_port_(socket);
 }
-std::string simple_rtmp::get_socket_remote_ip(boost::asio::ip::tcp::socket& socket)
+std::string get_socket_remote_ip(boost::asio::ip::tcp::socket& socket)
 {
     return get_socket_remote_ip_(socket);
 }
-uint16_t simple_rtmp::get_socket_remote_port(boost::asio::ip::tcp::socket& socket)
+uint16_t get_socket_remote_port(boost::asio::ip::tcp::socket& socket)
 {
     return get_socket_remote_port_(socket);
 }

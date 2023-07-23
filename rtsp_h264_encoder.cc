@@ -1,3 +1,4 @@
+#include <cassert>
 #include "rtsp_h264_encoder.h"
 #include "rtmp_codec.h"
 extern "C"
