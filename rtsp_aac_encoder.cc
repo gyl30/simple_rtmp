@@ -80,7 +80,7 @@ void simple_rtmp::rtsp_aac_encoder::write(const simple_rtmp::frame_buffer::ptr& 
         handler.alloc = rtp_alloc;
         handler.free = rtp_free;
         handler.packet = rtp_encode_packet;
-        ctx_ = rtp_payload_encode_create(96, "mpeg4-generic", 0, track_->ssrc(), &handler, this);
+        ctx_ = rtp_payload_encode_create(98, "mpeg4-generic", 0, track_->ssrc(), &handler, this);
     }
     if (ctx_ == nullptr)
     {
