@@ -349,6 +349,23 @@ int rtsp_forward_session::on_play(const std::string& url, const std::string& ses
 }
 int rtsp_forward_session::on_teardown(const std::string& url, const std::string& session)
 {
+    auto s = sink_.lock();
+    if (s == nullptr)
+    {
+        LOG_ERROR("play {} session sink not found {}", url, session);
+        shutdown();
+        return -1;
+    }
+
     LOG_INFO("play {} teardown {}", url, session);
+    std::stringstream ss;
+    ss << "RTSP/1.0 200 OK\r\n";
+    ss << "CSeq: " << args_->ctx->seq() << "\r\n";
+    ss << "Date: " << rfc822_now_format().data() << "\r\n\r\n";
+    std::string response = ss.str();
+    auto frame = fixed_frame_buffer::create(response.data(), response.size());
+    conn_->write_frame(frame);
+    s->del_channel(channel_);
+    sink_.reset();
     return 0;
 }
