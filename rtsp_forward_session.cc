@@ -12,11 +12,6 @@
 using simple_rtmp::rtsp_forward_session;
 using namespace std::placeholders;
 
-static const int kRtpVideoChannel = 0;
-static const int kRtcpVideoChannel = 1;
-static const int kRtpAudioChannel = 2;
-static const int kRtcpAudioChannel = 3;
-
 struct simple_rtmp::rtsp_forward_args
 {
     std::string app;
@@ -66,10 +61,10 @@ void rtsp_forward_session::start()
 }
 static simple_rtmp::frame_buffer::ptr make_frame_header(const simple_rtmp::frame_buffer::ptr& frame)
 {
-    int rtp_channel = kRtpVideoChannel;
+    int rtp_channel = simple_rtmp::kRtpVideoChannel;
     if (frame->media() == simple_rtmp::rtmp_tag::audio)
     {
-        rtp_channel = kRtpAudioChannel;
+        rtp_channel = simple_rtmp::kRtpAudioChannel;
     }
     uint32_t bytes = frame->size();
     uint8_t rtp_header[4] = {0};

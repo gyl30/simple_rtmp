@@ -7,7 +7,10 @@
 
 namespace simple_rtmp
 {
-
+static const int kRtpVideoChannel = 0;
+static const int kRtcpVideoChannel = 1;
+static const int kRtpAudioChannel = 2;
+static const int kRtcpAudioChannel = 3;
 const static char kRtspVideoTrackId[] = "track1";
 const static char kRtspAudioTrackId[] = "track2";
 std::string base64_decode(const std::string& data);
