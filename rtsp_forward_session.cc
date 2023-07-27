@@ -66,6 +66,10 @@ static simple_rtmp::frame_buffer::ptr make_frame_header(const simple_rtmp::frame
     {
         rtp_channel = simple_rtmp::kRtpAudioChannel;
     }
+    else if (frame->media() == simple_rtmp::rtmp_tag::script)
+    {
+        rtp_channel = frame->flag();
+    }
     uint32_t bytes = frame->size();
     uint8_t rtp_header[4] = {0};
     rtp_header[0] = '$';
