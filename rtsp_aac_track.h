@@ -20,8 +20,10 @@ class rtsp_aac_track : public rtsp_track
     std::string sdp() const override;
     uint32_t ssrc() const override;
     std::string id() const override;
+    int32_t sample_rate() const override;
 
    private:
+    int32_t sample_rate_ = 0;
     uint32_t ssrc_ = 0;
     std::stringstream ss_;
 };

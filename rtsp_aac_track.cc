@@ -17,6 +17,11 @@ uint32_t simple_rtmp::rtsp_aac_track::ssrc() const
     return ssrc_;
 }
 
+int32_t rtsp_aac_track::sample_rate() const
+{
+    return sample_rate_;
+}
+
 rtsp_aac_track::rtsp_aac_track(const std::string& cfg, int sample_rate, int channels, int bitrate)
 {
     ss_ << "m=audio 0 RTP/AVP 98\r\n";
@@ -38,4 +43,5 @@ rtsp_aac_track::rtsp_aac_track(const std::string& cfg, int sample_rate, int chan
         << "sizelength=13;indexlength=3;indexdeltalength=3;config=" << config << "\r\n";
     ss_ << "a=control:" << kRtspAudioTrackId << "\r\n";
     ssrc_ = rtsp_track::audio_ssrc();
+    sample_rate_ = sample_rate;
 }

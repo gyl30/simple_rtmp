@@ -16,6 +16,10 @@ uint32_t simple_rtmp::rtsp_h264_track::ssrc() const
 {
     return ssrc_;
 }
+int32_t rtsp_h264_track::sample_rate() const
+{
+    return 90000;
+}
 
 rtsp_h264_track::rtsp_h264_track(const frame_buffer::ptr &sps, const frame_buffer::ptr &pps)
 {

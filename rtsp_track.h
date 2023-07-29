@@ -28,6 +28,7 @@ class rtsp_track
     static uint32_t video_ssrc();
 
    public:
+    virtual int32_t sample_rate() const = 0;
     virtual std::string sdp() const = 0;
     virtual uint32_t ssrc() const = 0;
     virtual std::string id() const = 0;
