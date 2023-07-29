@@ -24,6 +24,7 @@ struct rtsp_server_context_handler
     std::function<int(const std::string& url)> on_describe;
     std::function<int(const std::string& url, const std::string& session, rtsp_transport* transport)> on_setup;
     std::function<int(const std::string& url, const std::string& session)> on_play;
+    std::function<int(int channel, const simple_rtmp::frame_buffer::ptr& frame)> on_rtcp;
     std::function<int(const std::string& url, const std::string& session)> on_teardown;
 };
 

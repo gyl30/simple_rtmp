@@ -89,6 +89,12 @@ int rtsp_server_context::parse_rtcp_message(const simple_rtmp::frame_buffer::ptr
         // 需要更多数据
         return RTSP_PARSE_CONTINUE;
     }
+    auto rtcp_frame = simple_rtmp::ref_frame_buffer::create(data + 4, length, frame);
+    if (handler_.on_rtcp)
+    {
+        handler_.on_rtcp(interleaved, rtcp_frame);
+    }
+
     return length + kRtcpPrefixLength;
 }
 
