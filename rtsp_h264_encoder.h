@@ -33,9 +33,7 @@ class rtsp_h264_encoder : public rtsp_encoder
     frame_buffer::ptr sps_;
     frame_buffer::ptr pps_;
     rtsp_track::ptr track_;
-    uint64_t rtcp_timestamp_ = 0;
     void* ctx_ = nullptr;
-    void* rtcp_ = nullptr;
 };
 }    // namespace simple_rtmp
 #endif

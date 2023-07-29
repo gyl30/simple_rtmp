@@ -43,6 +43,7 @@ class rtsp_forward_session : public std::enable_shared_from_this<rtsp_forward_se
     int on_play(const std::string& url, const std::string& session);
     int on_teardown(const std::string& url, const std::string& session);
     void on_track(const std::string& url, std::vector<rtsp_track::ptr> track);
+    int on_rtcp(int channel, const simple_rtmp::frame_buffer::ptr& frame);
 
    private:
     std::string stream_id_;
@@ -50,7 +51,12 @@ class rtsp_forward_session : public std::enable_shared_from_this<rtsp_forward_se
     sink::weak sink_;
     channel::ptr channel_ = nullptr;
     std::map<std::string, rtsp_track::ptr> tracks_;
-    std::map<std::string, rtsp_track::ptr> setup_tracks_;
+    rtsp_track::ptr audio_track_ = nullptr;
+    rtsp_track::ptr video_track_ = nullptr;
+    void* video_rtcp_ctx_ = nullptr;
+    void* audio_rtcp_ctx_ = nullptr;
+    uint64_t video_rtcp_time_ = 0;
+    uint64_t audio_rtcp_time_ = 0;
     simple_rtmp::executors::executor& ex_;
     std::shared_ptr<tcp_connection> conn_;
     std::vector<frame_buffer::ptr> write_queue_;

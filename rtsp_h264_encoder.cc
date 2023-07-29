@@ -16,7 +16,6 @@ static const auto kHz = 90;    // 90KHz
 static void* rtp_alloc(void* param, int bytes);
 static void rtp_free(void* param, void* packet);
 static const uint8_t* h264_startcode(const uint8_t* data, size_t bytes);
-static void on_rtcp_event(void* param, const struct rtcp_msg_t* msg);
 
 rtsp_h264_encoder::rtsp_h264_encoder(std::string id) : id_(std::move(id))
 {
@@ -39,7 +38,6 @@ simple_rtmp::rtsp_track::ptr rtsp_h264_encoder::track()
 int rtsp_h264_encoder::rtp_encode_packet(void* param, const void* packet, int bytes, uint32_t timestamp, int flags)
 {
     auto* self = static_cast<rtsp_h264_encoder*>(param);
-    self->send_rtcp(packet, bytes, timestamp, flags);
     auto frame = fixed_frame_buffer::create(packet, bytes);
     frame->set_pts(timestamp);
     frame->set_dts(timestamp);
@@ -49,33 +47,6 @@ int rtsp_h264_encoder::rtp_encode_packet(void* param, const void* packet, int by
     return 0;
 }
 
-void rtsp_h264_encoder::send_rtcp(const void* packet, int bytes, uint32_t timestamp, int flags)
-{
-    if (rtcp_ == nullptr)
-    {
-        struct rtp_event_t event;
-        event.on_rtcp = on_rtcp_event;
-        rtcp_ = rtp_create(&event, this, track_->ssrc(), timestamp, kHz * 1000, 4 * 1024, 1);
-        rtp_set_info(rtcp_, "SimpleRtsp", "ax");
-    }
-
-    auto now = timestamp::now().seconds();
-
-    if (rtcp_timestamp_ != 0 && rtcp_timestamp_ + 5 > now)
-    {
-        return;
-    }
-    rtcp_timestamp_ = now;
-    char buffer[1024] = {0};
-    size_t n = rtp_rtcp_report(rtcp_, buffer, sizeof(buffer));
-    auto frame = fixed_frame_buffer::create(buffer, n);
-    frame->set_pts(0);
-    frame->set_dts(0);
-    frame->set_media(simple_rtmp::rtmp_tag::script);
-    frame->set_flag(kRtcpVideoChannel);
-    ch_->write(frame, {});
-    rtp_onsend(rtcp_, packet, bytes /*, time*/);
-}
 void rtsp_h264_encoder::write(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
 {
     if (ec)
@@ -168,10 +139,4 @@ static void* rtp_alloc(void* /*param*/, int bytes)
 static void rtp_free(void* /*param*/, void* packet)
 {
     free(packet);
-}
-
-static void on_rtcp_event(void* param, const struct rtcp_msg_t* msg)
-{
-    (void)param;
-    (void)msg;
 }

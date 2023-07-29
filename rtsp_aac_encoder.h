@@ -23,9 +23,6 @@ class rtsp_aac_encoder : public rtsp_encoder
     void set_output(const channel::ptr& ch) override;
 
    private:
-    void send_rtcp(const void* packet, int bytes, uint32_t timestamp, int flags);
-
-   private:
     static int rtp_encode_packet(void* param, const void* packet, int bytes, uint32_t timestamp, int /*flags*/);
 
    private:
@@ -33,11 +30,8 @@ class rtsp_aac_encoder : public rtsp_encoder
     channel::ptr ch_;
     int sample_rate_ = 44100;
     int channel_count_ = 0;
-    uint64_t rtcp_timestamp_ = 0;
-
     rtsp_track::ptr track_;
     void* ctx_ = nullptr;
-    void* rtcp_ = nullptr;
 };
 }    // namespace simple_rtmp
 #endif
