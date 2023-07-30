@@ -67,25 +67,64 @@ void rtsp_forward_session::start()
     conn_->start();
 }
 
-static simple_rtmp::frame_buffer::ptr make_frame_header(const simple_rtmp::frame_buffer::ptr& frame)
+static simple_rtmp::frame_buffer::ptr make_frame_header(int channle, const simple_rtmp::frame_buffer::ptr& frame)
 {
-    int rtp_channel = simple_rtmp::kRtpVideoChannel;
-    if (frame->media() == simple_rtmp::rtmp_tag::audio)
-    {
-        rtp_channel = simple_rtmp::kRtpAudioChannel;
-    }
-    else if (frame->media() == simple_rtmp::rtmp_tag::script)
-    {
-        rtp_channel = frame->flag();
-    }
     uint32_t bytes = frame->size();
     uint8_t rtp_header[4] = {0};
     rtp_header[0] = '$';
-    rtp_header[1] = rtp_channel;
+    rtp_header[1] = channle;
     rtp_header[2] = (bytes >> 8) & 0xFF;
     rtp_header[3] = bytes & 0xff;
     return simple_rtmp::fixed_frame_buffer::create(rtp_header, 4);
 }
+
+void rtsp_forward_session::send_video_rtcp(const frame_buffer::ptr& frame)
+{
+    if (video_rtcp_ctx_ == nullptr)
+    {
+        struct rtp_event_t event;
+        event.on_rtcp = on_rtcp_event;
+        video_rtcp_ctx_ = rtp_create(&event, this, video_track_->ssrc(), frame->pts(), video_track_->sample_rate(), 4 * 1024, 1);
+        rtp_set_info(video_rtcp_ctx_, "SimpleRtsp", "vx");
+    }
+    auto now = timestamp::now().seconds();
+
+    if (video_rtcp_time_ == 0 || video_rtcp_time_ + 5 <= now)
+    {
+        video_rtcp_time_ = now;
+
+        char buffer[1024] = {0};
+        size_t n = rtp_rtcp_report(video_rtcp_ctx_, buffer, sizeof(buffer));
+        auto rtcp_frame = fixed_frame_buffer::create(buffer, n);
+        auto header_frame = make_frame_header(kRtcpVideoChannel, rtcp_frame);
+        conn_->write_frame(header_frame);
+        conn_->write_frame(rtcp_frame);
+    }
+}
+
+void rtsp_forward_session::send_audio_rtcp(const frame_buffer::ptr& frame)
+{
+    if (audio_rtcp_ctx_ == nullptr)
+    {
+        struct rtp_event_t event;
+        event.on_rtcp = on_rtcp_event;
+        audio_rtcp_ctx_ = rtp_create(&event, this, audio_track_->ssrc(), frame->pts(), audio_track_->sample_rate(), 4 * 1024, 1);
+        rtp_set_info(audio_rtcp_ctx_, "SimpleRtsp", "ax");
+    }
+    auto now = timestamp::now().seconds();
+
+    if (audio_rtcp_time_ == 0 || audio_rtcp_time_ + 5 <= now)
+    {
+        audio_rtcp_time_ = now;
+        char buffer[1024] = {0};
+        size_t n = rtp_rtcp_report(audio_rtcp_ctx_, buffer, sizeof(buffer));
+        auto rtcp_frame = fixed_frame_buffer::create(buffer, n);
+        auto header_frame = make_frame_header(kRtcpAudioChannel, rtcp_frame);
+        conn_->write_frame(header_frame);
+        conn_->write_frame(rtcp_frame);
+    }
+}
+
 void rtsp_forward_session::channel_out(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
 {
     if (ec)
@@ -94,49 +133,25 @@ void rtsp_forward_session::channel_out(const frame_buffer::ptr& frame, const boo
         shutdown();
         return;
     }
-    auto now = timestamp::now().seconds();
-    void* rtcp_ctx = nullptr;
+
     // 收到编码后的数据包
     if (frame->media() == simple_rtmp::rtmp_tag::video)
     {
-        if (video_rtcp_ctx_ == nullptr)
-        {
-            struct rtp_event_t event;
-            event.on_rtcp = on_rtcp_event;
-            video_rtcp_ctx_ = rtp_create(&event, this, video_track_->ssrc(), frame->pts(), video_track_->sample_rate(), 4 * 1024, 1);
-            rtp_set_info(video_rtcp_ctx_, "SimpleRtsp", "vx");
-        }
-
-        if (video_rtcp_time_ != 0 && video_rtcp_time_ + 5 <= now)
-        {
-            rtcp_ctx = video_rtcp_ctx_;
-        }
+        send_video_rtcp(frame);
+        auto header_frame = make_frame_header(kRtpVideoChannel, frame);
+        conn_->write_frame(header_frame);
     }
-    else if (frame->media() == simple_rtmp::rtmp_tag::video)
+    else if (frame->media() == simple_rtmp::rtmp_tag::audio)
     {
-        if (audio_rtcp_ctx_ == nullptr)
-        {
-            struct rtp_event_t event;
-            event.on_rtcp = on_rtcp_event;
-            audio_rtcp_ctx_ = rtp_create(&event, this, audio_track_->ssrc(), frame->pts(), audio_track_->sample_rate(), 4 * 1024, 1);
-            rtp_set_info(audio_rtcp_ctx_, "SimpleRtsp", "ax");
-        }
-        if (audio_rtcp_time_ != 0 && audio_rtcp_time_ + 5 <= now)
-        {
-            rtcp_ctx = audio_rtcp_ctx_;
-        }
-    }
-    // rtcp report
-    if (rtcp_ctx != nullptr)
-    {
-        char buffer[1024] = {0};
-        size_t n = rtp_rtcp_report(rtcp_ctx, buffer, sizeof(buffer));
-        auto rtcp_frame = fixed_frame_buffer::create(buffer, n);
-        conn_->write_frame(rtcp_frame);
-    }
-    auto header_frame = make_frame_header(frame);
 
-    conn_->write_frame(header_frame);
+        send_audio_rtcp(frame);
+        auto header_frame = make_frame_header(kRtpAudioChannel, frame);
+        conn_->write_frame(header_frame);
+    }
+    else
+    {
+        return;
+    }
 
     conn_->write_frame(frame);
 }
@@ -442,6 +457,7 @@ int rtsp_forward_session::on_rtcp(int channel, const simple_rtmp::frame_buffer::
     {
         rtp_onreceived_rtcp(rtcp_ctx, (const void*)frame->data(), (int)frame->size());
     }
+    return 0;
 }
 static void on_rtcp_event(void* param, const struct rtcp_msg_t* msg)
 {

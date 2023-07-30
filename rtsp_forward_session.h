@@ -35,7 +35,8 @@ class rtsp_forward_session : public std::enable_shared_from_this<rtsp_forward_se
     void on_write(const boost::system::error_code& ec, std::size_t bytes);
     void channel_out(const frame_buffer::ptr& frame, const boost::system::error_code& ec);
     void safe_shutdown();
-
+    void send_video_rtcp(const frame_buffer::ptr& frame);
+    void send_audio_rtcp(const frame_buffer::ptr& frame);
    private:
     int on_options(const std::string& url);
     int on_describe(const std::string& url);
