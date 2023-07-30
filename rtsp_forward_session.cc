@@ -57,7 +57,7 @@ void rtsp_forward_session::start()
     handler.on_setup = std::bind(&rtsp_forward_session::on_setup, this, _1, _2, _3);
     handler.on_play = std::bind(&rtsp_forward_session::on_play, this, _1, _2);
     handler.on_teardown = std::bind(&rtsp_forward_session::on_teardown, this, _1, _2);
-
+    handler.on_rtcp = std::bind(&rtsp_forward_session::on_rtcp, this, _1, _2);
     args_ = std::make_shared<simple_rtmp::rtsp_forward_args>();
     args_->ctx = std::make_shared<simple_rtmp::rtsp_server_context>(std::move(handler));
     channel_ = std::make_shared<simple_rtmp::channel>();
@@ -108,7 +108,7 @@ void rtsp_forward_session::send_audio_rtcp(const frame_buffer::ptr& frame)
     {
         struct rtp_event_t event;
         event.on_rtcp = on_rtcp_event;
-        audio_rtcp_ctx_ = rtp_create(&event, this, audio_track_->ssrc(), frame->pts(), audio_track_->sample_rate(), 4 * 1024, 1);
+        audio_rtcp_ctx_ = rtp_create(&event, this, audio_track_->ssrc(), frame->pts(), audio_track_->sample_rate(), 1 * 1024, 1);
         rtp_set_info(audio_rtcp_ctx_, "SimpleRtsp", "ax");
     }
     auto now = timestamp::now().seconds();
@@ -143,7 +143,6 @@ void rtsp_forward_session::channel_out(const frame_buffer::ptr& frame, const boo
     }
     else if (frame->media() == simple_rtmp::rtmp_tag::audio)
     {
-
         send_audio_rtcp(frame);
         auto header_frame = make_frame_header(kRtpAudioChannel, frame);
         conn_->write_frame(header_frame);
