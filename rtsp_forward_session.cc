@@ -84,7 +84,7 @@ void rtsp_forward_session::send_video_rtcp(const frame_buffer::ptr& frame)
     {
         struct rtp_event_t event;
         event.on_rtcp = on_rtcp_event;
-        video_rtcp_ctx_ = rtp_create(&event, this, video_track_->ssrc(), frame->pts(), video_track_->sample_rate(), 4 * 1024, 1);
+        video_rtcp_ctx_ = rtp_create(&event, this, video_track_->ssrc(), frame->dts() * 1000 / video_track_->sample_rate(), video_track_->sample_rate(), 4 * 1024 * 1024, 1);
         rtp_set_info(video_rtcp_ctx_, "SimpleRtsp", "vx");
     }
     auto now = timestamp::now().seconds();
@@ -108,7 +108,7 @@ void rtsp_forward_session::send_audio_rtcp(const frame_buffer::ptr& frame)
     {
         struct rtp_event_t event;
         event.on_rtcp = on_rtcp_event;
-        audio_rtcp_ctx_ = rtp_create(&event, this, audio_track_->ssrc(), frame->pts(), audio_track_->sample_rate(), 1 * 1024, 1);
+        audio_rtcp_ctx_ = rtp_create(&event, this, audio_track_->ssrc(), frame->dts() * 1000 / audio_track_->sample_rate(), audio_track_->sample_rate(), 128 * 1024, 1);
         rtp_set_info(audio_rtcp_ctx_, "SimpleRtsp", "ax");
     }
     auto now = timestamp::now().seconds();
