@@ -19,6 +19,7 @@ rtmp_source::rtmp_source(std::string id, simple_rtmp::executors::executor& ex) :
     std::string const rtsp_sink_id = "rtsp_" + id_;
     rtsp_sink_ = std::make_shared<simple_rtmp::rtsp_sink>(rtsp_sink_id, ex);
     simple_rtmp::sink::add(rtsp_sink_);
+    simple_rtmp::sink::add(rtmp_sink_);
 };
 
 void rtmp_source::on_codec(int codec, codec_option op)
