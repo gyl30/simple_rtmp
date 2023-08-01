@@ -13,6 +13,7 @@ extern "C"
 {
 #include "rtp-payload.h"
 #include "rtp-profile.h"
+#include "rtp-internal.h"
 #include "rtp.h"
 }
 
@@ -87,9 +88,10 @@ void rtsp_forward_session::send_video_rtcp(const frame_buffer::ptr& frame)
         video_rtcp_ctx_ = rtp_create(&event, this, video_track_->ssrc(), frame->dts() * 1000 / video_track_->sample_rate(), video_track_->sample_rate(), 4 * 1024 * 1024, 1);
         rtp_set_info(video_rtcp_ctx_, "SimpleRtsp", "vx");
     }
-    auto now = timestamp::now().seconds();
+    auto now = rtpclock();
+    auto interval = rtp_rtcp_interval(video_rtcp_ctx_);
 
-    if (video_rtcp_time_ == 0 || video_rtcp_time_ + 5 <= now)
+    if (video_rtcp_time_ == 0 || video_rtcp_time_ + (uint64_t)interval * 1000 <= now)
     {
         video_rtcp_time_ = now;
 
@@ -100,6 +102,7 @@ void rtsp_forward_session::send_video_rtcp(const frame_buffer::ptr& frame)
         conn_->write_frame(header_frame);
         conn_->write_frame(rtcp_frame);
     }
+    rtp_onsend(video_rtcp_ctx_, (const void*)frame->data(), frame->size());
 }
 
 void rtsp_forward_session::send_audio_rtcp(const frame_buffer::ptr& frame)
@@ -111,9 +114,9 @@ void rtsp_forward_session::send_audio_rtcp(const frame_buffer::ptr& frame)
         audio_rtcp_ctx_ = rtp_create(&event, this, audio_track_->ssrc(), frame->dts() * 1000 / audio_track_->sample_rate(), audio_track_->sample_rate(), 128 * 1024, 1);
         rtp_set_info(audio_rtcp_ctx_, "SimpleRtsp", "ax");
     }
-    auto now = timestamp::now().seconds();
-
-    if (audio_rtcp_time_ == 0 || audio_rtcp_time_ + 5 <= now)
+    auto now = rtpclock();
+    auto interval = rtp_rtcp_interval(audio_rtcp_ctx_);
+    if (audio_rtcp_time_ == 0 || audio_rtcp_time_ + (uint64_t)interval * 1000 <= now)
     {
         audio_rtcp_time_ = now;
         char buffer[1024] = {0};
@@ -123,6 +126,7 @@ void rtsp_forward_session::send_audio_rtcp(const frame_buffer::ptr& frame)
         conn_->write_frame(header_frame);
         conn_->write_frame(rtcp_frame);
     }
+    rtp_onsend(audio_rtcp_ctx_, (const void*)frame->data(), frame->size());
 }
 
 void rtsp_forward_session::channel_out(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
