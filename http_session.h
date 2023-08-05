@@ -16,9 +16,15 @@ namespace simple_rtmp
 {
 class http_session;
 using http_session_ptr = std::shared_ptr<http_session>;
+
 using http_request_t = boost::beast::http::request<boost::beast::http::string_body>;
+using http_request_ptr = std::shared_ptr<http_request_t>;
+
+using http_response_t = boost::beast::http::response<boost::beast::http::string_body>;
+using http_response_ptr = std::shared_ptr<http_response_t>;
+
 using http_request_parser_t = boost::beast::http::request_parser<boost::beast::http::string_body>;
-using request_cb_t = std::function<void(http_session_ptr& session, http_request_t& req)>;
+using request_cb_t = std::function<void(http_session_ptr& session, http_request_ptr& req)>;
 
 class http_session : public std::enable_shared_from_this<http_session>
 {
@@ -30,6 +36,7 @@ class http_session : public std::enable_shared_from_this<http_session>
     void start();
     void shutdown();
     boost::asio::ip::tcp::socket& socket();
+    void write(http_request_ptr& req, http_response_ptr& res);
 
    private:
     void do_read();
@@ -39,8 +46,11 @@ class http_session : public std::enable_shared_from_this<http_session>
     void on_request();
     void close_socket(boost::asio::ip::tcp::socket& socket);
 
+    void on_write(const http_request_ptr& req, boost::beast::error_code ec, std::size_t bytes);
+
    public:
     static void register_request_cb(const std::string& name, request_cb_t cb);
+    static http_response_ptr create_response(http_request_ptr& req, int code, const std::string& content);
 
    private:
     static std::map<std::string, request_cb_t> request_cb_;
