@@ -10,6 +10,7 @@
 #include "tcp_server.h"
 #include "scoped_exit.h"
 #include "log.h"
+#include "api.h"
 
 using simple_rtmp::rtmp_publish_session;
 using simple_rtmp::rtmp_forward_session;
@@ -56,6 +57,8 @@ int main(int argc, char* argv[])
     std::make_shared<tcp_server<rtmp_forward_session>>(kRtmpForwardPort, kRtmpForwardServerName, exs.get_executor(), exs)->run();
     std::make_shared<tcp_server<rtsp_forward_session>>(kRtspForwardPort, kRtspForwardServerName, exs.get_executor(), exs)->run();
     std::make_shared<tcp_server<http_session>>(kHttpServerPort, kHttpServerName, exs.get_executor(), exs)->run();
+
+    simple_rtmp::register_api();
 
     exs.run();
 
