@@ -30,6 +30,7 @@ class rtsp_hevc_encoder : public rtsp_encoder
    private:
     std::string id_;
     channel::ptr ch_;
+    frame_buffer::ptr vps_;
     frame_buffer::ptr sps_;
     frame_buffer::ptr pps_;
     rtsp_track::ptr track_;

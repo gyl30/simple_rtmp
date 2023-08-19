@@ -15,6 +15,7 @@ static const auto kHz = 90;    // 90KHz
 
 static void* rtp_alloc(void* param, int bytes);
 static void rtp_free(void* param, void* packet);
+static const uint8_t* h264_startcode(const uint8_t* data, size_t bytes);
 
 rtsp_hevc_encoder::rtsp_hevc_encoder(std::string id) : id_(std::move(id))
 {
@@ -53,8 +54,82 @@ void rtsp_hevc_encoder::write(const frame_buffer::ptr& frame, const boost::syste
         ch_->write(frame, ec);
         return;
     }
-}
+    // clang-format off
+    enum { NAL_VPS = 32, NAL_SPS = 33, NAL_PPS = 34, NAL_AUD = 35, NAL_PREFIX_SEI = 39, };
+    // clang-format on
+    const uint8_t* data = frame->data();
+    uint32_t bytes = frame->size();
+    const uint8_t* end = data + bytes;
+    const uint8_t* p = h264_startcode(data, bytes);
+    uint32_t n = 0;
+    while (p != nullptr)
+    {
+        const uint8_t* next = h264_startcode(p, static_cast<int>(end - p));
+        if (next != nullptr)
+        {
+            n = next - p - 3;
+        }
+        else
+        {
+            n = end - p;
+        }
 
+        while (n > 0 && 0 == p[n - 1])
+        {
+            n--;
+        }
+
+        assert(n > 0);
+        if (n > 0)
+        {
+            uint8_t nalu_type = p[0] & 0x1f;
+            if (nalu_type == NAL_VPS)
+            {
+                vps_ = fixed_frame_buffer::create(p, n);
+            }
+            if (nalu_type == NAL_SPS)
+            {
+                sps_ = fixed_frame_buffer::create(p, n);
+            }
+            if (nalu_type == NAL_PPS)
+            {
+                pps_ = fixed_frame_buffer::create(p, n);
+            }
+        }
+
+        p = next;
+    }
+    if (track_ == nullptr && vps_ && sps_ && pps_)
+    {
+        track_ = std::make_shared<rtsp_hevc_track>(vps_, sps_, pps_);
+    }
+    if (ctx_ == nullptr && track_ != nullptr)
+    {
+        struct rtp_payload_t handler;
+        handler.alloc = rtp_alloc;
+        handler.free = rtp_free;
+        handler.packet = rtp_encode_packet;
+        ctx_ = rtp_payload_encode_create(96, "HEVC", 0, track_->ssrc(), &handler, this);
+    }
+    if (ctx_ == nullptr)
+    {
+        return;
+    }
+    rtp_payload_encode_input(ctx_, frame->data(), static_cast<int>(frame->size()), frame->pts() * kHz);
+}
+static const uint8_t* h264_startcode(const uint8_t* data, size_t bytes)
+{
+    size_t i;
+    for (i = 2; i + 1 < bytes; i++)
+    {
+        if (0x01 == data[i] && 0x00 == data[i - 1] && 0x00 == data[i - 2])
+        {
+            return data + i + 1;
+        }
+    }
+
+    return nullptr;
+}
 static void* rtp_alloc(void* /*param*/, int bytes)
 {
     return malloc(bytes);
