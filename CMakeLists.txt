@@ -43,6 +43,23 @@ aux_source_directory(third/media-server/libflv/source FLV_SRC)
 add_library(flv STATIC ${FLV_SRC})
 list(APPEND LINK_LIBS flv)
 
+include_directories(third/media-server/librtsp/include)
+set(SDP_SRC
+    # third/media-server/librtsp/include/sdp.h 
+    # third/media-server/librtsp/include/sdp-options.h
+    # third/media-server/librtsp/include/sdp-a-fmtp.h
+    # third/media-server/librtsp/include/sdp-a-rtpmap.h
+    # third/media-server/librtsp/include/sdp-a-webrtc.h
+    third/media-server/librtsp/source/sdp.c
+    third/media-server/librtsp/source/sdp-options.c
+    third/media-server/librtsp/source/sdp-a-fmtp.c
+    third/media-server/librtsp/source/sdp-a-rtpmap.c
+    third/media-server/librtsp/source/sdp-a-webrtc.c
+    )
+
+add_library(sdp STATIC ${SDP_SRC})
+list(APPEND LINK_LIBS sdp)
+
 include_directories(third/spdlog/include)
 
 find_package(Boost 1.81 COMPONENTS system filesystem thread REQUIRED)
