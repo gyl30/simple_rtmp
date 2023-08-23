@@ -60,14 +60,23 @@ set(SDP_SRC
 add_library(sdp STATIC ${SDP_SRC})
 list(APPEND LINK_LIBS sdp)
 
+add_subdirectory(third/libsrtp)
+
+list(APPEND LINK_LIBS srtp2)
+
 include_directories(third/spdlog/include)
+
+include_directories(webrtc)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 find_package(Boost 1.81 COMPONENTS system filesystem thread REQUIRED)
 
 list(APPEND LINK_LIBS ${Boost_LIBRARIES})
 
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} SOURCE_FILE)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/webrtc WEBRTC_SOURCE_FILE)
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILE})
+add_executable(${PROJECT_NAME} ${SOURCE_FILE} ${WEBRTC_SOURCE_FILE})
 
 target_link_libraries(${PROJECT_NAME} ${LINK_LIBS})
