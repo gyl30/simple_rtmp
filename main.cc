@@ -9,12 +9,14 @@
 #include "execution.h"
 #include "tcp_server.h"
 #include "scoped_exit.h"
+#include "timer_manger.h"
 #include "log.h"
 #include "api.h"
 
 using simple_rtmp::rtmp_publish_session;
 using simple_rtmp::rtmp_forward_session;
 using simple_rtmp::rtsp_forward_session;
+using simple_rtmp::timer_manger_singleton;
 using simple_rtmp::http_session;
 using simple_rtmp::tcp_server;
 
@@ -60,14 +62,17 @@ int main(int argc, char* argv[])
 
     simple_rtmp::register_api();
 
+    timer_manger_singleton::instance().start();
     exs.run();
 
     while (!stop)
     {
+        timer_manger_singleton::instance().update();
         std::this_thread::sleep_for(std::chrono::milliseconds(30));
     }
 
     exs.stop();
+    timer_manger_singleton::instance().stop();
 
     LOG_INFO("simple_rtmp finish on {}", simple_rtmp::timestamp::now().fmt_micro_string());
     return 0;
