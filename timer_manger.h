@@ -22,11 +22,15 @@ class timer_manger
     void stop();
     void update();
     // repeat 重复次数，-1 一直重复
-    void add_task(int ms, timer_task &&task, int repeat);
+    // return id
+    uint64_t add_task(int ms, timer_task &&task, int repeat);
+    void del_task(uint64_t id);
 
    private:
     struct task_args;
     std::mutex mutex_;
+    uint64_t task_id_ = 0;
+    std::vector<uint64_t> invalid_ids_;
     std::vector<task_args *> tasks_;
 };
 using timer_manger_singleton = singleton<timer_manger>;
