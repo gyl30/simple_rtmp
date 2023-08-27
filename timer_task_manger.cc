@@ -26,7 +26,7 @@ void timer_task_manger::stop()
     }
 }
 
-uint64_t timer_task_manger::add_task(int ms, timer_task&& task, int repeat)
+uint64_t timer_task_manger::add_task(uint64_t ms, timer_task&& task, int repeat)
 {
     const uint64_t now_ms = timestamp::now().milliseconds();
     auto args = new task_args;

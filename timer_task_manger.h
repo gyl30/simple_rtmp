@@ -23,7 +23,7 @@ class timer_task_manger
     void update();
     // repeat 重复次数，-1 一直重复
     // return id
-    uint64_t add_task(int ms, timer_task &&task, int repeat);
+    uint64_t add_task(uint64_t ms, timer_task &&task, int repeat);
     void del_task(uint64_t id);
 
    private:
