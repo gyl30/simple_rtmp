@@ -74,6 +74,10 @@ find_package(Boost 1.81 COMPONENTS system filesystem thread REQUIRED)
 
 list(APPEND LINK_LIBS ${Boost_LIBRARIES})
 
+find_package(OpenSSL REQUIRED)
+
+list(APPEND LINK_LIBS OpenSSL::SSL OpenSSL::Crypto)
+
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} SOURCE_FILE)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/webrtc WEBRTC_SOURCE_FILE)
 
