@@ -1,10 +1,10 @@
 #include <algorithm>
-#include "timer_manger.h"
+#include "timer_task_manger.h"
 #include "timestamp.h"
 
 namespace simple_rtmp
 {
-struct timer_manger::task_args
+struct timer_task_manger::task_args
 {
     timer_task task;         // 回调函数
     int repeat = -1;         // 重复次数，-1 一直重复
@@ -14,10 +14,10 @@ struct timer_manger::task_args
     uint64_t id = 0;
 };
 
-void timer_manger::start()
+void timer_task_manger::start()
 {
 }
-void timer_manger::stop()
+void timer_task_manger::stop()
 {
     std::lock_guard<std::mutex> const lock(mutex_);
     for (auto&& task : tasks_)
@@ -26,7 +26,7 @@ void timer_manger::stop()
     }
 }
 
-uint64_t timer_manger::add_task(int ms, timer_task&& task, int repeat)
+uint64_t timer_task_manger::add_task(int ms, timer_task&& task, int repeat)
 {
     const uint64_t now_ms = timestamp::now().milliseconds();
     auto args = new task_args;
@@ -41,13 +41,13 @@ uint64_t timer_manger::add_task(int ms, timer_task&& task, int repeat)
     return args->id;
 }
 
-void timer_manger::del_task(uint64_t id)
+void timer_task_manger::del_task(uint64_t id)
 {
     std::lock_guard<std::mutex> const lock(mutex_);
     invalid_ids_.push_back(id);
 }
 
-void timer_manger::update()
+void timer_task_manger::update()
 {
     std::vector<task_args*> tmp_tasks;
     std::vector<uint64_t> tmp_ids;

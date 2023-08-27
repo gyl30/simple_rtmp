@@ -9,13 +9,13 @@
 
 namespace simple_rtmp
 {
-class timer_manger
+class timer_task_manger
 {
     using timer_task = std::function<void(void)>;
 
    public:
-    timer_manger() = default;
-    ~timer_manger() = default;
+    timer_task_manger() = default;
+    ~timer_task_manger() = default;
 
    public:
     void start();
@@ -33,6 +33,7 @@ class timer_manger
     std::vector<uint64_t> invalid_ids_;
     std::vector<task_args *> tasks_;
 };
-using timer_manger_singleton = singleton<timer_manger>;
+// timer task manger signleton
+using ttms = singleton<timer_task_manger>;
 }    // namespace simple_rtmp
 #endif
