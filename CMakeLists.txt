@@ -61,8 +61,10 @@ add_library(sdp STATIC ${SDP_SRC})
 list(APPEND LINK_LIBS sdp)
 
 add_subdirectory(third/libsrtp)
+add_subdirectory(third/usrsctp)
 
 list(APPEND LINK_LIBS srtp2)
+list(APPEND LINK_LIBS usrsctp)
 
 include_directories(third/spdlog/include)
 
