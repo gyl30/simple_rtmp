@@ -4,6 +4,8 @@
 #include <string>
 #include "sdp.h"
 
+namespace simple_rtmp
+{
 class webrtc_sdp
 {
    public:
@@ -11,10 +13,12 @@ class webrtc_sdp
     ~webrtc_sdp() = default;
 
    public:
-    void parse();
+    int parse();
 
    private:
-    std::string sdp_;
+    sdp_t* sdp_ = nullptr;
+    std::string sdp_str_;
 };
+}    // namespace simple_rtmp
 
 #endif
