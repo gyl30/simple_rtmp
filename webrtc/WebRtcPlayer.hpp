@@ -4,11 +4,12 @@
 #include <memory>
 #include "webrtc/DtlsTransport.hpp"
 #include "webrtc/IceServer.hpp"
+#include "webrtc_sdp.h"
 
 class WebRtcPlayer : public RTC::DtlsTransport::Listener, public RTC::IceServer::Listener, public std::enable_shared_from_this<WebRtcPlayer>
 {
    public:
-    WebRtcPlayer() = default;
+    explicit WebRtcPlayer(const std::shared_ptr<simple_rtmp::webrtc_sdp>& sdp);
     ~WebRtcPlayer() override = default;
 
    public:
@@ -37,9 +38,13 @@ class WebRtcPlayer : public RTC::DtlsTransport::Listener, public RTC::IceServer:
     void OnIceServerCompleted(const RTC::IceServer* iceServer) override;
     void OnIceServerDisconnected(const RTC::IceServer* iceServer) override;
 
+   public:
+    void setRemoteDtlsFingerprint();
+
    private:
     std::shared_ptr<RTC::DtlsTransport> dtls_transport_;
     std::shared_ptr<RTC::IceServer> ice_server_;
+    std::shared_ptr<simple_rtmp::webrtc_sdp> sdp_;
 };
 
 #endif

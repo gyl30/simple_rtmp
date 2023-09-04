@@ -1,4 +1,33 @@
 #include "webrtc/WebRtcPlayer.hpp"
+#include <string>
+#include <random>
+#include <utility>
+
+static std::string getPlayerId()
+{
+    static std::atomic<uint64_t> player_key{0};
+    return "simple_rtmp_" + std::to_string(player_key);
+}
+
+static std::string randomString()
+{
+    static std::string str("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+
+    static thread_local std::mt19937 generator(std::random_device());
+    std::shuffle(str.begin(), str.end(), generator);
+    return str.substr(0, 24);
+}
+
+WebRtcPlayer::WebRtcPlayer(const std::shared_ptr<simple_rtmp::webrtc_sdp>& sdp)
+{
+    dtls_transport_ = std::make_shared<RTC::DtlsTransport>(this);
+    ice_server_ = std::make_shared<RTC::IceServer>(getPlayerId(), randomString());
+    sdp_ = sdp;
+}
+
+void WebRtcPlayer::setRemoteDtlsFingerprint()
+{
+}
 
 void WebRtcPlayer::OnDtlsTransportConnecting(const RTC::DtlsTransport* dtlsTransport)
 {
