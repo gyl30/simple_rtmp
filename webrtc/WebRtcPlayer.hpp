@@ -9,7 +9,7 @@ class WebRtcPlayer : public RTC::DtlsTransport::Listener, public RTC::IceServer:
 {
    public:
     WebRtcPlayer() = default;
-    ~WebRtcPlayer() = default;
+    ~WebRtcPlayer() override = default;
 
    public:
     void OnDtlsTransportConnecting(const RTC::DtlsTransport* dtlsTransport) override;
