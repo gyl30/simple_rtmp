@@ -2,7 +2,7 @@
 
 using simple_rtmp::webrtc_sdp;
 
-webrtc_sdp::webrtc_sdp(const std::string& sdp) : sdp_(sdp)
+webrtc_sdp::webrtc_sdp(const std::string& sdp) : sdp_str_(sdp)
 {
 }
 int webrtc_sdp::parse()
