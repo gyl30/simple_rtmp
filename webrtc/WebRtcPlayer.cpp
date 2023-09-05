@@ -4,6 +4,7 @@
 #include <utility>
 #include <thread>
 #include <algorithm>
+#include <atomic>
 
 static std::string getPlayerId()
 {
