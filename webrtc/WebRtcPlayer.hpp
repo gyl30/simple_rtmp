@@ -39,9 +39,10 @@ class WebRtcPlayer : public RTC::DtlsTransport::Listener, public RTC::IceServer:
     void OnIceServerDisconnected(const RTC::IceServer* iceServer) override;
 
    public:
-    void setRemoteDtlsFingerprint();
+    void exchangeSdp();
 
    private:
+    std::string id_;
     std::shared_ptr<RTC::DtlsTransport> dtls_transport_;
     std::shared_ptr<RTC::IceServer> ice_server_;
     std::shared_ptr<simple_rtmp::webrtc_sdp> sdp_;

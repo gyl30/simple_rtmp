@@ -1,10 +1,11 @@
-#include "webrtc/WebRtcPlayer.hpp"
 #include <string>
 #include <random>
 #include <utility>
 #include <thread>
 #include <algorithm>
 #include <atomic>
+#include "webrtc/WebRtcPlayer.hpp"
+#include "log.h"
 
 static std::string getPlayerId()
 {
@@ -20,15 +21,30 @@ static std::string randomString()
     return str.substr(0, 24);
 }
 
-WebRtcPlayer::WebRtcPlayer(const std::shared_ptr<simple_rtmp::webrtc_sdp>& sdp)
+WebRtcPlayer::WebRtcPlayer(const std::shared_ptr<simple_rtmp::webrtc_sdp>& sdp) : id_(randomString())
 {
     dtls_transport_ = std::make_shared<RTC::DtlsTransport>(this);
-    ice_server_ = std::make_shared<RTC::IceServer>(this, getPlayerId(), randomString());
+    std::string username_fragment = id_;
+    std::string password = id_;
+    ice_server_ = std::make_shared<RTC::IceServer>(this, username_fragment, password);
     sdp_ = sdp;
 }
 
-void WebRtcPlayer::setRemoteDtlsFingerprint()
+void WebRtcPlayer::exchangeSdp()
 {
+    std::string algorithm;
+    std::string fingerprint;
+    int ret = sdp_->fingerprint_algorithm(algorithm, fingerprint);
+    if (ret != 0)
+    {
+        LOG_ERROR("{} fingerprint algorithm failed", id_);
+        return;
+    }
+    RTC::DtlsTransport::Fingerprint remote_fingerprint;
+    remote_fingerprint.algorithm = RTC::DtlsTransport::GetFingerprintAlgorithm(algorithm);
+    remote_fingerprint.value = fingerprint;
+    dtls_transport_->SetRemoteFingerprint(remote_fingerprint);
+    //
 }
 
 void WebRtcPlayer::OnDtlsTransportConnecting(const RTC::DtlsTransport* dtlsTransport)
