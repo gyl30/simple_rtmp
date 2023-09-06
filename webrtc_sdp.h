@@ -14,6 +14,7 @@ class webrtc_sdp
 
    public:
     int parse();
+    int fingerprint_algorithm(std::string& algorithm, std::string& fingerprint);
 
    private:
     sdp_t* sdp_ = nullptr;

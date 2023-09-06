@@ -1,4 +1,6 @@
 #include "webrtc_sdp.h"
+#include "sdp-a-webrtc.h"
+#include <cstring>
 
 using simple_rtmp::webrtc_sdp;
 
@@ -36,5 +38,25 @@ int webrtc_sdp::parse()
     {
         return -1;
     }
+    return 0;
+}
+
+int webrtc_sdp::fingerprint_algorithm(std::string& algorithm, std::string& fingerprint)
+{
+    const char* fingerprint_str = sdp_media_attribute_find(sdp_, 0, "fingerprint");
+    if (fingerprint_str == nullptr)
+    {
+        return -1;
+    }
+    int fingerprint_len = strlen(fingerprint_str);
+    char hash[64] = {0};
+    char fingerprint_buff[1024] = {0};
+    const int ret = sdp_a_fingerprint(fingerprint_str, fingerprint_len, hash, fingerprint_buff);
+    if (ret != 0)
+    {
+        return -1;
+    }
+    algorithm = hash;
+    fingerprint = fingerprint_buff;
     return 0;
 }
