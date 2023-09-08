@@ -11,26 +11,31 @@ class webrtc_sdp
 {
     struct version
     {
+        std::string key = "v";
         int version;
     };
     struct connection
     {
+        std::string key = "c";
         std::string nettype{"IN"};
         std::string addrtype{"IP4"};
         std::string address{"0.0.0.0"};
     };
     struct time
     {
+        std::string key = "t";
         uint64_t start = 0;
         uint64_t stop = 0;
     };
     struct bandwidth
     {
+        std::string key = "b";
         std::string bwtype{"AS"};
         uint32_t bandwidth{0};
     };
     struct media
     {
+        std::string key = "m";
         uint16_t port;
         std::string proto;
         std::vector<std::string> fmts;
@@ -38,6 +43,7 @@ class webrtc_sdp
 
     struct origin
     {
+        std::string key = "o";
         std::string username{"-"};
         std::string session_id;
         std::string session_version;
@@ -47,59 +53,61 @@ class webrtc_sdp
     };
     struct attribute
     {
+        std::string key = "a";
         std::string attr;
     };
     struct attr_group
     {
-        std::string key;
+        std::string key = "group";
         std::string type{"BUNDLE"};
         std::vector<std::string> mids;
     };
     struct attribute_msid_semantic
     {
-        std::string key;
+        std::string key = "msid-semantic";
         std::string msid{"WMS"};
         std::string token;
     };
     struct attribute_rtcp
     {
         uint16_t port{0};
-        std::string key;
+        std::string key = "rtcp";
         std::string nettype{"IN"};
         std::string addrtype{"IP4"};
         std::string address{"0.0.0.0"};
     };
     struct attribute_ice_ufrag
     {
-        std::string key;
+        std::string key = "ice-ufrag";
         std::string attr;
     };
 
     struct attribute_ice_pwd
     {
-        std::string key;
+        std::string key = "ice-pwd";
         std::string attr;
     };
 
     struct attribute_ice_option
     {
-        std::string key;
+        std::string key = "ice-options";
         bool trickle = false;
         bool renomination = false;
     };
     struct attribute_fingerprint
     {
+        std::string key = "fingerprint";
         std::string algorithm;
         std::string hash;
     };
     struct attribute_setup
     {
-        std::string key;
+        std::string key = "setup";
         std::string setup;
     };
     struct attribute_mid
     {
-        std::string key;
+        std::string key = "mid";
         std::string mid;
     };
 
@@ -108,12 +116,12 @@ class webrtc_sdp
         uint8_t id;
         std::string ext;
         std::string direction;
-        std::string key;
+        std::string key = "extmap";
     };
     struct attribute_rtpmap
     {
         uint8_t pt;
-        std::string key;
+        std::string key = "rtpmap";
         std::string codec;
         uint32_t sample_rate;
         uint32_t channel = 0;
@@ -121,25 +129,25 @@ class webrtc_sdp
     struct attribute_rtcp_fb
     {
         uint8_t pt;
-        std::string key;
+        std::string key = "rtcp-fb";
         std::string rtcp_type;
     };
     struct attribute_fmtp
     {
         uint8_t pt;
-        std::string key;
+        std::string key = "fmtp";
         std::map<std::string, std::string> fmtp;
     };
     struct attribute_ssrc
     {
         uint32_t ssrc;
-        std::string key;
+        std::string key = "ssrc";
         std::string attribute;
         std::string attribute_value;
     };
     struct attribute_ssrc_group
     {
-        std::string key;
+        std::string key = "ssrc-group";
         std::string type{"FID"};
         std::vector<uint32_t> ssrcs;
     };
@@ -147,12 +155,12 @@ class webrtc_sdp
     {
         uint16_t port = 0;
         uint32_t streams = 0;
-        std::string key;
+        std::string key = "sctpmap";
         std::string subtypes;
     };
     struct attribute_candidate
     {
-        std::string key;
+        std::string key = "candidate";
         std::string foundation;
         uint32_t component;
         std::string transport{"udp"};
@@ -164,17 +172,17 @@ class webrtc_sdp
     };
     struct attribute_msid
     {
-        std::string key;
+        std::string key = "msid";
         std::string value;
     };
     struct attribute_extmap_allow_mixed
     {
-        std::string key;
+        std::string key = "extmap-allow-mixed";
         std::string value;
     };
     struct attribute_simulcast
     {
-        std::string key;
+        std::string key = "simulcast";
         std::string direction;
         std::vector<std::string> rids;
     };
@@ -182,6 +190,7 @@ class webrtc_sdp
     {
         std::string direction;
         std::string rid;
+        std::string key = "rid";
     };
 
    public:
