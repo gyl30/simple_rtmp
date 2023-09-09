@@ -17,6 +17,59 @@ int webrtc_sdp::parse()
     {
         return -1;
     }
+    // v=0
+    v_.version = sdp_version_get(sdp_);
+
+    // o=- 8056465047193717905 2 IN IP4 127.0.0.1
+
+    {
+        const char* username = nullptr;
+        const char* session = nullptr;
+        const char* version = nullptr;
+        const char* network = nullptr;
+        const char* address_type = nullptr;
+        const char* address = nullptr;
+
+        int ret = sdp_origin_get(sdp, &username, &session, &version, &network, &address_type, &address);
+        if (ret == 0)
+        {
+            o_.username = username;
+            o_.session_id = session;
+            o_.address = address;
+            o_.session_version = version;
+            o_.nettype = network;
+            o_.addrtype = address_type;
+        }
+    }
+    // s=-
+    const char* session_name = sdp_session_get_name(sdp_);
+    const char* session_info = sdp_session_get_name(sdp_);
+    if (session_name)
+    {
+        session_name_ = session_name;
+    }
+    if (session_info)
+    {
+        session_info_ = session_info;
+    }
+    // t=0 0
+    int time_count = sdp_timing_count(sdp_);
+    for (int i = 0; i < time_count; i++)
+    {
+        char start_buffer[64] = {0};
+        char stop_buffer[64] = {0};
+        const char** start_ptr = (const char**)&start_buffer;
+        const char** stop_ptr = (const char**)&stop_buffer;
+        ret = sdp_timing_get(sdp, i, start_ptr, stop_ptr);
+        if (ret == 0)
+        {
+            simple_rtmp::webrtc_sdp::time t;
+            t.start = atoi(start_buffer);
+            t.stop = atoi(stop_buffer);
+            times_.push_back(t);
+        }
+    }
+
     int media_count = sdp_media_count(sdp_);
     if (sdp_origin_get_network(sdp_) == SDP_C_NETWORK_UNKNOWN)
     {

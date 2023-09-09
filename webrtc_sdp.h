@@ -56,7 +56,7 @@ class webrtc_sdp
         std::string key = "a";
         std::string attr;
     };
-    struct attr_group
+    struct attribute_group
     {
         std::string key = "group";
         std::string type{"BUNDLE"};
@@ -202,6 +202,15 @@ class webrtc_sdp
     int fingerprint_algorithm(std::string& algorithm, std::string& fingerprint);
 
    private:
+    version v_;
+    origin o_;
+    std::string session_name_;
+    std::string session_info_;
+    std::vector<time> times_;
+    connection c_;
+    attribute_msid_semantic msid_semantic_;
+    std::vector<media> medias_;
+    attribute_group group_;
     sdp_t* sdp_ = nullptr;
     std::string sdp_str_;
 };
