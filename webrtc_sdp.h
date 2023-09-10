@@ -1,6 +1,7 @@
 #ifndef SIMPLE_RTMP_WEBRTC_SDP_H
 #define SIMPLE_RTMP_WEBRTC_SDP_H
 
+#include <map>
 #include <string>
 #include <vector>
 #include "sdp.h"
@@ -208,9 +209,9 @@ class webrtc_sdp
     std::string session_info_;
     std::vector<time> times_;
     connection c_;
+    attribute_group group_;
     attribute_msid_semantic msid_semantic_;
     std::vector<media> medias_;
-    attribute_group group_;
     sdp_t* sdp_ = nullptr;
     std::string sdp_str_;
 };
