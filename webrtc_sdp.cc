@@ -45,11 +45,11 @@ int webrtc_sdp::parse()
     // s=-
     const char* session_name = sdp_session_get_name(sdp_);
     const char* session_info = sdp_session_get_name(sdp_);
-    if (session_name)
+    if (session_name != nullptr)
     {
         session_name_ = session_name;
     }
-    if (session_info)
+    if (session_info != nullptr)
     {
         session_info_ = session_info;
     }
@@ -57,16 +57,14 @@ int webrtc_sdp::parse()
     int time_count = sdp_timing_count(sdp_);
     for (int i = 0; i < time_count; i++)
     {
-        char start_buffer[64] = {0};
-        char stop_buffer[64] = {0};
-        const char** start_ptr = (const char**)&start_buffer;
-        const char** stop_ptr = (const char**)&stop_buffer;
-        int ret = sdp_timing_get(sdp_, i, start_ptr, stop_ptr);
+        const char* start = nullptr;
+        const char* stop = nullptr;
+        int ret = sdp_timing_get(sdp_, i, &start, &stop);
         if (ret == 0)
         {
             simple_rtmp::webrtc_sdp::time t;
-            t.start = atoi(start_buffer);
-            t.stop = atoi(stop_buffer);
+            t.start = atoi(start);
+            t.stop = atoi(stop);
             times_.push_back(t);
         }
     }
