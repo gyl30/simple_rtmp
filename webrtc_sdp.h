@@ -37,9 +37,9 @@ class webrtc_sdp
     struct media
     {
         std::string key = "m";
-        uint16_t port;
+        std::vector<uint16_t> ports;
         std::string proto;
-        std::vector<std::string> fmts;
+        std::vector<int> fmts;
     };
 
     struct origin

@@ -21,7 +21,7 @@ int webrtc_sdp::parse()
     // v=0
     v_.version = sdp_version_get(sdp_);
 
-    // o=- 8056465047193717905 2 IN IP4 127.0.0.1
+    // o=- 87905 2 IN IP4 127.0.0.1
 
     {
         const char* username = nullptr;
@@ -93,13 +93,35 @@ int webrtc_sdp::parse()
                 self->group_.mids = mids;
                 return;
             }
-            if (strncmp("msid-semantic", name, 14) == 0)
+            else if (strncmp("msid-semantic", name, 14) == 0)
             {
                 self->msid_semantic_.token = value;
             }
         },
         this);
     int media_count = sdp_media_count(sdp_);
+    for (int i = 0; i < media_count; i++)
+    {
+        const auto* type = sdp_media_type(sdp_, i);
+        const auto* proto = sdp_media_proto(sdp_, i);
+        int format_count = sdp_media_formats(sdp_, i, nullptr, 0);
+        int* formats = static_cast<int*>(malloc(format_count));
+        sdp_media_formats(sdp_, i, formats, format_count);
+        webrtc_sdp::media m;
+        m.proto = proto;
+        for (int i = 0; i < format_count; i++)
+        {
+            m.fmts.push_back(formats[i]);
+        }
+        free(formats);
+        int ports[32] = {0};
+        int ports_num = sdp_media_port(sdp_, i, ports, 32);
+        for (int i = 0; i < ports_num; i++)
+        {
+            m.ports.push_back(ports[i]);
+        }
+        medias_.push_back(m);
+    }
     if (sdp_origin_get_network(sdp_) == SDP_C_NETWORK_UNKNOWN)
     {
         return -1;
