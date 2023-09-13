@@ -193,6 +193,25 @@ class webrtc_sdp
         std::string rid;
         std::string key = "rid";
     };
+    /////////////////////////////////////////////////////////////
+    struct rtc_codec_plan
+    {
+        uint8_t pt;
+        std::string codec;
+        uint32_t sample_rate;
+        uint32_t channel = 0;
+        std::set<std::string> rtcp_fb;
+        std::map<std::string, std::string> fmtp;
+    };
+    struct rtc_media
+    {
+        std::string mid;
+        uint16_t port = 0;
+        webrtc_sdp::connection c;
+        webrtc_sdp::bandwidth bandwidth;
+        std::string proto;
+        std::string direction;    // sendonly recvonly ...
+    };
 
    public:
     explicit webrtc_sdp(const std::string& sdp);
