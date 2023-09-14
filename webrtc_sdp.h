@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <set>
 #include "sdp.h"
 
 namespace simple_rtmp
@@ -17,7 +18,6 @@ class webrtc_sdp
     };
     struct connection
     {
-        std::string key = "c";
         std::string nettype{"IN"};
         std::string addrtype{"IP4"};
         std::string address{"0.0.0.0"};
@@ -33,13 +33,6 @@ class webrtc_sdp
         std::string key = "b";
         std::string bwtype{"AS"};
         uint32_t bandwidth{0};
-    };
-    struct media
-    {
-        std::string key = "m";
-        std::vector<uint16_t> ports;
-        std::string proto;
-        std::vector<int> fmts;
     };
 
     struct origin
@@ -71,11 +64,12 @@ class webrtc_sdp
     };
     struct attribute_rtcp
     {
-        uint16_t port{0};
+        uint16_t port[2] = {0};
         std::string key = "rtcp";
-        std::string nettype{"IN"};
-        std::string addrtype{"IP4"};
-        std::string address{"0.0.0.0"};
+        std::string nettype;
+        std::string addrtype;
+        std::string address;
+        std::string source;
     };
     struct attribute_ice_ufrag
     {
@@ -203,23 +197,31 @@ class webrtc_sdp
         std::set<std::string> rtcp_fb;
         std::map<std::string, std::string> fmtp;
     };
+
     struct rtc_media
     {
         std::string mid;
-        uint16_t port = 0;
+        std::string type;    // audio video
+        std::vector<int> fmts;
+        std::vector<uint16_t> ports;
         webrtc_sdp::connection c;
+        webrtc_sdp::attribute_rtcp attr_rtcp;
         webrtc_sdp::bandwidth bandwidth;
         std::string proto;
         std::string direction;    // sendonly recvonly ...
     };
 
    public:
-    explicit webrtc_sdp(const std::string& sdp);
+    explicit webrtc_sdp(std::string sdp);
     ~webrtc_sdp() = default;
 
    public:
     int parse();
     int fingerprint_algorithm(std::string& algorithm, std::string& fingerprint);
+
+   private:
+    int parse_attribute();
+    int parse_media_attribute(int i);
 
    private:
     version v_;
@@ -230,7 +232,7 @@ class webrtc_sdp
     connection c_;
     attribute_group group_;
     attribute_msid_semantic msid_semantic_;
-    std::vector<media> medias_;
+    std::vector<rtc_media> medias_;
     sdp_t* sdp_ = nullptr;
     std::string sdp_str_;
 };
