@@ -53,13 +53,13 @@ int webrtc_sdp::parse()
     return 0;
 }
 
-int webrtc_sdp::parse_media_attribute(int i)
+int webrtc_sdp::parse_media_attribute(int media_index)
 {
-    const auto* type = sdp_media_type(sdp_, i);
-    const auto* proto = sdp_media_proto(sdp_, i);
-    int format_count = sdp_media_formats(sdp_, i, nullptr, 0);
+    const auto* type = sdp_media_type(sdp_, media_index);
+    const auto* proto = sdp_media_proto(sdp_, media_index);
+    int format_count = sdp_media_formats(sdp_, media_index, nullptr, 0);
     int* formats = static_cast<int*>(malloc(format_count));
-    sdp_media_formats(sdp_, i, formats, format_count);
+    sdp_media_formats(sdp_, media_index, formats, format_count);
     webrtc_sdp::rtc_media m;
     m.proto = proto;
     for (int i = 0; i < format_count; i++)
@@ -68,7 +68,7 @@ int webrtc_sdp::parse_media_attribute(int i)
     }
     free(formats);
     int ports[32] = {0};
-    int ports_num = sdp_media_port(sdp_, i, ports, 32);
+    int ports_num = sdp_media_port(sdp_, media_index, ports, 32);
     for (int i = 0; i < ports_num; i++)
     {
         m.ports.push_back(ports[i]);
@@ -77,7 +77,7 @@ int webrtc_sdp::parse_media_attribute(int i)
     const char* address_type = nullptr;
     const char* address = nullptr;
 
-    int ret = sdp_media_get_connection(sdp_, i, &network, &address_type, &address);
+    int ret = sdp_media_get_connection(sdp_, media_index, &network, &address_type, &address);
     if (ret == 0)
     {
         m.c.address = address;
@@ -87,7 +87,7 @@ int webrtc_sdp::parse_media_attribute(int i)
 
     sdp_media_attribute_list(
         sdp_,
-        i,
+        media_index,
         nullptr,
         [](void* param, const char* name, const char* value)
         {
@@ -104,9 +104,22 @@ int webrtc_sdp::parse_media_attribute(int i)
                     media->attr_rtcp.port[0] = addr.port[0];
                     media->attr_rtcp.port[1] = addr.port[1];
                 }
+                return;
             }
-            if (value != nullptr)
+            if (value != nullptr && strncmp(name, "ice-ufrag", 9) == 0)
             {
+                media->ice_ufrag = value;
+                return;
+            }
+            if (value != nullptr && strncmp(name, "ice-pwd", 7) == 0)
+            {
+                media->ice_pwd = value;
+                return;
+            }
+            if (value != nullptr && strncmp(name, "ice-options", 11) == 0)
+            {
+                media->ice_options = value;
+                return;
             }
         },
         &m);
@@ -114,6 +127,7 @@ int webrtc_sdp::parse_media_attribute(int i)
     medias_.push_back(m);
     return 0;
 }
+
 int webrtc_sdp::parse_attribute()
 {
     const char* username = nullptr;

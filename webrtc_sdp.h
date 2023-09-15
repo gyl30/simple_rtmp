@@ -202,6 +202,9 @@ class webrtc_sdp
     {
         std::string mid;
         std::string type;    // audio video
+        std::string ice_ufrag;
+        std::string ice_pwd;
+        std::string ice_options;
         std::vector<int> fmts;
         std::vector<uint16_t> ports;
         webrtc_sdp::connection c;
@@ -221,7 +224,7 @@ class webrtc_sdp
 
    private:
     int parse_attribute();
-    int parse_media_attribute(int i);
+    int parse_media_attribute(int media_index);
 
    private:
     version v_;
