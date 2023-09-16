@@ -1,5 +1,6 @@
 #include "webrtc_sdp.h"
 #include "sdp-a-webrtc.h"
+#include "sdp-options.h"
 #include <cstring>
 #include <boost/algorithm/string.hpp>
 #include <utility>
@@ -119,6 +120,24 @@ int webrtc_sdp::parse_media_attribute(int media_index)
             if (value != nullptr && strncmp(name, "ice-options", 11) == 0)
             {
                 media->ice_options = value;
+                return;
+            }
+            if (value != nullptr && strncmp(name, "fingerprint", 11) == 0)
+            {
+                char hash[16];
+                char fingerprint[128];
+
+                int ret = sdp_a_fingerprint(name, static_cast<int>(strlen(name)), hash, fingerprint);
+                if (ret == 0)
+                {
+                    media->fingerprint.algorithm = hash;
+                    media->fingerprint.fingerprint = fingerprint;
+                }
+                return;
+            }
+            if (value != nullptr && strncmp(name, "setup", 5) == 0)
+            {
+                media->setup = value;
                 return;
             }
         },

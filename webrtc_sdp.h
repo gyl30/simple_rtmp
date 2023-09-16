@@ -89,17 +89,6 @@ class webrtc_sdp
         bool trickle = false;
         bool renomination = false;
     };
-    struct attribute_fingerprint
-    {
-        std::string key = "fingerprint";
-        std::string algorithm;
-        std::string hash;
-    };
-    struct attribute_setup
-    {
-        std::string key = "setup";
-        std::string setup;
-    };
     struct attribute_mid
     {
         std::string key = "mid";
@@ -197,7 +186,12 @@ class webrtc_sdp
         std::set<std::string> rtcp_fb;
         std::map<std::string, std::string> fmtp;
     };
-
+    struct attribute_fingerprint
+    {
+        std::string key = "fingerprint";
+        std::string algorithm;
+        std::string fingerprint;
+    };
     struct rtc_media
     {
         std::string mid;
@@ -205,6 +199,8 @@ class webrtc_sdp
         std::string ice_ufrag;
         std::string ice_pwd;
         std::string ice_options;
+        attribute_fingerprint fingerprint;
+        std::string setup;
         std::vector<int> fmts;
         std::vector<uint16_t> ports;
         webrtc_sdp::connection c;
