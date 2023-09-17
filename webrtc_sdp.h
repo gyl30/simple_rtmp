@@ -95,13 +95,6 @@ class webrtc_sdp
         std::string mid;
     };
 
-    struct attribute_extmap
-    {
-        uint8_t id;
-        std::string ext;
-        std::string direction;
-        std::string key = "extmap";
-    };
     struct attribute_rtpmap
     {
         uint8_t pt;
@@ -154,11 +147,6 @@ class webrtc_sdp
         std::string type;
         std::vector<std::pair<std::string, std::string> > arr;
     };
-    struct attribute_msid
-    {
-        std::string key = "msid";
-        std::string value;
-    };
     struct attribute_extmap_allow_mixed
     {
         std::string key = "extmap-allow-mixed";
@@ -192,6 +180,20 @@ class webrtc_sdp
         std::string algorithm;
         std::string fingerprint;
     };
+    struct attribute_extmap
+    {
+        std::string ext;
+        std::string direction;
+        std::string url;
+        std::string key = "extmap";
+    };
+    struct attribute_msid
+    {
+        std::string key = "msid";
+        std::string msid;
+        std::string appdata;
+    };
+
     struct rtc_media
     {
         std::string mid;
@@ -201,8 +203,10 @@ class webrtc_sdp
         std::string ice_options;
         attribute_fingerprint fingerprint;
         std::string setup;
+        std::vector<attribute_extmap> extmaps;
         std::vector<int> fmts;
         std::vector<uint16_t> ports;
+        attribute_msid msid;
         webrtc_sdp::connection c;
         webrtc_sdp::attribute_rtcp attr_rtcp;
         webrtc_sdp::bandwidth bandwidth;

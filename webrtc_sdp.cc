@@ -1,6 +1,8 @@
 #include "webrtc_sdp.h"
 #include "sdp-a-webrtc.h"
 #include "sdp-options.h"
+#include "sdp-a-rtpmap.h"
+#include "sdp-a-fmtp.h"
 #include <cstring>
 #include <boost/algorithm/string.hpp>
 #include <utility>
@@ -139,6 +141,34 @@ int webrtc_sdp::parse_media_attribute(int media_index)
             {
                 media->setup = value;
                 return;
+            }
+            if (value != nullptr && strncmp(name, "extmap", 5) == 0)
+            {
+                char url[128];
+                int ext = -1;
+                int direction = -1;
+                if (sdp_a_extmap(value, strlen(value), &ext, &direction, url) != 0)
+                {
+                    return;
+                }
+                attribute_extmap extmap;
+                extmap.ext = ext;
+                extmap.direction = direction;
+                extmap.url = url;
+                media->extmaps.push_back(extmap);
+            }
+
+            if (value != nullptr && strncmp(name, "msid", 4) == 0)
+            {
+                char msid[65];
+                char appdata[65];
+
+                if (sdp_a_msid(value, strlen(value), msid, appdata) != 0)
+                {
+                    return;
+                }
+                media->msid.msid = msid;
+                media->msid.appdata = appdata;
             }
         },
         &m);
