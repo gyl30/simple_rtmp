@@ -145,7 +145,7 @@ class webrtc_sdp
         std::string address;
         uint16_t port;
         std::string type;
-        std::vector<std::pair<std::string, std::string> > arr;
+        std::vector<std::pair<std::string, std::string>> arr;
     };
     struct attribute_extmap_allow_mixed
     {

@@ -87,92 +87,102 @@ int webrtc_sdp::parse_media_attribute(int media_index)
         m.c.addrtype = address_type;
         m.c.nettype = network;
     }
-
+    using attribute_kv = std::vector<std::pair<std::string, std::string>>;
+    attribute_kv kv;
     sdp_media_attribute_list(
         sdp_,
         media_index,
         nullptr,
         [](void* param, const char* name, const char* value)
         {
-            auto* media = static_cast<webrtc_sdp::rtc_media*>(param);
-            if (name != nullptr && strncmp(name, "rtcp", 4) == 0)
-            {
-                sdp_address_t addr;
-                if (sdp_a_rtcp(value, static_cast<int>(strlen(value)), &addr) == 0)
-                {
-                    media->attr_rtcp.nettype = addr.network;
-                    media->attr_rtcp.addrtype = addr.addrtype;
-                    media->attr_rtcp.address = addr.address;
-                    media->attr_rtcp.source = addr.source;
-                    media->attr_rtcp.port[0] = addr.port[0];
-                    media->attr_rtcp.port[1] = addr.port[1];
-                }
-                return;
-            }
-            if (value != nullptr && strncmp(name, "ice-ufrag", 9) == 0)
-            {
-                media->ice_ufrag = value;
-                return;
-            }
-            if (value != nullptr && strncmp(name, "ice-pwd", 7) == 0)
-            {
-                media->ice_pwd = value;
-                return;
-            }
-            if (value != nullptr && strncmp(name, "ice-options", 11) == 0)
-            {
-                media->ice_options = value;
-                return;
-            }
-            if (value != nullptr && strncmp(name, "fingerprint", 11) == 0)
-            {
-                char hash[16];
-                char fingerprint[128];
-
-                int ret = sdp_a_fingerprint(name, static_cast<int>(strlen(name)), hash, fingerprint);
-                if (ret == 0)
-                {
-                    media->fingerprint.algorithm = hash;
-                    media->fingerprint.fingerprint = fingerprint;
-                }
-                return;
-            }
-            if (value != nullptr && strncmp(name, "setup", 5) == 0)
-            {
-                media->setup = value;
-                return;
-            }
-            if (value != nullptr && strncmp(name, "extmap", 5) == 0)
-            {
-                char url[128];
-                int ext = -1;
-                int direction = -1;
-                if (sdp_a_extmap(value, strlen(value), &ext, &direction, url) != 0)
-                {
-                    return;
-                }
-                attribute_extmap extmap;
-                extmap.ext = ext;
-                extmap.direction = direction;
-                extmap.url = url;
-                media->extmaps.push_back(extmap);
-            }
-
-            if (value != nullptr && strncmp(name, "msid", 4) == 0)
-            {
-                char msid[65];
-                char appdata[65];
-
-                if (sdp_a_msid(value, strlen(value), msid, appdata) != 0)
-                {
-                    return;
-                }
-                media->msid.msid = msid;
-                media->msid.appdata = appdata;
-            }
+            auto* kv = static_cast<attribute_kv*>(param);
+            auto pair = std::make_pair(name, value);
+            kv->emplace_back(pair);
         },
-        &m);
+        &kv);
 
+    for (const auto& pair : kv)
+    {
+        const char* name = pair.first.data();
+        const char* value = pair.second.data();
+        if (name != nullptr && strncmp(name, "rtcp", 4) == 0)
+        {
+            sdp_address_t addr;
+            if (sdp_a_rtcp(value, static_cast<int>(strlen(value)), &addr) == 0)
+            {
+                m.attr_rtcp.nettype = addr.network;
+                m.attr_rtcp.addrtype = addr.addrtype;
+                m.attr_rtcp.address = addr.address;
+                m.attr_rtcp.source = addr.source;
+                m.attr_rtcp.port[0] = addr.port[0];
+                m.attr_rtcp.port[1] = addr.port[1];
+            }
+            continue;
+        }
+        if (value != nullptr && strncmp(name, "ice-ufrag", 9) == 0)
+        {
+            m.ice_ufrag = value;
+            continue;
+        }
+        if (value != nullptr && strncmp(name, "ice-pwd", 7) == 0)
+        {
+            m.ice_pwd = value;
+            continue;
+        }
+        if (value != nullptr && strncmp(name, "ice-options", 11) == 0)
+        {
+            m.ice_options = value;
+            continue;
+        }
+        if (value != nullptr && strncmp(name, "fingerprint", 11) == 0)
+        {
+            char hash[16];
+            char fingerprint[128];
+
+            int ret = sdp_a_fingerprint(name, static_cast<int>(strlen(name)), hash, fingerprint);
+            if (ret == 0)
+            {
+                m.fingerprint.algorithm = hash;
+                m.fingerprint.fingerprint = fingerprint;
+            }
+            continue;
+        }
+        if (value != nullptr && strncmp(name, "setup", 5) == 0)
+        {
+            m.setup = value;
+            continue;
+        }
+        if (value != nullptr && strncmp(name, "extmap", 5) == 0)
+        {
+            char url[128];
+            int ext = -1;
+            int direction = -1;
+            if (sdp_a_extmap(value, strlen(value), &ext, &direction, url) != 0)
+            {
+                continue;
+            }
+            attribute_extmap extmap;
+            extmap.ext = ext;
+            extmap.direction = direction;
+            extmap.url = url;
+            m.extmaps.push_back(extmap);
+            continue;
+        }
+
+        if (value != nullptr && strncmp(name, "msid", 4) == 0)
+        {
+            char msid[65];
+            char appdata[65];
+
+            if (sdp_a_msid(value, strlen(value), msid, appdata) != 0)
+            {
+                continue;
+            }
+            m.msid.msid = msid;
+            m.msid.appdata = appdata;
+            continue;
+        }
+    }
     medias_.push_back(m);
     return 0;
 }
