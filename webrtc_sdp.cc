@@ -96,19 +96,22 @@ int webrtc_sdp::parse_media_attribute(int media_index)
         [](void* param, const char* name, const char* value)
         {
             auto* kv = static_cast<attribute_kv*>(param);
-            auto pair = std::make_pair(name, value);
-            kv->emplace_back(pair);
+            if (value != nullptr)
+            {
+                auto pair = std::make_pair(name, value);
+                kv->emplace_back(pair);
+            }
         },
         &kv);
 
     for (const auto& pair : kv)
     {
-        const char* name = pair.first.data();
-        const char* value = pair.second.data();
-        if (name != nullptr && strncmp(name, "rtcp", 4) == 0)
+        const std::string& name = pair.first;
+        const std::string& value = pair.second;
+        if (name == "rtcp")
         {
             sdp_address_t addr;
-            if (sdp_a_rtcp(value, static_cast<int>(strlen(value)), &addr) == 0)
+            if (sdp_a_rtcp(value.data(), static_cast<int>(value.size()), &addr) == 0)
             {
                 m.attr_rtcp.nettype = addr.network;
                 m.attr_rtcp.addrtype = addr.addrtype;
@@ -119,27 +122,27 @@ int webrtc_sdp::parse_media_attribute(int media_index)
             }
             continue;
         }
-        if (value != nullptr && strncmp(name, "ice-ufrag", 9) == 0)
+        if (name == "ice-ufrag")
         {
             m.ice_ufrag = value;
             continue;
         }
-        if (value != nullptr && strncmp(name, "ice-pwd", 7) == 0)
+        if (name == "ice-pwd")
         {
             m.ice_pwd = value;
             continue;
         }
-        if (value != nullptr && strncmp(name, "ice-options", 11) == 0)
+        if (name == "ice-options")
         {
             m.ice_options = value;
             continue;
         }
-        if (value != nullptr && strncmp(name, "fingerprint", 11) == 0)
+        if (name == "fingerprint")
         {
             char hash[16];
             char fingerprint[128];
 
-            int ret = sdp_a_fingerprint(name, static_cast<int>(strlen(name)), hash, fingerprint);
+            int ret = sdp_a_fingerprint(name.data(), static_cast<int>(name.size()), hash, fingerprint);
             if (ret == 0)
             {
                 m.fingerprint.algorithm = hash;
@@ -147,17 +150,17 @@ int webrtc_sdp::parse_media_attribute(int media_index)
             }
             continue;
         }
-        if (value != nullptr && strncmp(name, "setup", 5) == 0)
+        if (name == "setup")
         {
             m.setup = value;
             continue;
         }
-        if (value != nullptr && strncmp(name, "extmap", 5) == 0)
+        if (name == "extmap")
         {
             char url[128];
             int ext = -1;
             int direction = -1;
-            if (sdp_a_extmap(value, strlen(value), &ext, &direction, url) != 0)
+            if (sdp_a_extmap(value.data(), static_cast<int>(value.size()), &ext, &direction, url) != 0)
             {
                 continue;
             }
@@ -169,18 +172,36 @@ int webrtc_sdp::parse_media_attribute(int media_index)
             continue;
         }
 
-        if (value != nullptr && strncmp(name, "msid", 4) == 0)
+        if (name == "msid")
         {
             char msid[65];
             char appdata[65];
 
-            if (sdp_a_msid(value, strlen(value), msid, appdata) != 0)
+            if (sdp_a_msid(value.data(), static_cast<int>(value.size()), msid, appdata) != 0)
             {
                 continue;
             }
             m.msid.msid = msid;
             m.msid.appdata = appdata;
             continue;
+        }
+        if (name == "rtpmap")
+        {
+            int payload = 0;
+            int rate = 0;
+            char encoding[32] = {0};
+            char parameters[64] = {0};
+            sdp_a_rtpmap(value.data(), &payload, encoding, &rate, parameters);
+            attribute_rtpmap rtpmap;
+            rtpmap.pt = payload;
+            rtpmap.sample_rate = rate;
+            rtpmap.codec = encoding;
+            if (strlen(parameters) != 0)
+            {
+                rtpmap.channel = atoi(parameters);
+            }
+            continue;
+            m.rtpmaps_.push_back(rtpmap);
         }
     }
     medias_.push_back(m);
