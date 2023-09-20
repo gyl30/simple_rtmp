@@ -1,11 +1,14 @@
 #include "webrtc_sdp.h"
+#include <cstring>
+#include <boost/algorithm/string.hpp>
+#include <utility>
+extern "C"
+{
 #include "sdp-a-webrtc.h"
 #include "sdp-options.h"
 #include "sdp-a-rtpmap.h"
 #include "sdp-a-fmtp.h"
-#include <cstring>
-#include <boost/algorithm/string.hpp>
-#include <utility>
+}
 
 using simple_rtmp::webrtc_sdp;
 
@@ -191,7 +194,10 @@ int webrtc_sdp::parse_media_attribute(int media_index)
             int rate = 0;
             char encoding[32] = {0};
             char parameters[64] = {0};
-            sdp_a_rtpmap(value.data(), &payload, encoding, &rate, parameters);
+            if (sdp_a_rtpmap(value.data(), &payload, encoding, &rate, parameters) != 0)
+            {
+                continue;
+            }
             attribute_rtpmap rtpmap;
             rtpmap.pt = payload;
             rtpmap.sample_rate = rate;
@@ -200,8 +206,24 @@ int webrtc_sdp::parse_media_attribute(int media_index)
             {
                 rtpmap.channel = atoi(parameters);
             }
-            continue;
             m.rtpmaps_.push_back(rtpmap);
+            continue;
+        }
+        if (name == "rtcp-fb")
+        {
+            struct sdp_rtcp_fb_t fb;
+            memset(&fb, 0, sizeof(fb));
+            if (sdp_a_rtcp_fb(value.data(), static_cast<int>(value.size()), &fb) != 0)
+            {
+                continue;
+            }
+            attribute_rtcp_fb rtcp_fb;
+            rtcp_fb.feedback = fb.feedback;
+            rtcp_fb.fmt = fb.fmt;
+            rtcp_fb.param = fb.param;
+            rtcp_fb.trr_int = fb.trr_int;
+            m.rtcp_fbs_.push_back(rtcp_fb);
+            continue;
         }
     }
     medias_.push_back(m);
