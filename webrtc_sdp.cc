@@ -2,6 +2,7 @@
 #include <cstring>
 #include <boost/algorithm/string.hpp>
 #include <utility>
+#include <cstdlib>
 extern "C"
 {
 #include "sdp-a-webrtc.h"
@@ -224,6 +225,29 @@ int webrtc_sdp::parse_media_attribute(int media_index)
             rtcp_fb.trr_int = fb.trr_int;
             m.rtcp_fbs_.push_back(rtcp_fb);
             continue;
+        }
+        if (name == "fmtp")
+        {
+            int fmt = 0;
+            char* params = nullptr;
+            if (sdp_a_fmtp(value.data(), value.size(), &fmt, &params) != 0)
+            {
+                continue;
+            }
+            std::vector<std::string> kvs;
+            boost::split(kvs, params, boost::is_any_of(";"));
+            for (const auto& kv_str : kvs)
+            {
+                std::vector<std::string> kv;
+                boost::split(kv, kv_str, boost::is_any_of("="));
+                if (kv.size() == 2)
+                {
+                    m.fmtp_.params.emplace(kv.front(), kv.back());
+                }
+            }
+            free(params);
+
+            m.fmtp_.fmt = fmt;
         }
     }
     medias_.push_back(m);
