@@ -249,6 +249,22 @@ int webrtc_sdp::parse_media_attribute(int media_index)
 
             m.fmtp_.fmt = fmt;
         }
+        if (name == "ssrc")
+        {
+            uint32_t ssrc = 0;
+            char attribute[64] = {0};
+            char attribute_value[128] = {0};
+            if (sdp_a_ssrc(value.data(), static_cast<int>(value.size()), &ssrc, attribute, attribute_value) != 0)
+            {
+                continue;
+            }
+            attribute_ssrc attr_ssrc;
+            attr_ssrc.ssrc = ssrc;
+            attr_ssrc.attribute = attribute;
+            attr_ssrc.attribute_value = attribute_value;
+            m.attr_ssrc_.push_back(attr_ssrc);
+            continue;
+        }
     }
     medias_.push_back(m);
     return 0;

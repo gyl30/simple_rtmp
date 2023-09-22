@@ -95,13 +95,6 @@ class webrtc_sdp
         std::string mid;
     };
 
-    struct attribute_ssrc
-    {
-        uint32_t ssrc;
-        std::string key = "ssrc";
-        std::string attribute;
-        std::string attribute_value;
-    };
     struct attribute_ssrc_group
     {
         std::string key = "ssrc-group";
@@ -194,6 +187,13 @@ class webrtc_sdp
         std::string key = "fmtp";
         std::map<std::string, std::string> params;
     };
+    struct attribute_ssrc
+    {
+        uint32_t ssrc;
+        std::string key = "ssrc";
+        std::string attribute;
+        std::string attribute_value;
+    };
 
     struct rtc_media
     {
@@ -209,6 +209,7 @@ class webrtc_sdp
         std::vector<uint16_t> ports;
         std::vector<attribute_rtpmap> rtpmaps_;
         std::vector<attribute_rtcp_fb> rtcp_fbs_;
+        std::vector<attribute_ssrc> attr_ssrc_;
         attribute_fmtp fmtp_;
         attribute_msid msid;
         webrtc_sdp::connection c;
