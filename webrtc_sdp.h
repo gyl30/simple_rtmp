@@ -95,12 +95,6 @@ class webrtc_sdp
         std::string mid;
     };
 
-    struct attribute_ssrc_group
-    {
-        std::string key = "ssrc-group";
-        std::string type{"FID"};
-        std::vector<uint32_t> ssrcs;
-    };
     struct attribute_sctpmap
     {
         uint16_t port = 0;
@@ -155,8 +149,8 @@ class webrtc_sdp
     };
     struct attribute_extmap
     {
-        std::string ext;
-        std::string direction;
+        int ext;
+        int direction;
         std::string url;
         std::string key = "extmap";
     };
@@ -194,6 +188,12 @@ class webrtc_sdp
         std::string attribute;
         std::string attribute_value;
     };
+    struct attribute_ssrc_group
+    {
+        std::string key = "ssrc-group";
+        std::string type{"FID"};
+        std::vector<std::string> ssrcs;
+    };
 
     struct rtc_media
     {
@@ -210,6 +210,7 @@ class webrtc_sdp
         std::vector<attribute_rtpmap> rtpmaps_;
         std::vector<attribute_rtcp_fb> rtcp_fbs_;
         std::vector<attribute_ssrc> attr_ssrc_;
+        attribute_ssrc_group ssrc_group_;
         attribute_fmtp fmtp_;
         attribute_msid msid;
         webrtc_sdp::connection c;

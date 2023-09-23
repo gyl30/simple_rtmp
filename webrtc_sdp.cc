@@ -230,7 +230,7 @@ int webrtc_sdp::parse_media_attribute(int media_index)
         {
             int fmt = 0;
             char* params = nullptr;
-            if (sdp_a_fmtp(value.data(), value.size(), &fmt, &params) != 0)
+            if (sdp_a_fmtp(value.data(), static_cast<int>(value.size()), &fmt, &params) != 0)
             {
                 continue;
             }
@@ -263,6 +263,21 @@ int webrtc_sdp::parse_media_attribute(int media_index)
             attr_ssrc.attribute = attribute;
             attr_ssrc.attribute_value = attribute_value;
             m.attr_ssrc_.push_back(attr_ssrc);
+            continue;
+        }
+        if (name == "ssrc-group")
+        {
+            sdp_ssrc_group_t ssrc_group;
+            if (sdp_a_ssrc_group(value.data(), static_cast<int>(value.size()), &ssrc_group) != 0)
+            {
+                continue;
+            }
+            m.ssrc_group_.type = ssrc_group.key;
+            for (int i = 0; i < ssrc_group.count; i++)
+            {
+                m.ssrc_group_.ssrcs.emplace_back(ssrc_group.values[i]);
+            }
+            free(ssrc_group.values);
             continue;
         }
     }
