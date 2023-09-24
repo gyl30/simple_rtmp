@@ -38,19 +38,12 @@ int webrtc_sdp::parse()
     {
         return -1;
     }
-    if (sdp_session_get_information(sdp_) == nullptr)
-    {
-        return -1;
-    }
     if (sdp_version_get(sdp_) != 0)
     {
         return -1;
     }
 
-    // v=0
-    v_.version = sdp_version_get(sdp_);
-
-    // o=- 87905 2 IN IP4 127.0.0.1
+    parse_attribute();
 
     int media_count = sdp_media_count(sdp_);
     for (int i = 0; i < media_count; i++)
@@ -66,9 +59,14 @@ int webrtc_sdp::parse_media_attribute(int media_index)
     const auto* proto = sdp_media_proto(sdp_, media_index);
     int format_count = sdp_media_formats(sdp_, media_index, nullptr, 0);
     int* formats = static_cast<int*>(malloc(format_count));
-    sdp_media_formats(sdp_, media_index, formats, format_count);
+    if (sdp_media_formats(sdp_, media_index, formats, format_count) == -1)
+    {
+        return -1;
+    }
     webrtc_sdp::rtc_media m;
     m.proto = proto;
+    m.type = type;
+
     for (int i = 0; i < format_count; i++)
     {
         m.fmts.push_back(formats[i]);
@@ -126,6 +124,7 @@ int webrtc_sdp::parse_media_attribute(int media_index)
             }
             continue;
         }
+
         if (name == "ice-ufrag")
         {
             m.ice_ufrag = value;
@@ -158,6 +157,14 @@ int webrtc_sdp::parse_media_attribute(int media_index)
         {
             m.setup = value;
             continue;
+        }
+        if (name == "mid")
+        {
+            char tag[256] = {0};
+            if (sdp_a_mid(value.data(), static_cast<int>(value.size()), tag) != -1)
+            {
+                m.mid = tag;
+            }
         }
         if (name == "extmap")
         {
@@ -287,6 +294,9 @@ int webrtc_sdp::parse_media_attribute(int media_index)
 
 int webrtc_sdp::parse_attribute()
 {
+    // v=0
+    v_.version = sdp_version_get(sdp_);
+    // o=
     const char* username = nullptr;
     const char* session = nullptr;
     const char* version = nullptr;
@@ -304,16 +314,18 @@ int webrtc_sdp::parse_attribute()
         o_.nettype = network;
         o_.addrtype = address_type;
     }
-    // s=-
-    const char* session_name = sdp_session_get_name(sdp_);
-    const char* session_info = sdp_session_get_name(sdp_);
-    if (session_name != nullptr)
-    {
-        session_name_ = session_name;
-    }
+    // i=
+    const char* session_info = sdp_session_get_information(sdp_);
     if (session_info != nullptr)
     {
         session_info_ = session_info;
+    }
+
+    // s=-
+    const char* session_name = sdp_session_get_name(sdp_);
+    if (session_name != nullptr)
+    {
+        session_name_ = session_name;
     }
     // t=0 0
     int time_count = sdp_timing_count(sdp_);
