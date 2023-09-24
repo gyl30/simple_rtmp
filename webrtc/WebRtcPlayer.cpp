@@ -32,6 +32,7 @@ WebRtcPlayer::WebRtcPlayer(const std::shared_ptr<simple_rtmp::webrtc_sdp>& sdp) 
 
 void WebRtcPlayer::exchangeSdp()
 {
+    sdp_->parse();
     std::string algorithm;
     std::string fingerprint;
     int ret = sdp_->fingerprint_algorithm(algorithm, fingerprint);
