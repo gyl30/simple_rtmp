@@ -233,6 +233,11 @@ int webrtc_sdp::parse_media_attribute(int media_index)
             m.rtcp_fbs_.push_back(rtcp_fb);
             continue;
         }
+        if (name == "rtcp-mux")
+        {
+            m.rtcp_mux_ = name;
+            continue;
+        }
         if (name == "fmtp")
         {
             int fmt = 0;

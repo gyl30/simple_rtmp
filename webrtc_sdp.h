@@ -203,6 +203,7 @@ class webrtc_sdp
         std::string ice_pwd;
         std::string ice_options;
         attribute_fingerprint fingerprint;
+        std::string rtcp_mux_;
         std::string setup;
         std::vector<attribute_extmap> extmaps;
         std::vector<int> fmts;

@@ -45,6 +45,8 @@ void WebRtcPlayer::exchangeSdp()
     remote_fingerprint.algorithm = RTC::DtlsTransport::GetFingerprintAlgorithm(algorithm);
     remote_fingerprint.value = fingerprint;
     dtls_transport_->SetRemoteFingerprint(remote_fingerprint);
+    std::string user = ice_server_->GetUsernameFragment();
+    std::string pwd = ice_server_->GetPassword();
     //
 }
 
