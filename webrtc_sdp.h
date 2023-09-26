@@ -125,12 +125,6 @@ class webrtc_sdp
         std::string direction;
         std::vector<std::string> rids;
     };
-    struct attribute_rid
-    {
-        std::string direction;
-        std::string rid;
-        std::string key = "rid";
-    };
     /////////////////////////////////////////////////////////////
     struct rtc_codec_plan
     {
@@ -194,6 +188,12 @@ class webrtc_sdp
         std::string type{"FID"};
         std::vector<std::string> ssrcs;
     };
+    struct attribute_rid
+    {
+        std::string direction;
+        std::string rid;
+        std::string key = "rid";
+    };
 
     struct rtc_media
     {
@@ -204,6 +204,7 @@ class webrtc_sdp
         std::string ice_options;
         attribute_fingerprint fingerprint;
         std::string rtcp_mux_;
+        std::string ice_lite_;
         std::string setup;
         std::vector<attribute_extmap> extmaps;
         std::vector<int> fmts;
@@ -212,6 +213,7 @@ class webrtc_sdp
         std::vector<attribute_rtcp_fb> rtcp_fbs_;
         std::vector<attribute_ssrc> attr_ssrc_;
         attribute_ssrc_group ssrc_group_;
+        attribute_rid rid_;
         attribute_fmtp fmtp_;
         attribute_msid msid;
         webrtc_sdp::connection c;

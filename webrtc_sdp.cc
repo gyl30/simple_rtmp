@@ -238,6 +238,11 @@ int webrtc_sdp::parse_media_attribute(int media_index)
             m.rtcp_mux_ = name;
             continue;
         }
+        if (name == "ice-lite")
+        {
+            m.ice_lite_ = name;
+            continue;
+        }
         if (name == "fmtp")
         {
             int fmt = 0;
@@ -275,6 +280,17 @@ int webrtc_sdp::parse_media_attribute(int media_index)
             attr_ssrc.attribute = attribute;
             attr_ssrc.attribute_value = attribute_value;
             m.attr_ssrc_.push_back(attr_ssrc);
+            continue;
+        }
+        if (name == "rid")
+        {
+            sdp_rid_t rid;
+            if (sdp_a_rid(value.data(), static_cast<int>(value.size()), &rid) != 0)
+            {
+                continue;
+            }
+            m.rid_.direction = rid.direction;
+            m.rid_.rid = rid.rid;
             continue;
         }
         if (name == "ssrc-group")
