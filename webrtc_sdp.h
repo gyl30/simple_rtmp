@@ -224,12 +224,16 @@ class webrtc_sdp
     };
 
    public:
+    using ptr = std::shared_ptr<webrtc_sdp>;
+
+   public:
     explicit webrtc_sdp(std::string sdp);
     ~webrtc_sdp() = default;
 
    public:
     int parse();
     int fingerprint_algorithm(std::string& algorithm, std::string& fingerprint);
+    ptr create_answer();
 
    private:
     int parse_attribute();

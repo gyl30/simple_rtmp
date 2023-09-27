@@ -395,6 +395,11 @@ int webrtc_sdp::parse_attribute()
     return 0;
 }
 
+webrtc_sdp::ptr webrtc_sdp::create_answer()
+{
+    //
+    return nullptr;
+}
 int webrtc_sdp::fingerprint_algorithm(std::string& algorithm, std::string& fingerprint)
 {
     const char* fingerprint_str = sdp_media_attribute_find(sdp_, 0, "fingerprint");
