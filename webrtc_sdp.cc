@@ -398,6 +398,9 @@ int webrtc_sdp::parse_attribute()
 webrtc_sdp::ptr webrtc_sdp::create_answer()
 {
     //
+    webrtc_sdp sdp;
+    sdp.v_.version = 2;
+    sdp.o_ = this->o_;
     return nullptr;
 }
 int webrtc_sdp::fingerprint_algorithm(std::string& algorithm, std::string& fingerprint)
