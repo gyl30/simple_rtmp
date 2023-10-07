@@ -401,6 +401,10 @@ webrtc_sdp::ptr webrtc_sdp::create_answer()
     webrtc_sdp sdp;
     sdp.v_.version = 2;
     sdp.o_ = this->o_;
+    sdp.session_name_ = this->session_name_;
+    sdp.session_info_ = this->session_info_;
+    sdp.times_ = this->times_;
+
     return nullptr;
 }
 int webrtc_sdp::fingerprint_algorithm(std::string& algorithm, std::string& fingerprint)
