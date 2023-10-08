@@ -1,4 +1,5 @@
 #include <utility>
+#include <boost/algorithm/string.hpp>
 #include "http_session.h"
 #include "socket.h"
 
@@ -89,19 +90,45 @@ void http_session::on_request()
     }
     auto req = std::make_shared<http_request_t>(std::move(parser_->release()));
     const std::string target = req->target();
-    std::string body = req->body();
 
-    LOG_DEBUG("request {} {}", target, body);
+    LOG_DEBUG("request {}", target);
 
     auto it = request_cb_.find(target);
     if (it == request_cb_.end())
     {
+        on_request(req);
         shutdown();
         return;
     }
     http_session_ptr session = shared_from_this();
 
     it->second(session, req);
+}
+
+void http_session::on_request(const http_request_ptr& req)
+{
+    //
+    const std::string target = req->target();
+    if (boost::starts_with(target, "/flv/") && boost::ends_with(target, ".flv"))
+    {
+        // flv
+        return on_flv_request(req);
+    }
+    if (boost::starts_with(target, "/hls/") && boost::ends_with(target, ".hls"))
+    {
+        // hls
+        return on_hls_request(req);
+    }
+}
+
+void http_session::on_flv_request(const http_request_ptr& req)
+{
+    //
+}
+
+void http_session::on_hls_request(const http_request_ptr& req)
+{
+    //
 }
 
 void http_session::write(http_request_ptr& req, http_response_ptr& res)
