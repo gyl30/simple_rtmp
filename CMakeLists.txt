@@ -43,23 +43,6 @@ aux_source_directory(third/media-server/libflv/source FLV_SRC)
 add_library(flv STATIC ${FLV_SRC})
 list(APPEND LINK_LIBS flv)
 
-include_directories(third/media-server/librtsp/include)
-set(SDP_SRC
-    # third/media-server/librtsp/include/sdp.h 
-    # third/media-server/librtsp/include/sdp-options.h
-    # third/media-server/librtsp/include/sdp-a-fmtp.h
-    # third/media-server/librtsp/include/sdp-a-rtpmap.h
-    # third/media-server/librtsp/include/sdp-a-webrtc.h
-    third/media-server/librtsp/source/sdp.c
-    third/media-server/librtsp/source/sdp-options.c
-    third/media-server/librtsp/source/sdp-a-fmtp.c
-    third/media-server/librtsp/source/sdp-a-rtpmap.c
-    third/media-server/librtsp/source/sdp-a-webrtc.c
-    )
-
-add_library(sdp STATIC ${SDP_SRC})
-list(APPEND LINK_LIBS sdp)
-
 add_subdirectory(third/libsrtp)
 add_subdirectory(third/usrsctp)
 
@@ -68,7 +51,6 @@ list(APPEND LINK_LIBS usrsctp)
 
 include_directories(third/spdlog/include)
 
-include_directories(webrtc)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -81,8 +63,7 @@ find_package(OpenSSL REQUIRED)
 list(APPEND LINK_LIBS OpenSSL::SSL OpenSSL::Crypto)
 
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} SOURCE_FILE)
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/webrtc WEBRTC_SOURCE_FILE)
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILE} ${WEBRTC_SOURCE_FILE})
+add_executable(${PROJECT_NAME} ${SOURCE_FILE})
 
 target_link_libraries(${PROJECT_NAME} ${LINK_LIBS})
