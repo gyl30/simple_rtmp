@@ -43,21 +43,22 @@ aux_source_directory(third/media-server/libflv/source FLV_SRC)
 add_library(flv STATIC ${FLV_SRC})
 list(APPEND LINK_LIBS flv)
 
-add_subdirectory(third/libsrtp)
-add_subdirectory(third/usrsctp)
-
-list(APPEND LINK_LIBS srtp2)
-list(APPEND LINK_LIBS usrsctp)
-
 include_directories(third/spdlog/include)
 
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_DEBUG_LIBS ON)
+set(Boost_USE_RELEASE_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+
 find_package(Boost 1.81 COMPONENTS system filesystem thread REQUIRED)
 
 list(APPEND LINK_LIBS ${Boost_LIBRARIES})
 
+set(OPENSSL_USE_STATIC_LIBS TRUE)
 find_package(OpenSSL REQUIRED)
 
 list(APPEND LINK_LIBS OpenSSL::SSL OpenSSL::Crypto)
