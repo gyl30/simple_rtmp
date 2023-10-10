@@ -17,7 +17,7 @@ namespace simple_rtmp
 class flv_forward_session : public std::enable_shared_from_this<flv_forward_session>
 {
    public:
-    explicit flv_forward_session(simple_rtmp::executors::executor& ex);
+    flv_forward_session(std::string target, simple_rtmp::executors::executor& ex);
     ~flv_forward_session();
 
    public:
@@ -26,6 +26,11 @@ class flv_forward_session : public std::enable_shared_from_this<flv_forward_sess
     boost::asio::ip::tcp::socket& socket();
 
    private:
+    void safe_shutdown();
+    void channel_out(const frame_buffer::ptr& frame, const boost::system::error_code& ec);
+
+   private:
+    std::string target_;
     sink::weak sink_;
     channel::ptr channel_ = nullptr;
     simple_rtmp::executors::executor& ex_;
