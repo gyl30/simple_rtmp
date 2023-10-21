@@ -21,6 +21,8 @@ set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads)
 set(LINK_LIBS Threads::Threads)
 
+find_package(PkgConfig REQUIRED)
+
 include_directories(third/http_parse)
 aux_source_directory(third/http_parse HTTP_PARSE_SRC)
 add_library(http_parse STATIC ${HTTP_PARSE_SRC})
