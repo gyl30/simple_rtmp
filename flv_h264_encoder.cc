@@ -1,6 +1,5 @@
 #include "log.h"
 #include "flv-header.h"
-#include "flv-writer.h"
 #include "mpeg4-avc.h"
 #include "frame_buffer.h"
 #include "flv_h264_encoder.h"
@@ -45,8 +44,6 @@ void flv_h264_encoder::set_output(const channel::ptr& ch)
 static simple_rtmp::frame_buffer::ptr make_frame_header(const simple_rtmp::frame_buffer::ptr& frame)
 {
     uint8_t buf[FLV_TAG_HEADER_SIZE + 4] = {0};
-    struct flv_vec_t vec[3];
-    struct flv_writer_t* flv;
     struct flv_tag_header_t tag;
 
     memset(&tag, 0, sizeof(tag));
