@@ -3,6 +3,7 @@
 #include "rtmp_demuxer.h"
 #include "rtmp_sink.h"
 #include "rtsp_sink.h"
+#include "flv_sink.h"
 #include "log.h"
 
 using simple_rtmp::rtmp_source;
@@ -18,8 +19,11 @@ rtmp_source::rtmp_source(std::string id, simple_rtmp::executors::executor& ex) :
     rtmp_sink_ = std::make_shared<simple_rtmp::rtmp_sink>(rtmp_sink_id, ex);
     std::string const rtsp_sink_id = "rtsp_" + id_;
     rtsp_sink_ = std::make_shared<simple_rtmp::rtsp_sink>(rtsp_sink_id, ex);
+    std::string const flv_sink_id = "flv_" + id_;
+    flv_sink_ = std::make_shared<simple_rtmp::flv_sink>(flv_sink_id, ex);
     simple_rtmp::sink::add(rtsp_sink_);
     simple_rtmp::sink::add(rtmp_sink_);
+    simple_rtmp::sink::add(flv_sink_);
 };
 
 void rtmp_source::on_codec(int codec, codec_option op)

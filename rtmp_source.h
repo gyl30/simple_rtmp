@@ -35,6 +35,7 @@ class rtmp_source : public std::enable_shared_from_this<rtmp_source>
     channel::ptr ch_;
     sink::ptr rtmp_sink_;
     sink::ptr rtsp_sink_;
+    sink::ptr flv_sink_;
     rtmp_demuxer::prt demuxer_;
 };
 
