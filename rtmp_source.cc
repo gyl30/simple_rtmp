@@ -29,6 +29,7 @@ rtmp_source::rtmp_source(std::string id, simple_rtmp::executors::executor& ex) :
 void rtmp_source::on_codec(int codec, codec_option op)
 {
     rtmp_sink_->add_codec(codec, op);
+    flv_sink_->add_codec(codec, op);
     rtsp_sink_->add_codec(codec, std::move(op));
 }
 
@@ -38,6 +39,7 @@ void rtmp_source::on_frame(const frame_buffer::ptr& frame, const boost::system::
     // frame->payload.size());
     rtmp_sink_->write(frame, ec);
     rtsp_sink_->write(frame, ec);
+    flv_sink_->write(frame, ec);
 }
 
 void rtmp_source::write(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
