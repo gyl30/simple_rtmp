@@ -60,11 +60,6 @@ find_package(Boost 1.81 COMPONENTS system filesystem thread REQUIRED)
 
 list(APPEND LINK_LIBS ${Boost_LIBRARIES})
 
-set(OPENSSL_USE_STATIC_LIBS TRUE)
-find_package(OpenSSL REQUIRED)
-
-list(APPEND LINK_LIBS OpenSSL::SSL OpenSSL::Crypto)
-
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} SOURCE_FILE)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILE})
