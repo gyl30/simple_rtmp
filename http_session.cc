@@ -1,6 +1,7 @@
 #include <utility>
 #include <boost/algorithm/string.hpp>
 #include "http_session.h"
+#include "log.h"
 #include "socket.h"
 
 using simple_rtmp::http_session;
@@ -57,7 +58,7 @@ void http_session::close_socket(boost::asio::ip::tcp::socket& socket)
     std::string local_addr = get_socket_local_address(socket);
     std::string remote_addr = get_socket_remote_address(socket);
     LOG_WARN("shutdown {} <--> {}", local_addr, remote_addr);
-    socket.close(ignored_ec);
+    (void)socket.close(ignored_ec);
 }
 
 void http_session::do_read()
@@ -150,6 +151,12 @@ simple_rtmp::http_response_ptr http_session::create_response(simple_rtmp::http_r
 
 void http_session::on_write(const http_request_ptr& req, boost::beast::error_code ec, std::size_t bytes)
 {
+    (void)bytes;
+    if (ec)
+    {
+        LOG_ERROR("write failed {}", ec.message());
+        return;
+    }
     if (!req->keep_alive())
     {
         shutdown();

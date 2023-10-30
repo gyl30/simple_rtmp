@@ -40,7 +40,7 @@ class http_session : public std::enable_shared_from_this<http_session>
     void safe_do_read();
     void safe_shutdown();
     void on_request();
-    void close_socket(boost::asio::ip::tcp::socket& socket);
+    static void close_socket(boost::asio::ip::tcp::socket& socket);
     void on_write(const http_request_ptr& req, boost::beast::error_code ec, std::size_t bytes);
 
    private:
