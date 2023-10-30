@@ -1,16 +1,12 @@
 #ifndef SIMPLE_RTMP_HTTP_SESSION_H
 #define SIMPLE_RTMP_HTTP_SESSION_H
 
+#include <map>
 #include <memory>
 #include <string>
-#include <utility>
-#include <vector>
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
-#include <map>
 #include "execution.h"
-#include "error.h"
-#include "log.h"
 
 namespace simple_rtmp
 {
