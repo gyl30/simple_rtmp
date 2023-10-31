@@ -9,6 +9,11 @@ tcp_connection::tcp_connection(simple_rtmp::executors::executor& ex) : ex_(ex)
     LOG_DEBUG("create {}", static_cast<void*>(this));
 }
 
+tcp_connection::tcp_connection(simple_rtmp::executors::executor& ex, boost::asio::ip::tcp::socket socket) : ex_(ex), socket_(std::move(socket))
+{
+    LOG_DEBUG("create {}", static_cast<void*>(this));
+}
+
 tcp_connection::~tcp_connection()
 {
     LOG_DEBUG("destroy {}", static_cast<void*>(this));

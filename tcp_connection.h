@@ -13,6 +13,7 @@ class tcp_connection : public std::enable_shared_from_this<tcp_connection>
 {
    public:
     explicit tcp_connection(simple_rtmp::executors::executor& ex);
+    tcp_connection(simple_rtmp::executors::executor& ex, boost::asio::ip::tcp::socket socket);
     ~tcp_connection();
 
    public:
