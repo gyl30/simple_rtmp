@@ -1,50 +1,45 @@
-#include "log.h"
-#include "socket.h"
 #include "flv_session.h"
 
 using simple_rtmp::flv_session;
 
-flv_session::flv_session(simple_rtmp::executors::executor& ex, const std::shared_ptr<boost::beast::tcp_stream>& stream) : ex_(ex), stream_(stream)
+flv_session::flv_session(simple_rtmp::executors::executor& ex, boost::asio::ip::tcp::socket socket) : ex_(ex), conn_(std::make_shared<tcp_connection>(ex_, std::move(socket)))
 {
 }
 
 void flv_session::start()
 {
-    //
-    ex_.post(std::bind(&flv_session::safe_do_read, shared_from_this()));
+    conn_->set_read_cb(std::bind(&flv_session::on_read, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
+    conn_->set_write_cb(std::bind(&flv_session::on_write, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
+    conn_->start();
 }
+
 void flv_session::shutdown()
 {
     //
-}
-void flv_session::do_read()
-{
-    //
-}
-void flv_session::on_read(const boost::beast::error_code& ec, std::size_t bytes)
-{
-    //
-}
-void flv_session::safe_do_read()
-{
-    //
-    auto& socket = stream_->socket();
-    std::string local_addr = get_socket_local_address(socket);
-    std::string remote_addr = get_socket_remote_address(socket);
+    auto self = shared_from_this();
 
-    LOG_DEBUG("do read {} <--> {}", local_addr, remote_addr);
-
-    do_read();
+    ex_.post([this, self]() { safe_shutdown(); });
 }
+
 void flv_session::safe_shutdown()
 {
     //
+
+    conn_->shutdown();
+    conn_.reset();
 }
-void flv_session::close_socket(boost::asio::ip::tcp::socket& socket)
+
+void flv_session::on_read(const simple_rtmp::frame_buffer::ptr& frame, boost::system::error_code ec)
 {
     //
 }
-void flv_session::on_write(const http_request_ptr& req, boost::beast::error_code ec, std::size_t bytes)
+
+void flv_session::write_frame(const simple_rtmp::frame_buffer::ptr& frame)
+{
+    conn_->write_frame(frame);
+}
+
+void flv_session::on_write(const boost::system::error_code& ec, std::size_t bytes)
 {
     //
 }
