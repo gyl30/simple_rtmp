@@ -1,7 +1,9 @@
 #include <utility>
 #include <boost/algorithm/string.hpp>
 #include "http_session.h"
+#include "flv_session.h"
 #include "log.h"
+#include "sink.h"
 #include "socket.h"
 
 using simple_rtmp::http_session;
@@ -124,7 +126,12 @@ void http_session::on_request(const http_request_ptr& req)
 
 void http_session::on_flv_request(const http_request_ptr& req)
 {
-    //
+    // /flv/app/stream
+    const std::string target = req->target();
+    auto socket = stream_->release_socket();
+    auto session = std::make_shared<flv_session>(target, ex_, std::move(socket));
+    session->start();
+    shutdown();
 }
 
 void http_session::on_hls_request(const http_request_ptr& req)
