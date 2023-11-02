@@ -15,7 +15,7 @@ class flv_session : public std::enable_shared_from_this<flv_session>
 {
    public:
     flv_session(std::string target, simple_rtmp::executors::executor& ex, boost::asio::ip::tcp::socket socket);
-    ~flv_session() = default;
+    ~flv_session();
 
    public:
     void start();
