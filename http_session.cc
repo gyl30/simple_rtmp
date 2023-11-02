@@ -12,6 +12,11 @@ std::map<std::string, simple_rtmp::request_cb_t> http_session::request_cb_;
 
 http_session::http_session(simple_rtmp::executors::executor& ex) : ex_(ex)
 {
+    LOG_DEBUG("create {}", static_cast<void*>(this));
+}
+http_session::~http_session()
+{
+    LOG_DEBUG("destory {}", static_cast<void*>(this));
 }
 
 boost::asio::ip::tcp::socket& http_session::socket()
@@ -100,7 +105,6 @@ void http_session::on_request()
     if (it == request_cb_.end())
     {
         on_request(req);
-        shutdown();
         return;
     }
     http_session_ptr session = shared_from_this();
@@ -112,12 +116,12 @@ void http_session::on_request(const http_request_ptr& req)
 {
     //
     const std::string target = req->target();
-    if (boost::starts_with(target, "/flv/") && boost::ends_with(target, ".flv"))
+    if (boost::ends_with(target, "/flv/") || boost::ends_with(target, ".flv"))
     {
         // flv
         return on_flv_request(req);
     }
-    if (boost::starts_with(target, "/hls/") && boost::ends_with(target, ".hls"))
+    if (boost::starts_with(target, "/hls/") || boost::ends_with(target, ".hls"))
     {
         // hls
         return on_hls_request(req);
@@ -129,6 +133,8 @@ void http_session::on_flv_request(const http_request_ptr& req)
     // /flv/app/stream
     const std::string target = req->target();
     auto socket = stream_->release_socket();
+    stream_->cancel();
+    stream_.reset();
     auto session = std::make_shared<flv_session>(target, ex_, std::move(socket));
     session->start();
     shutdown();

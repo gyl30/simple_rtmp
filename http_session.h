@@ -26,7 +26,7 @@ class http_session : public std::enable_shared_from_this<http_session>
 {
    public:
     explicit http_session(simple_rtmp::executors::executor& ex);
-    ~http_session() = default;
+    ~http_session();
 
    public:
     void start();
