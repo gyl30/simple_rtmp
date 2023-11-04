@@ -9,6 +9,7 @@
 #include "channel.h"
 #include "sink.h"
 #include "execution.h"
+#include "flv_encoder.h"
 
 namespace simple_rtmp
 {
@@ -26,6 +27,8 @@ class flv_sink : public sink
     void add_codec(int codec, codec_option op) override;
 
    private:
+    void on_frame(const frame_buffer::ptr& frame, const boost::system::error_code& ec);
+
     void safe_add_channel(const channel::ptr& ch);
     void safe_del_channel(const channel::ptr& ch);
 
@@ -33,6 +36,8 @@ class flv_sink : public sink
     std::string id_;
     simple_rtmp::executors::executor& ex_;
     std::set<channel::ptr> chs_;
+    std::shared_ptr<flv_encoder> video_encoder_;
+    std::shared_ptr<flv_encoder> audio_encoder_;
 };
 }    // namespace simple_rtmp
 

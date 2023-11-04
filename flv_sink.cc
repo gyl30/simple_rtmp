@@ -1,6 +1,8 @@
 #include "flv_sink.h"
 #include "flv-writer.h"
 #include "flv-header.h"
+#include "flv_h264_encoder.h"
+#include "log.h"
 
 using simple_rtmp::flv_sink;
 
@@ -22,6 +24,26 @@ std::string flv_sink::id() const
 }
 void flv_sink::write(const simple_rtmp::frame_buffer::ptr& frame, const boost::system::error_code& ec)
 {
+    if (ec)
+    {
+        if (video_encoder_)
+        {
+            video_encoder_->write(frame, ec);
+        }
+        if (audio_encoder_)
+        {
+            audio_encoder_->write(frame, ec);
+        }
+        return;
+    }
+    if (frame->media() == simple_rtmp::rtmp_tag::video && video_encoder_)
+    {
+        video_encoder_->write(frame, ec);
+    }
+    if (frame->media() == simple_rtmp::rtmp_tag::audio && audio_encoder_)
+    {
+        audio_encoder_->write(frame, ec);
+    }
 }
 void flv_sink::del_channel(const channel::ptr& ch)
 {
@@ -44,7 +66,25 @@ void flv_sink::safe_add_channel(const channel::ptr& ch)
     ch->write(frame, {});
     chs_.insert(ch);
 }
-
+void flv_sink::on_frame(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
+{
+    for (const auto& ch : chs_)
+    {
+        ch->write(frame, ec);
+    }
+}
 void flv_sink::add_codec(int codec, codec_option op)
 {
+    (void)op;
+    if (codec == simple_rtmp::rtmp_codec::h264)
+    {
+        video_encoder_ = std::make_shared<flv_h264_encoder>(id_);
+        auto ch = std::make_shared<simple_rtmp::channel>();
+        ch->set_output(std::bind(&flv_sink::on_frame, this, std::placeholders::_1, std::placeholders::_2));
+        video_encoder_->set_output(ch);
+        LOG_DEBUG("{} add flv h264 encoder", id_);
+    }
+    else if (codec == simple_rtmp::rtmp_codec::aac)
+    {
+    }
 }
