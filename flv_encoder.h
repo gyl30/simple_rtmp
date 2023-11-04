@@ -16,7 +16,6 @@ class flv_encoder
 
    public:
     virtual std::string id() = 0;
-    virtual rtsp_track::ptr track() = 0;
     virtual void write(const frame_buffer::ptr& frame, const boost::system::error_code& ec) = 0;
     virtual void set_output(const channel::ptr& ch) = 0;
 };
