@@ -4,6 +4,7 @@
 #include "frame_buffer.h"
 #include "flv_h264_encoder.h"
 #include "rtmp_codec.h"
+#include "flv-proto.h"
 
 enum
 {
@@ -27,7 +28,7 @@ struct flv_h264_encoder::args
     uint8_t video_sequence_header;
 };
 
-flv_h264_encoder::flv_h264_encoder(std::string id) : id_(std::move(id))
+flv_h264_encoder::flv_h264_encoder(std::string id) : id_(std::move(id)), args_(std::make_shared<flv_h264_encoder::args>())
 {
 }
 
@@ -48,7 +49,7 @@ static simple_rtmp::frame_buffer::ptr make_frame_header(const simple_rtmp::frame
 
     memset(&tag, 0, sizeof(tag));
     tag.size = static_cast<int>(frame->size());
-    tag.type = static_cast<uint8_t>(frame->media());
+    tag.type = FLV_TYPE_VIDEO;
     tag.timestamp = frame->dts();
     flv_tag_header_write(&tag, buf, FLV_TAG_HEADER_SIZE);
     flv_tag_size_write(buf + FLV_TAG_HEADER_SIZE, 4, frame->size() + FLV_TAG_HEADER_SIZE);
@@ -59,8 +60,12 @@ void flv_h264_encoder::muxer_frame(const frame_buffer::ptr& frame, boost::system
 {
     if (ch_)
     {
-        auto header = make_frame_header(frame);
-        ch_->write(header, ec);
+        if (!ec)
+        {
+            auto header = make_frame_header(frame);
+            ch_->write(header, ec);
+        }
+
         ch_->write(frame, ec);
     }
 }
@@ -105,7 +110,7 @@ void flv_h264_encoder::write(const frame_buffer::ptr& frame, const boost::system
         ret = mpeg4_avc_decoder_configuration_record_save(&args_->avc, buf + kVideoTagSize, kBufferSize - kVideoTagSize);
         if (ret <= 0)
         {
-            LOG_DEBUG("rtmp encoder configuration record save failed {}", ret);
+            LOG_DEBUG("flv encoder configuration record save failed {}", ret);
             return;
         }
         auto config_frame = fixed_frame_buffer::create();
