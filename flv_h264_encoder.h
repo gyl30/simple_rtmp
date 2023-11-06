@@ -22,6 +22,7 @@ class flv_h264_encoder : public flv_encoder
 
    private:
     void muxer_frame(const frame_buffer::ptr& frame, boost::system::error_code ec);
+    void muxer_frame_header(const frame_buffer::ptr& frame, boost::system::error_code ec);
 
    private:
     struct args;

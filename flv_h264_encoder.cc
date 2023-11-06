@@ -42,8 +42,14 @@ void flv_h264_encoder::set_output(const channel::ptr& ch)
     //
     ch_ = ch;
 }
-static simple_rtmp::frame_buffer::ptr make_frame_header(const simple_rtmp::frame_buffer::ptr& frame)
+
+void flv_h264_encoder::muxer_frame_header(const frame_buffer::ptr& frame, boost::system::error_code ec)
 {
+    if (ec)
+    {
+        return;
+    }
+
     uint8_t buf[FLV_TAG_HEADER_SIZE + 4] = {0};
     struct flv_tag_header_t tag;
 
@@ -53,19 +59,18 @@ static simple_rtmp::frame_buffer::ptr make_frame_header(const simple_rtmp::frame
     tag.timestamp = frame->dts();
     flv_tag_header_write(&tag, buf, FLV_TAG_HEADER_SIZE);
     flv_tag_size_write(buf + FLV_TAG_HEADER_SIZE, 4, frame->size() + FLV_TAG_HEADER_SIZE);
-    return simple_rtmp::fixed_frame_buffer::create(buf, FLV_TAG_HEADER_SIZE);
+    auto tag_header = simple_rtmp::fixed_frame_buffer::create(buf, FLV_TAG_HEADER_SIZE);
+    auto tag_size = simple_rtmp::fixed_frame_buffer::create(buf + FLV_TAG_HEADER_SIZE, 4);
+
+    ch_->write(tag_header, ec);
+    ch_->write(tag_size, ec);
 }
 
 void flv_h264_encoder::muxer_frame(const frame_buffer::ptr& frame, boost::system::error_code ec)
 {
     if (ch_)
     {
-        if (!ec)
-        {
-            auto header = make_frame_header(frame);
-            ch_->write(header, ec);
-        }
-
+        muxer_frame_header(frame, ec);
         ch_->write(frame, ec);
     }
 }
