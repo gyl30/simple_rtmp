@@ -43,10 +43,11 @@ void flv_h264_encoder::set_output(const channel::ptr& ch)
     ch_ = ch;
 }
 
-void flv_h264_encoder::muxer_frame_header(const frame_buffer::ptr& frame, boost::system::error_code ec)
+void flv_h264_encoder::muxer_frame(const frame_buffer::ptr& frame, boost::system::error_code ec)
 {
     if (ec)
     {
+        ch_->write(frame, ec);
         return;
     }
 
@@ -63,16 +64,8 @@ void flv_h264_encoder::muxer_frame_header(const frame_buffer::ptr& frame, boost:
     auto tag_size = simple_rtmp::fixed_frame_buffer::create(buf + FLV_TAG_HEADER_SIZE, 4);
 
     ch_->write(tag_header, ec);
+    ch_->write(frame, ec);
     ch_->write(tag_size, ec);
-}
-
-void flv_h264_encoder::muxer_frame(const frame_buffer::ptr& frame, boost::system::error_code ec)
-{
-    if (ch_)
-    {
-        muxer_frame_header(frame, ec);
-        ch_->write(frame, ec);
-    }
 }
 
 void flv_h264_encoder::write(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
