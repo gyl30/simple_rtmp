@@ -5,7 +5,9 @@
 using simple_rtmp::flv_forward_session;
 using simple_rtmp::tcp_connection;
 
-flv_forward_session::flv_forward_session(std::string target, simple_rtmp::executors::executor& ex) : target_(std::move(target)), ex_(ex), conn_(std::make_shared<tcp_connection>(ex_))
+flv_forward_session::flv_forward_session(std::string target, simple_rtmp::executors::executor& ex, boost::asio::ip::tcp::socket socket)
+    : target_(std::move(target)), ex_(ex), conn_(std::make_shared<tcp_connection>(ex_, std::move(socket)))
+
 {
 }
 

@@ -1,7 +1,7 @@
 #include <utility>
 #include <boost/algorithm/string.hpp>
 #include "http_session.h"
-#include "flv_session.h"
+#include "flv_forward_session.h"
 #include "log.h"
 #include "sink.h"
 #include "socket.h"
@@ -135,7 +135,7 @@ void http_session::on_flv_request(const http_request_ptr& req)
     auto socket = stream_->release_socket();
     stream_->cancel();
     stream_.reset();
-    auto session = std::make_shared<flv_session>(target, ex_, std::move(socket));
+    auto session = std::make_shared<flv_forward_session>(target, ex_, std::move(socket));
     session->start();
     shutdown();
 }
