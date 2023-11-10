@@ -1,19 +1,9 @@
 #include "flv_sink.h"
-#include "flv-writer.h"
-#include "flv-header.h"
-#include "flv_h264_encoder.h"
+#include "rtmp_h264_encoder.h"
+#include "rtmp_aac_encoder.h"
 #include "log.h"
 
 using simple_rtmp::flv_sink;
-
-static simple_rtmp::frame_buffer::ptr make_flv_header()
-{
-    struct flv_vec_t vec[1];
-    uint8_t header[9 + 4];
-    flv_header_write(1, 1, header, 9);
-    flv_tag_size_write(header + 9, 4, 0);
-    return simple_rtmp::fixed_frame_buffer::create(header, sizeof(header));
-}
 
 flv_sink::flv_sink(std::string id, simple_rtmp::executors::executor& ex) : id_(std::move(id)), ex_(ex)
 {
@@ -62,29 +52,101 @@ void flv_sink::add_channel(const channel::ptr& ch)
 
 void flv_sink::safe_add_channel(const channel::ptr& ch)
 {
-    auto frame = make_flv_header();
-    ch->write(frame, {});
+    if (video_config_)
+    {
+        LOG_DEBUG("write video config frame {} bytes", video_config_->size());
+        ch->write(video_config_, {});
+    }
+    if (audio_config_)
+    {
+        LOG_DEBUG("write audio config frame {} bytes", audio_config_->size());
+        ch->write(audio_config_, {});
+    }
+    for (const auto& frame : gop_cache_)
+    {
+        ch->write(frame, {});
+    }
     chs_.insert(ch);
 }
+
 void flv_sink::on_frame(const frame_buffer::ptr& frame, const boost::system::error_code& ec)
 {
+    if (ec)
+    {
+        for (const auto& ch : chs_)
+        {
+            ch->write(frame, ec);
+        }
+        return;
+    }
+    if (frame->media() == simple_rtmp::rtmp_tag::video)
+    {
+        on_video_frame(frame);
+    }
+    else if (frame->media() == simple_rtmp::rtmp_tag::audio)
+    {
+        on_audio_frame(frame);
+    }
+
     for (const auto& ch : chs_)
     {
         ch->write(frame, ec);
     }
 }
+static bool audio_config_frame(const simple_rtmp::frame_buffer::ptr& frame)
+{
+    return (frame->codec() == simple_rtmp::rtmp_codec::aac || frame->codec() == simple_rtmp::rtmp_codec::opus) && frame->data()[1] == 0;
+}
+
+static bool video_config_frame(const simple_rtmp::frame_buffer::ptr& frame)
+{
+    return frame->data()[1] == 0;
+}
+void flv_sink::on_video_frame(const frame_buffer::ptr& frame)
+{
+    if (video_config_frame(frame))
+    {
+        video_config_ = frame;
+        return;
+    }
+
+    if (frame->flag() == 1)
+    {
+        gop_cache_.clear();
+        gop_cache_.push_back(frame);
+        return;
+    }
+    if (!gop_cache_.empty())
+    {
+        gop_cache_.push_back(frame);
+    }
+}
+void flv_sink::on_audio_frame(const frame_buffer::ptr& frame)
+{
+    if (audio_config_frame(frame))
+    {
+        audio_config_ = frame;
+    }
+}
+
 void flv_sink::add_codec(int codec, codec_option op)
 {
     (void)op;
+    LOG_DEBUG("{} add codec {}", id_, codec);
     if (codec == simple_rtmp::rtmp_codec::h264)
     {
-        video_encoder_ = std::make_shared<flv_h264_encoder>(id_);
+        video_encoder_ = std::make_shared<rtmp_h264_encoder>(id_);
         auto ch = std::make_shared<simple_rtmp::channel>();
         ch->set_output(std::bind(&flv_sink::on_frame, this, std::placeholders::_1, std::placeholders::_2));
         video_encoder_->set_output(ch);
-        LOG_DEBUG("{} add flv h264 encoder", id_);
+        LOG_DEBUG("{} add h264 encoder", id_);
     }
     else if (codec == simple_rtmp::rtmp_codec::aac)
     {
+        audio_encoder_ = std::make_shared<rtmp_aac_encoder>(id_);
+        auto ch = std::make_shared<simple_rtmp::channel>();
+        ch->set_output(std::bind(&flv_sink::on_frame, this, std::placeholders::_1, std::placeholders::_2));
+        audio_encoder_->set_output(ch);
+        LOG_DEBUG("{} add aac encoder", id_);
     }
 }

@@ -1,11 +1,8 @@
 #ifndef SIMPLE_RTMP_FLV_FORWARD_SESSION_H
 #define SIMPLE_RTMP_FLV_FORWARD_SESSION_H
 
-#include <queue>
 #include <memory>
 #include <string>
-#include <vector>
-#include <atomic>
 #include "execution.h"
 #include "channel.h"
 #include "frame_buffer.h"
@@ -24,10 +21,14 @@ class flv_forward_session : public std::enable_shared_from_this<flv_forward_sess
     void start();
     void shutdown();
     boost::asio::ip::tcp::socket& socket();
+    void write(const frame_buffer::ptr& frame);
 
    private:
     void safe_shutdown();
     void channel_out(const frame_buffer::ptr& frame, const boost::system::error_code& ec);
+
+    void on_read(const simple_rtmp::frame_buffer::ptr& frame, boost::system::error_code ec);
+    void on_write(const boost::system::error_code& ec, std::size_t bytes);
 
    private:
     std::string target_;
@@ -35,6 +36,7 @@ class flv_forward_session : public std::enable_shared_from_this<flv_forward_sess
     channel::ptr channel_ = nullptr;
     simple_rtmp::executors::executor& ex_;
     std::shared_ptr<tcp_connection> conn_;
+    void* flv_writer_ = nullptr;
 };
 }    // namespace simple_rtmp
 

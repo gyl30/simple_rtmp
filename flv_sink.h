@@ -9,7 +9,7 @@
 #include "channel.h"
 #include "sink.h"
 #include "execution.h"
-#include "flv_encoder.h"
+#include "rtmp_encoder.h"
 
 namespace simple_rtmp
 {
@@ -29,6 +29,9 @@ class flv_sink : public sink
    private:
     void on_frame(const frame_buffer::ptr& frame, const boost::system::error_code& ec);
 
+    void on_video_frame(const frame_buffer::ptr& frame);
+    void on_audio_frame(const frame_buffer::ptr& frame);
+
     void safe_add_channel(const channel::ptr& ch);
     void safe_del_channel(const channel::ptr& ch);
 
@@ -36,8 +39,11 @@ class flv_sink : public sink
     std::string id_;
     simple_rtmp::executors::executor& ex_;
     std::set<channel::ptr> chs_;
-    std::shared_ptr<flv_encoder> video_encoder_;
-    std::shared_ptr<flv_encoder> audio_encoder_;
+    frame_buffer::ptr video_config_;
+    frame_buffer::ptr audio_config_;
+    std::vector<frame_buffer::ptr> gop_cache_;
+    std::shared_ptr<rtmp_encoder> video_encoder_;
+    std::shared_ptr<rtmp_encoder> audio_encoder_;
 };
 }    // namespace simple_rtmp
 

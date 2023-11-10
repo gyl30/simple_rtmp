@@ -44,10 +44,12 @@ class http_session : public std::enable_shared_from_this<http_session>
     void on_write(const http_request_ptr& req, boost::beast::error_code ec, std::size_t bytes);
 
    private:
-    void on_request(const http_request_ptr& req);
+    void on_request(http_request_ptr& req);
+    void on_flv_request(http_request_ptr& req);
+    void on_hls_request(http_request_ptr& req);
 
-    void on_flv_request(const http_request_ptr& req);
-    void on_hls_request(const http_request_ptr& req);
+    void write_flv(http_request_ptr& req, http_response_ptr& res);
+    void on_flv_write(const http_request_ptr& req, boost::beast::error_code ec, std::size_t bytes);
 
    public:
     static void register_request_cb(const std::string& name, request_cb_t cb);

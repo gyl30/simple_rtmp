@@ -3,7 +3,6 @@
 #include "http_session.h"
 #include "flv_forward_session.h"
 #include "log.h"
-#include "sink.h"
 #include "socket.h"
 
 using simple_rtmp::http_session;
@@ -112,7 +111,7 @@ void http_session::on_request()
     it->second(session, req);
 }
 
-void http_session::on_request(const http_request_ptr& req)
+void http_session::on_request(http_request_ptr& req)
 {
     //
     const std::string target = req->target();
@@ -128,19 +127,20 @@ void http_session::on_request(const http_request_ptr& req)
     }
 }
 
-void http_session::on_flv_request(const http_request_ptr& req)
+void http_session::on_flv_request(http_request_ptr& req)
 {
-    // /flv/app/stream
-    const std::string target = req->target();
-    auto socket = stream_->release_socket();
-    stream_->cancel();
-    stream_.reset();
-    auto session = std::make_shared<flv_forward_session>(target, ex_, std::move(socket));
-    session->start();
-    shutdown();
+    auto rsp = std::make_shared<boost::beast::http::response<boost::beast::http::string_body>>();
+    rsp->keep_alive(true);
+    rsp->set(boost::beast::http::field::cache_control, "no-cache");
+    rsp->set(boost::beast::http::field::content_type, "flash");
+    rsp->set(boost::beast::http::field::expires, "-1");
+    rsp->set(boost::beast::http::field::access_control_allow_origin, "*");
+    rsp->set(boost::beast::http::field::pragma, "no-cache");
+    rsp->set(boost::beast::http::field::connection, "keep-alive");
+    write_flv(req, rsp);
 }
 
-void http_session::on_hls_request(const http_request_ptr& req)
+void http_session::on_hls_request(http_request_ptr& req)
 {
     //
 }
@@ -149,6 +149,27 @@ void http_session::write(http_request_ptr& req, http_response_ptr& res)
 {
     auto self = shared_from_this();
     boost::beast::http::async_write(*stream_, *res, [self, this, req, res](boost::beast::error_code ec, std::size_t bytes) { on_write(req, ec, bytes); });
+}
+void http_session::write_flv(http_request_ptr& req, http_response_ptr& res)
+{
+    auto self = shared_from_this();
+    boost::beast::http::async_write(*stream_, *res, [self, this, req, res](boost::beast::error_code ec, std::size_t bytes) { on_flv_write(req, ec, bytes); });
+}
+void http_session::on_flv_write(const http_request_ptr& req, boost::beast::error_code ec, std::size_t bytes)
+{
+    if (ec)
+    {
+        LOG_ERROR("write failed {}", ec.message());
+        return;
+    }
+    // /flv/app/stream
+    const std::string target = req->target();
+    auto socket = stream_->release_socket();
+    stream_->cancel();
+    stream_.reset();
+    auto session = std::make_shared<flv_forward_session>(target, ex_, std::move(socket));
+    session->start();
+    shutdown();
 }
 
 simple_rtmp::http_response_ptr http_session::create_response(simple_rtmp::http_request_ptr& req, int code, const std::string& content)
