@@ -13,10 +13,10 @@ using simple_rtmp::tcp_connection;
 
 static simple_rtmp::frame_buffer::ptr make_flv_header()
 {
-    struct flv_vec_t vec[1];
-    uint8_t header[9 + 4];
-    flv_header_write(1, 1, header, 9);
-    flv_tag_size_write(header + 9, 4, 0);
+    static const auto kFlvHeaderSize = 9;
+    uint8_t header[kFlvHeaderSize + 4];
+    flv_header_write(1, 1, header, kFlvHeaderSize);
+    flv_tag_size_write(header + kFlvHeaderSize, 4, 0);
     return simple_rtmp::fixed_frame_buffer::create(header, sizeof(header));
 }
 
@@ -104,8 +104,6 @@ void flv_forward_session::start()
     channel_ = std::make_shared<simple_rtmp::channel>();
     channel_->set_output(std::bind(&flv_forward_session::channel_out, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 
-    // auto header = make_flv_header();
-    // conn_->write_frame(header);
     conn_->set_read_cb(std::bind(&flv_forward_session::on_read, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
     conn_->set_write_cb(std::bind(&flv_forward_session::on_write, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
     conn_->start();
@@ -114,6 +112,7 @@ void flv_forward_session::start()
 }
 void flv_forward_session::on_read(const simple_rtmp::frame_buffer::ptr& frame, boost::system::error_code ec)
 {
+    (void)frame;
     if (ec)
     {
         LOG_ERROR("read failed {} {}", target_, ec.message());
@@ -169,14 +168,33 @@ void flv_forward_session::channel_out(const frame_buffer::ptr& frame, const boos
         shutdown();
         return;
     }
-    if (flv_writer_ == nullptr)
-    {
-        flv_writer_ = flv_writer_create2(1, 1, on_flv_write, this);
-    }
     auto type = FLV_TYPE_VIDEO;
     if (frame->media() == simple_rtmp::audio)
     {
         type = FLV_TYPE_AUDIO;
     }
-    flv_writer_input(flv_writer_, type, frame->data(), frame->size(), frame->pts());
+    if (!first_frame_)
+    {
+        first_frame_ = true;
+        auto frame = make_flv_header();
+        write(frame);
+    }
+
+    static const auto kFlvTagHeaderSize = 11;
+    uint8_t buf[kFlvTagHeaderSize + 4];
+    struct flv_writer_t* flv;
+    struct flv_tag_header_t tag;
+
+    memset(&tag, 0, sizeof(tag));
+    tag.size = frame->size();
+    tag.type = type;
+    tag.timestamp = frame->pts();
+    flv_tag_header_write(&tag, buf, kFlvTagHeaderSize);
+    flv_tag_size_write(buf + kFlvTagHeaderSize, 4, frame->size() + kFlvTagHeaderSize);
+
+    auto tag_header = simple_rtmp::fixed_frame_buffer::create(buf, kFlvTagHeaderSize);
+    auto tag_size = simple_rtmp::fixed_frame_buffer::create(buf + kFlvTagHeaderSize, 4);
+    write(tag_header);
+    write(frame);
+    write(tag_size);
 }

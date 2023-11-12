@@ -31,12 +31,12 @@ class flv_forward_session : public std::enable_shared_from_this<flv_forward_sess
     void on_write(const boost::system::error_code& ec, std::size_t bytes);
 
    private:
+    bool first_frame_ = false;
     std::string target_;
     sink::weak sink_;
     channel::ptr channel_ = nullptr;
     simple_rtmp::executors::executor& ex_;
     std::shared_ptr<tcp_connection> conn_;
-    void* flv_writer_ = nullptr;
 };
 }    // namespace simple_rtmp
 
