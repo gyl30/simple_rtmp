@@ -32,6 +32,7 @@ class flv_forward_session : public std::enable_shared_from_this<flv_forward_sess
 
    private:
     bool first_frame_ = false;
+    std::string id_;
     std::string target_;
     sink::weak sink_;
     channel::ptr channel_ = nullptr;

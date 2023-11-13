@@ -4,7 +4,6 @@
 #include "log.h"
 #include "sink.h"
 #include "flv-proto.h"
-#include "flv-writer.h"
 #include "flv-header.h"
 #include "flv_forward_session.h"
 
@@ -20,26 +19,17 @@ static simple_rtmp::frame_buffer::ptr make_flv_header()
     return simple_rtmp::fixed_frame_buffer::create(header, sizeof(header));
 }
 
-static int on_flv_write(void* flv, const struct flv_vec_t* v, int n)
-{
-    auto* that = static_cast<simple_rtmp::flv_forward_session*>(flv);
-    for (int i = 0; i < n; i++)
-    {
-        auto buffer = simple_rtmp::fixed_frame_buffer::create(v[i].ptr, v[i].len);
-        that->write(buffer);
-    }
-    return 0;
-}
-
 flv_forward_session::flv_forward_session(std::string target, simple_rtmp::executors::executor& ex, boost::asio::ip::tcp::socket socket)
     : target_(std::move(target)), ex_(ex), conn_(std::make_shared<tcp_connection>(ex_, std::move(socket)))
 
 {
 }
+
 void flv_forward_session::write(const frame_buffer::ptr& frame)
 {
     conn_->write_frame(frame);
 }
+
 static std::string make_session_id_suffix(const std::string& target)
 {
     //
@@ -75,14 +65,13 @@ static std::string make_session_id_prefix(const std::string& target)
 }
 void flv_forward_session::start()
 {
-    std::string id;
     if (boost::ends_with(target_, ".flv"))
     {
-        id = make_session_id_suffix(target_);
+        id_ = make_session_id_suffix(target_);
     }
     else if (boost::starts_with(target_, "/flv"))
     {
-        id = make_session_id_prefix(target_);
+        id_ = make_session_id_prefix(target_);
     }
     else
     {
@@ -91,14 +80,14 @@ void flv_forward_session::start()
         return;
     }
 
-    auto s = sink::get(id);
+    auto s = sink::get(id_);
     if (!s)
     {
-        LOG_ERROR("not found sink {}", id);
+        LOG_ERROR("{} not found sink {}", target_, id_);
         shutdown();
         return;
     }
-    LOG_DEBUG("flv session {}", id);
+    LOG_DEBUG("{} start", id_);
     sink_ = s;
 
     channel_ = std::make_shared<simple_rtmp::channel>();
@@ -110,12 +99,13 @@ void flv_forward_session::start()
     sink_ = s;
     s->add_channel(channel_);
 }
+
 void flv_forward_session::on_read(const simple_rtmp::frame_buffer::ptr& frame, boost::system::error_code ec)
 {
     (void)frame;
     if (ec)
     {
-        LOG_ERROR("read failed {} {}", target_, ec.message());
+        LOG_ERROR("read failed {} {}", id_, ec.message());
         shutdown();
         return;
     }
@@ -125,7 +115,7 @@ void flv_forward_session::on_write(const boost::system::error_code& ec, std::siz
 {
     if (ec)
     {
-        LOG_ERROR("write failed {} {}", target_, ec.message());
+        LOG_ERROR("{} write failed {}", id_, ec.message());
         shutdown();
         return;
     }
@@ -142,7 +132,7 @@ boost::asio::ip::tcp::socket& flv_forward_session::socket()
 
 void flv_forward_session::safe_shutdown()
 {
-    LOG_DEBUG("shutdown {}", static_cast<void*>(this));
+    LOG_DEBUG("{} shutdown", id_);
     auto s = sink_.lock();
     if (s)
     {
@@ -164,7 +154,7 @@ void flv_forward_session::channel_out(const frame_buffer::ptr& frame, const boos
 {
     if (ec)
     {
-        LOG_ERROR("channel out {} failed {}", static_cast<void*>(this), ec.message());
+        LOG_ERROR("{} flv sink failed {}", id_, ec.message());
         shutdown();
         return;
     }

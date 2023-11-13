@@ -48,6 +48,7 @@ void rtmp_h264_encoder::write(const frame_buffer::ptr &frame, const boost::syste
 {
     if (ec)
     {
+        LOG_ERROR("{}", ec.message());
         on_frame(frame, ec);
         return;
     }

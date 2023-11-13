@@ -1,3 +1,4 @@
+#include "log.h"
 #include "rtmp_aac_encoder.h"
 #include "rtmp_codec.h"
 #include "flv-header.h"
@@ -44,6 +45,7 @@ void rtmp_aac_encoder::write(const frame_buffer::ptr &frame, const boost::system
 {
     if (ec)
     {
+        LOG_ERROR("{}", ec.message());
         on_frame(frame, ec);
         return;
     }
