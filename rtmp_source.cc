@@ -3,33 +3,26 @@
 #include "rtmp_demuxer.h"
 #include "rtmp_sink.h"
 #include "rtsp_sink.h"
-#include "flv_sink.h"
-#include "log.h"
 
 using simple_rtmp::rtmp_source;
-using namespace std::placeholders;
 using simple_rtmp::rtmp_demuxer;
 
 rtmp_source::rtmp_source(std::string id, simple_rtmp::executors::executor& ex) : id_(std::move(id)), ch_(std::make_shared<simple_rtmp::channel>()), demuxer_(std::make_shared<rtmp_demuxer>(id_))
 {
-    ch_->set_output(std::bind(&rtmp_source::on_frame, this, _1, _2));
+    ch_->set_output(std::bind(&rtmp_source::on_frame, this, std::placeholders::_1, std::placeholders::_2));
     demuxer_->set_channel(ch_);
-    demuxer_->on_codec(std::bind(&rtmp_source::on_codec, this, _1, _2));
+    demuxer_->on_codec(std::bind(&rtmp_source::on_codec, this, std::placeholders::_1, std::placeholders::_2));
     std::string const rtmp_sink_id = "rtmp_" + id_;
     rtmp_sink_ = std::make_shared<simple_rtmp::rtmp_sink>(rtmp_sink_id, ex);
     std::string const rtsp_sink_id = "rtsp_" + id_;
     rtsp_sink_ = std::make_shared<simple_rtmp::rtsp_sink>(rtsp_sink_id, ex);
-    std::string const flv_sink_id = "flv_" + id_;
-    flv_sink_ = std::make_shared<simple_rtmp::flv_sink>(flv_sink_id, ex);
     simple_rtmp::sink::add(rtsp_sink_);
     simple_rtmp::sink::add(rtmp_sink_);
-    simple_rtmp::sink::add(flv_sink_);
 };
 
 void rtmp_source::on_codec(int codec, codec_option op)
 {
     rtmp_sink_->add_codec(codec, op);
-    flv_sink_->add_codec(codec, op);
     rtsp_sink_->add_codec(codec, std::move(op));
 }
 
@@ -39,7 +32,6 @@ void rtmp_source::on_frame(const frame_buffer::ptr& frame, const boost::system::
     // frame->payload.size());
     rtmp_sink_->write(frame, ec);
     rtsp_sink_->write(frame, ec);
-    flv_sink_->write(frame, ec);
 }
 
 void rtmp_source::write(const frame_buffer::ptr& frame, const boost::system::error_code& ec)

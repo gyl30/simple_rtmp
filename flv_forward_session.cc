@@ -45,7 +45,7 @@ static std::string make_session_id_suffix(const std::string& target)
     auto stream_index = results.size() - 1;
     std::string app = results[app_index];
     std::string stream = results[stream_index];
-    return "flv_" + app + "_" + stream;
+    return "rtmp_" + app + "_" + stream;
 }
 
 static std::string make_session_id_prefix(const std::string& target)
