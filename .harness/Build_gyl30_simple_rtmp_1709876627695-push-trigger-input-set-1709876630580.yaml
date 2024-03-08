@@ -1,0 +1,14 @@
+inputSet:
+  name: Build_gyl30_simple_rtmp_1709876627695-push-trigger-input-set
+  identifier: Build_gyl30_simple_rtmp_1709876627695pushtriggerinputset
+  orgIdentifier: default
+  projectIdentifier: default_project
+  pipeline:
+    identifier: Build_gyl30_simple_rtmp_1709876627695
+    properties:
+      ci:
+        codebase:
+          build:
+            type: branch
+            spec:
+              branch: <+trigger.branch>
