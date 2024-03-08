@@ -1,0 +1,49 @@
+pipeline:
+  identifier: Build_gyl30_simple_rtmp_1709876627695
+  name: Build simple_rtmp
+  orgIdentifier: default
+  projectIdentifier: default_project
+  properties:
+    ci:
+      codebase:
+        build: <+input>
+        connectorRef: account.Github_OAuth_1709876607479
+        repoName: gyl30/simple_rtmp
+  stages:
+    - stage:
+        identifier: build
+        name: build
+        spec:
+          cloneCodebase: true
+          execution:
+            steps:
+              - step:
+                  identifier: installandupdatedeps
+                  name: install and update deps
+                  spec:
+                    command: |-
+                      sudo apt-get update
+                      sudo apt-get install libgtest-dev
+                  timeout: ""
+                  type: Run
+              - step:
+                  identifier: cmakebuildmake
+                  name: cmake build  make
+                  spec:
+                    command: mkdir build && cd build && cmake .. && cmake --build .
+                  timeout: ""
+                  type: Run
+              - step:
+                  identifier: runtests
+                  name: run tests
+                  spec:
+                    command: cd build && make check
+                  timeout: ""
+                  type: Run
+          platform:
+            arch: Amd64
+            os: Linux
+          runtime:
+            spec: {}
+            type: Docker
+        type: CI
