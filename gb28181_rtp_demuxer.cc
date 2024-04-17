@@ -16,4 +16,11 @@ void gb28181_rtp_demuxer::write(const frame_buffer::ptr& frame)
     {
         return;
     }
+    uint16_t rtp_payload_size = (data_[0] << 8) | data_[1];
+    if (data_.size() < rtp_payload_size + kGB28181RtpTcpPrefixSize)
+    {
+        return;
+    }
+
+    data_.clear();
 }
