@@ -23,6 +23,9 @@ class gb28181_rtp_demuxer : public std::enable_shared_from_this<gb28181_rtp_demu
     void set_channel(const channel::ptr& ch);
 
    private:
+    void on_frame(const frame_buffer::ptr& frame, boost::system::error_code ec);
+
+   private:
     std::string id_;
     channel::ptr ch_;
     std::vector<uint8_t> data_;
