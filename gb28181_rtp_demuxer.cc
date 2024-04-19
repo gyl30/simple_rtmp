@@ -1,4 +1,7 @@
+extern "C"
+{
 #include <rtp-packet.h>
+}
 #include "gb28181_rtp_demuxer.h"
 using simple_rtmp::gb28181_rtp_demuxer;
 
