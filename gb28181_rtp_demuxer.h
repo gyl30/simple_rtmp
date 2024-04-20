@@ -4,8 +4,8 @@
 #include <memory>
 #include <string>
 #include <boost/system/error_code.hpp>
+#include "rtp-queue.h"
 #include "channel.h"
-
 #include "frame_buffer.h"
 
 namespace simple_rtmp
@@ -29,6 +29,7 @@ class gb28181_rtp_demuxer : public std::enable_shared_from_this<gb28181_rtp_demu
     std::string id_;
     channel::ptr ch_;
     std::vector<uint8_t> data_;
+    rtp_queue_t* queue_ = nullptr;
 };
 
 }    // namespace simple_rtmp
