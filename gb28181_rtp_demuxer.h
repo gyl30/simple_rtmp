@@ -16,7 +16,7 @@ class gb28181_rtp_demuxer : public std::enable_shared_from_this<gb28181_rtp_demu
     using prt = std::shared_ptr<gb28181_rtp_demuxer>;
 
    public:
-    explicit gb28181_rtp_demuxer(std::string& id);
+    explicit gb28181_rtp_demuxer(std::string id);
 
    public:
     void write(const frame_buffer::ptr& frame);

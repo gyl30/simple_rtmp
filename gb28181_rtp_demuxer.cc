@@ -2,8 +2,13 @@ extern "C"
 {
 #include <rtp-packet.h>
 }
+#include <utility>
 #include "gb28181_rtp_demuxer.h"
 using simple_rtmp::gb28181_rtp_demuxer;
+
+gb28181_rtp_demuxer::gb28181_rtp_demuxer(std::string id) : id_(std::move(id))
+{
+}
 
 void gb28181_rtp_demuxer::set_channel(const channel::ptr& ch)
 {
