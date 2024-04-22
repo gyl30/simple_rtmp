@@ -4,12 +4,28 @@ extern "C"
 }
 #include <utility>
 #include "gb28181_rtp_demuxer.h"
+
 using simple_rtmp::gb28181_rtp_demuxer;
+
+static void rtp_packet_free(void* param, struct rtp_packet_t* pkt)
+{
+    free(pkt);
+    (void)param;
+}
 
 gb28181_rtp_demuxer::gb28181_rtp_demuxer(std::string id) : id_(std::move(id))
 {
+    queue_ = rtp_queue_create(100, 90000, rtp_packet_free, nullptr);
 }
 
+gb28181_rtp_demuxer::~gb28181_rtp_demuxer()
+{
+    if (queue_ != nullptr)
+    {
+        rtp_queue_destroy(queue_);
+        queue_ = nullptr;
+    }
+}
 void gb28181_rtp_demuxer::set_channel(const channel::ptr& ch)
 {
     ch_ = ch;
@@ -39,13 +55,13 @@ void gb28181_rtp_demuxer::write(const frame_buffer::ptr& frame)
         return;
     }
 
-    struct rtp_packet_t pkt;
-    int ret = rtp_packet_deserialize(&pkt, data_.data() + kGB28181RtpTcpPrefixSize, rtp_payload_size);
+    auto* pkt = static_cast<struct rtp_packet_t*>(malloc(sizeof(struct rtp_packet_t)));
+
+    int ret = rtp_packet_deserialize(pkt, data_.data() + kGB28181RtpTcpPrefixSize, rtp_payload_size);
     if (ret != 0)
     {
         on_frame(frame, boost::system::errc::make_error_code(boost::system::errc::protocol_error));
         return;
     }
-
-    data_.clear();
+    data_.erase(data_.begin(), data_.begin() + kGB28181RtpTcpPrefixSize + rtp_payload_size);
 }
