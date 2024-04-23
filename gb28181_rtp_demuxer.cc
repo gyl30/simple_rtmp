@@ -7,6 +7,12 @@ extern "C"
 
 using simple_rtmp::gb28181_rtp_demuxer;
 
+static struct rtp_packet_t* rtp_packet_malloc(void* param)
+{
+    (void)param;
+    return static_cast<struct rtp_packet_t*>(malloc(sizeof(struct rtp_packet_t)));
+}
+
 static void rtp_packet_free(void* param, struct rtp_packet_t* pkt)
 {
     free(pkt);
@@ -55,7 +61,7 @@ void gb28181_rtp_demuxer::write(const frame_buffer::ptr& frame)
         return;
     }
 
-    auto* pkt = static_cast<struct rtp_packet_t*>(malloc(sizeof(struct rtp_packet_t)));
+    auto* pkt = rtp_packet_malloc(this);
 
     int ret = rtp_packet_deserialize(pkt, data_.data() + kGB28181RtpTcpPrefixSize, rtp_payload_size);
     if (ret != 0)
@@ -64,4 +70,9 @@ void gb28181_rtp_demuxer::write(const frame_buffer::ptr& frame)
         return;
     }
     data_.erase(data_.begin(), data_.begin() + kGB28181RtpTcpPrefixSize + rtp_payload_size);
+    ret = rtp_queue_write(queue_, pkt);
+    if (ret < 0)
+    {
+        rtp_packet_free(this, pkt);
+    }
 }
