@@ -75,4 +75,11 @@ void gb28181_rtp_demuxer::write(const frame_buffer::ptr& frame)
     {
         rtp_packet_free(this, pkt);
     }
+    pkt = rtp_queue_read(queue_);
+
+    auto f = fixed_frame_buffer::create(pkt->payload, pkt->payloadlen);
+    f->set_pts(pkt->rtp.timestamp);
+    f->set_dts(pkt->rtp.timestamp);
+    rtp_packet_free(this, pkt);
+    on_frame(f, {});
 }
