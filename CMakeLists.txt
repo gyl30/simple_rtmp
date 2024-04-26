@@ -35,6 +35,11 @@ add_library(rtp STATIC ${RTP_SRC})
 target_compile_options(rtp PRIVATE -DRTP_MPEG4_GENERIC_SKIP_ADTS)
 list(APPEND LINK_LIBS rtp)
 
+include_directories(third/media-server/libmpeg/include)
+aux_source_directory(third/media-server/libmpeg/source MPEG_SRC)
+add_library(mpeg STATIC ${MPEG_SRC})
+list(APPEND LINK_LIBS mpeg)
+
 include_directories(third/media-server/librtmp/include)
 aux_source_directory(third/media-server/librtmp/source RTMP_SRC)
 add_library(rtmp STATIC ${RTMP_SRC})
