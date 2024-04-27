@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <boost/system/error_code.hpp>
+#include "mpeg-ps.h"
 #include "channel.h"
 #include "frame_buffer.h"
 
@@ -28,6 +29,7 @@ class gb28181_ps_demuxer : public std::enable_shared_from_this<gb28181_ps_demuxe
    private:
     std::string id_;
     channel::ptr ch_;
+    struct ps_muxer_t* demuxer_ = nullptr;
 };
 
 }    // namespace simple_rtmp
